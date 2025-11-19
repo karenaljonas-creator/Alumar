@@ -3,12 +3,15 @@
 import type { Machine, WeeklySnapshot, HistoryTrend } from "./types"
 import { calculateStats, filtrarMaquinasPrincipais } from "./machine-utils"
 import { createClient } from "./supabase/client"
-
-
-const CONTRACT_ID = "5900119505"
+import { loadContrato } from "./contrato-storage"
 
 function getSupabaseClient() {
   return createClient()
+}
+
+function getCurrentContractId(): string {
+  const contrato = loadContrato()
+  return contrato.numero
 }
 
 export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySnapshot> {
@@ -58,8 +61,9 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
       throw error
     }
   } catch (error) {
+    console.error("Erro ao salvar snapshot:", error)
   }
-  
+
   return snapshot
 }
 
@@ -70,6 +74,7 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
     const { data, error } = await supabase.from("weekly_snapshots").select("*").order("date", { ascending: false })
 
     if (error) {
+      console.error("Erro ao carregar histórico:", error)
       return []
     }
 
@@ -79,6 +84,7 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
 
     return data.map((row) => row.snapshot as WeeklySnapshot)
   } catch (error) {
+    console.error("Erro ao carregar histórico:", error)
     return []
   }
 }
@@ -97,6 +103,7 @@ export async function getHistoryTrends(): Promise<HistoryTrend[]> {
       }))
       .reverse()
   } catch (error) {
+    console.error("Erro ao obter trends:", error)
     return []
   }
 }
@@ -120,8 +127,6 @@ export async function deleteSnapshot(id: string): Promise<void> {
   if (error) {
     throw error
   }
-
-  console.log(`Snapshot ${id} deletado com sucesso`)
 }
 
 export function exportHistoryToCSV(history: WeeklySnapshot[]): string {

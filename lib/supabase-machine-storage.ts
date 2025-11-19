@@ -3,15 +3,20 @@
 import type { Machine } from "./types"
 import { createClient } from "./supabase/client"
 import { loadRealData } from "./dados-reais"
-
-const CONTRACT_ID = "5900119505"
+import { loadContrato } from "./contrato-storage"
 
 function getSupabaseClient() {
   return createClient()
 }
 
+function getCurrentContractId(): string {
+  const contrato = loadContrato()
+  return contrato.numero
+}
+
 export async function saveMachines(machines: Machine[]): Promise<void> {
   const supabase = getSupabaseClient()
+  const contractId = getCurrentContractId()
 
   const records = machines.map((m) => ({
     id: m.id,
@@ -25,7 +30,7 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
     horas_operacao: m.tempoParada || 0,
     data_ultima_manutencao: m.dataParada ? new Date(m.dataParada).toISOString() : null,
     proxima_manutencao: null,
-    contrato: CONTRACT_ID,
+    contrato: contractId,
     observacoes: m.motivoParada || m.descricaoDetalhada || null,
     acao_responsavel: m.acaoResponsavel || null,
     updated_at: new Date().toISOString(),
@@ -36,6 +41,7 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
   })
 
   if (error) {
+    console.error("Erro ao salvar máquinas:", error)
     throw error
   }
 }
@@ -43,10 +49,12 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
 export async function loadMachines(): Promise<Machine[]> {
   try {
     const supabase = getSupabaseClient()
+    const contractId = getCurrentContractId()
 
-    const { data, error } = await supabase.from("machines").select("*").eq("contrato", CONTRACT_ID)
+    const { data, error } = await supabase.from("machines").select("*").eq("contrato", contractId)
 
     if (error) {
+      console.error("Erro ao carregar máquinas:", error)
       const realData = loadRealData()
       return realData.machines
     }
@@ -56,12 +64,11 @@ export async function loadMachines(): Promise<Machine[]> {
       try {
         await saveMachines(realData.machines)
       } catch (saveError) {
-        // Ignorar erro de salvamento inicial
+        console.error("Erro ao salvar dados iniciais:", saveError)
       }
       return realData.machines
     }
 
-    // Converter do formato do banco para o formato da aplicação
     const machines: Machine[] = data.map((row) => ({
       id: row.id,
       nome: row.modelo,
@@ -83,6 +90,7 @@ export async function loadMachines(): Promise<Machine[]> {
 
     return machines
   } catch (error) {
+    console.error("Erro ao carregar máquinas:", error)
     const realData = loadRealData()
     return realData.machines
   }
@@ -104,6 +112,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
   const { error } = await supabase.from("machines").update(record).eq("id", id)
 
   if (error) {
+    console.error("Erro ao atualizar máquina:", error)
     throw error
   }
 }
@@ -193,7 +202,6 @@ export async function importFromCSV(csvContent: string): Promise<Machine[]> {
     }
   }
 
-  // Salvar as máquinas importadas no Supabase
   if (machines.length > 0) {
     await saveMachines(machines)
   }
