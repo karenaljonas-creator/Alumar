@@ -37,7 +37,7 @@ export async function migrateLocalStorageToSupabase(): Promise<{
     }
 
     if (machinesMigrated || historyMigrated) {
-      localStorage.setItem("supabase_migration_done", "true")
+      localStorage.setItem("supabase_migration_v2_done", "true")
     }
 
     return { machinesMigrated, historyMigrated }
@@ -48,5 +48,5 @@ export async function migrateLocalStorageToSupabase(): Promise<{
 
 export function isMigrationDone(): boolean {
   if (typeof window === "undefined") return false
-  return localStorage.getItem("supabase_migration_done") === "true"
+  return localStorage.getItem("supabase_migration_v2_done") === "true"
 }
