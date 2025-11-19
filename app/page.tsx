@@ -3,21 +3,11 @@
 // Sistema de Gestão de Máquinas - v1.0
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
-import { 
-  loadMachines, 
-  saveMachines, 
-  downloadCSV, 
-  importFromCSV 
-} from "@/lib/supabase-machine-storage"
+import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
 import { migrateLocalStorageToSupabase, isMigrationDone } from "@/lib/migration"
+// Force rebuild to fix LightningCSS error
 import { loadContrato } from "@/lib/contrato-storage"
-import {
-  saveWeeklySnapshot,
-  loadHistory,
-  deleteSnapshot,
-  downloadHistoryCSV,
-  getHistoryTrends,
-} from "@/lib/supabase-history-storage"
+import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } from "@/lib/supabase-history-storage"
 import {
   calculateStats,
   analisarPeriodoInoperante,
@@ -36,7 +26,7 @@ import { RegistroSemanal } from "@/components/registro-semanal"
 import { Configuracoes } from "@/components/configuracoes"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Download, Upload, BarChart3, Settings, ClipboardList, TrendingUp } from 'lucide-react'
+import { Plus, Download, Upload, BarChart3, Settings, ClipboardList, TrendingUp } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -69,11 +59,11 @@ export default function Home() {
     async function loadData() {
       try {
         setIsLoading(true)
-        
+
         if (!isMigrationDone()) {
           setIsMigrating(true)
           const { machinesMigrated, historyMigrated } = await migrateLocalStorageToSupabase()
-          
+
           if (machinesMigrated || historyMigrated) {
             toast({
               title: "Dados migrados para nuvem!",
@@ -82,11 +72,8 @@ export default function Home() {
           }
           setIsMigrating(false)
         }
-        
-        const [savedMachines, savedHistory] = await Promise.all([
-          loadMachines(),
-          loadHistory()
-        ])
+
+        const [savedMachines, savedHistory] = await Promise.all([loadMachines(), loadHistory()])
         setMachines(savedMachines)
         setHistory(savedHistory)
       } catch (error) {
@@ -347,9 +334,7 @@ export default function Home() {
             {isMigrating ? "Migrando seus dados para a nuvem..." : "Carregando dados..."}
           </p>
           {isMigrating && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Isso pode levar alguns segundos na primeira vez
-            </p>
+            <p className="text-sm text-muted-foreground mt-2">Isso pode levar alguns segundos na primeira vez</p>
           )}
         </div>
       </div>
