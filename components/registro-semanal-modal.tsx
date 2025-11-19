@@ -9,8 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { ChevronLeft, ChevronRight, Save, X } from "@/lib/lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import { saveMachines, loadMachines } from "@/lib/machine-storage"
-import { saveRegistroSemanal } from "@/lib/registro-semanal-storage"
+import { saveMachines, loadMachines } from "@/lib/supabase-machine-storage"
 
 interface RegistroSemanalModalProps {
   machine: Machine
@@ -58,27 +57,33 @@ export function RegistroSemanalModal({
     setEditedMachine((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = () => {
-    const allMachines = loadMachines()
-    const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
+  const handleSave = async () => {
+    try {
+      const allMachines = await loadMachines()
+      const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
 
-    saveMachines(updatedMachines)
-    saveRegistroSemanal(updatedMachines)
+      await saveMachines(updatedMachines)
 
-    onSave()
+      onSave()
+    } catch (error) {
+      console.error("Erro ao salvar máquina:", error)
+    }
   }
 
-  const handleSaveAndNext = () => {
-    const allMachines = loadMachines()
-    const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
+  const handleSaveAndNext = async () => {
+    try {
+      const allMachines = await loadMachines()
+      const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
 
-    saveMachines(updatedMachines)
-    saveRegistroSemanal(updatedMachines)
+      await saveMachines(updatedMachines)
 
-    if (currentIndex < totalMachines - 1) {
-      onNext()
+      if (currentIndex < totalMachines - 1) {
+        onNext()
+      }
+      onSave()
+    } catch (error) {
+      console.error("Erro ao salvar máquina:", error)
     }
-    onSave()
   }
 
   return (

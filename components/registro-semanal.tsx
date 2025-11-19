@@ -5,12 +5,11 @@ import type { Machine } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Edit, Send } from "@/lib/lucide-react"
+import { Search, Edit, Send } from "lucide-react"
 import { RegistroSemanalModal } from "./registro-semanal-modal"
 import { Badge } from "@/components/ui/badge"
-import { loadMachines } from "@/lib/machine-storage"
-import { saveRegistroSemanal } from "@/lib/registro-semanal-storage"
-import { saveWeeklySnapshot } from "@/lib/history-storage"
+import { loadMachines, saveMachines } from "@/lib/supabase-machine-storage"
+import { saveWeeklySnapshot } from "@/lib/supabase-history-storage"
 import { useToast } from "@/hooks/use-toast"
 
 interface RegistroSemanalProps {
@@ -38,26 +37,32 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
   const handleSaveMachine = () => {
     setIsModalOpen(false)
-    const updatedMachines = loadMachines()
-    onSaveAll(updatedMachines)
+    loadMachines().then((updatedMachines) => {
+      onSaveAll(updatedMachines)
+    })
   }
 
-  const handleEnviarRegistro = () => {
-    const currentMachines = loadMachines()
+  const handleEnviarRegistro = async () => {
+    try {
+      const currentMachines = await loadMachines()
 
-    // Salva o registro semanal
-    const registro = saveRegistroSemanal(currentMachines)
+      await saveMachines(currentMachines)
 
-    // Cria snapshot para o histórico
-    const snapshot = saveWeeklySnapshot(currentMachines)
+      const snapshot = await saveWeeklySnapshot(currentMachines)
 
-    toast({
-      title: "Registro Semanal Enviado",
-      description: `Registro da semana ${registro.semana} foi salvo com sucesso e adicionado ao histórico.`,
-    })
+      toast({
+        title: "Registro Semanal Enviado",
+        description: `Registro da semana ${snapshot.week} foi salvo com sucesso e adicionado ao histórico.`,
+      })
 
-    // Atualiza o componente pai
-    onSaveAll(currentMachines)
+      onSaveAll(currentMachines)
+    } catch (error) {
+      toast({
+        title: "Erro ao enviar registro",
+        description: "Não foi possível salvar os dados. Tente novamente.",
+        variant: "destructive",
+      })
+    }
   }
 
   const handlePrevious = () => {
