@@ -55,6 +55,16 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
     setIsSending(true)
     console.log("[v0] Iniciando envio do registro semanal...")
     console.log("[v0] Total de máquinas:", machines.length)
+    console.log(
+      "[v0] Primeiras 3 máquinas a serem salvas:",
+      machines.slice(0, 3).map((m) => ({
+        id: m.id,
+        nome: m.nome,
+        numeroSerie: m.numeroSerie,
+        responsavel: m.responsavel,
+        acaoResponsavel: m.acaoResponsavel,
+      })),
+    )
 
     try {
       console.log("[v0] Salvando máquinas no banco...")
