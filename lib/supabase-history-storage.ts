@@ -58,10 +58,12 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     )
 
     if (error) {
+      console.error("Supabase error saving snapshot:", error)
       throw error
     }
   } catch (error) {
     console.error("Erro ao salvar snapshot:", error)
+    throw error
   }
 
   return snapshot
