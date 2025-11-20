@@ -39,7 +39,6 @@ import { GraficoLocalizacao } from "@/components/grafico-localizacao"
 import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
-import { ConnectionStatus } from "@/components/connection-status"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -344,7 +343,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background">
-      <ConnectionStatus />
       <div className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">

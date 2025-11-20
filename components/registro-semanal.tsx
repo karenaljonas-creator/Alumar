@@ -21,6 +21,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedMachineIndex, setSelectedMachineIndex] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSending, setIsSending] = useState(false)
   const { toast } = useToast()
 
   const filteredMachines = machines.filter(
@@ -46,25 +47,42 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   }
 
   const handleEnviarRegistro = async () => {
-    try {
-      await saveMachines(machines)
+    if (isSending) {
+      console.log("[v0] Já existe um envio em andamento, ignorando...")
+      return
+    }
 
+    setIsSending(true)
+    console.log("[v0] Iniciando envio do registro semanal...")
+    console.log("[v0] Total de máquinas:", machines.length)
+
+    try {
+      console.log("[v0] Salvando máquinas no banco...")
+      await saveMachines(machines)
+      console.log("[v0] Máquinas salvas com sucesso!")
+
+      console.log("[v0] Criando snapshot semanal...")
       const snapshot = await saveWeeklySnapshot(machines)
+      console.log("[v0] Snapshot criado:", snapshot)
 
       toast({
         title: "Registro Semanal Enviado",
         description: `Registro da semana ${snapshot.semana} foi salvo com sucesso e adicionado ao histórico.`,
       })
 
+      console.log("[v0] Recarregando máquinas atualizadas...")
       const updatedMachines = await loadMachines()
       onSaveAll(updatedMachines)
+      console.log("[v0] Processo concluído com sucesso!")
     } catch (error) {
-      console.error("Erro ao enviar registro:", error)
+      console.error("[v0] Erro ao enviar registro:", error)
       toast({
         title: "Erro ao enviar registro",
-        description: "Não foi possível salvar os dados. Tente novamente.",
+        description: error instanceof Error ? error.message : "Não foi possível salvar os dados. Tente novamente.",
         variant: "destructive",
       })
+    } finally {
+      setIsSending(false)
     }
   }
 
@@ -105,9 +123,9 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
             className="pl-10"
           />
         </div>
-        <Button onClick={handleEnviarRegistro} className="gap-2 bg-primary">
+        <Button onClick={handleEnviarRegistro} className="gap-2 bg-primary" disabled={isSending}>
           <Send className="h-4 w-4" />
-          Enviar Registro Semanal
+          {isSending ? "Enviando..." : "Enviar Registro Semanal"}
         </Button>
       </div>
 
