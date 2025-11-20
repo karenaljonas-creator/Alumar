@@ -122,11 +122,32 @@ export async function loadMachines(): Promise<Machine[]> {
 export async function updateMachine(id: string, updates: Partial<Machine>): Promise<void> {
   const supabase = getSupabaseClient()
 
+  const { data: currentData, error: fetchError } = await supabase
+    .from("machines")
+    .select("observacoes")
+    .eq("id", id)
+    .single()
+
+  if (fetchError) {
+    console.error("Erro ao buscar máquina para atualização:", fetchError)
+    throw fetchError
+  }
+
+  let currentObservacoes: any = {}
+  try {
+    if (currentData?.observacoes) {
+      currentObservacoes = JSON.parse(currentData.observacoes)
+    }
+  } catch (e) {
+    // ignore error
+  }
+
   const record: any = {}
   if (updates.nome) record.modelo = updates.nome
   if (updates.localizacao) record.localizacao = updates.localizacao
   if (updates.status) record.status_operacional = updates.status
   if (updates.tipo) record.tipo_equipamento = updates.tipo
+
   if (
     updates.motivoParada ||
     updates.descricaoDetalhada ||
@@ -136,14 +157,16 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
     updates.temContrato !== undefined
   ) {
     record.observacoes = JSON.stringify({
-      motivoParada: updates.motivoParada,
-      descricaoDetalhada: updates.descricaoDetalhada,
-      statusPreventiva: updates.statusPreventiva,
-      manutencaoPreventiva: updates.manutencaoPreventiva,
-      responsavel: updates.responsavel,
-      temContrato: updates.temContrato,
+      ...currentObservacoes, // Keep existing fields
+      ...(updates.motivoParada !== undefined && { motivoParada: updates.motivoParada }),
+      ...(updates.descricaoDetalhada !== undefined && { descricaoDetalhada: updates.descricaoDetalhada }),
+      ...(updates.statusPreventiva !== undefined && { statusPreventiva: updates.statusPreventiva }),
+      ...(updates.manutencaoPreventiva !== undefined && { manutencaoPreventiva: updates.manutencaoPreventiva }),
+      ...(updates.responsavel !== undefined && { responsavel: updates.responsavel }),
+      ...(updates.temContrato !== undefined && { temContrato: updates.temContrato }),
     })
   }
+
   if (updates.acaoResponsavel !== undefined) record.acao_responsavel = updates.acaoResponsavel
   if (updates.tempoParada !== undefined) record.horas_operacao = updates.tempoParada
   record.updated_at = new Date().toISOString()
