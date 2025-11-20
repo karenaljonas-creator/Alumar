@@ -59,25 +59,18 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     const supabase = getSupabaseClient()
     console.log("[v0] Cliente Supabase obtido, salvando no banco...")
 
-    const { error } = await supabase.from("weekly_snapshots").upsert(
-      {
-        week: semana,
-        date: now.toISOString(),
-        snapshot: snapshot,
-      },
-      {
-        onConflict: "week,date",
-      },
-    )
+    const { error } = await supabase.from("weekly_snapshots").insert({
+      week: semana,
+      date: now.toISOString(),
+      snapshot: snapshot,
+    })
 
     if (error) {
-      console.error("[v0] ERRO do Supabase ao salvar snapshot:", error)
+      console.error("Erro ao salvar snapshot:", error)
       throw error
     }
-
-    console.log("[v0] Snapshot salvo com sucesso no banco!")
   } catch (error) {
-    console.error("[v0] ERRO ao salvar snapshot (catch):", error)
+    console.error("Erro ao salvar snapshot:", error)
     throw error
   }
 

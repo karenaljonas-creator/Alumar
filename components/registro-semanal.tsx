@@ -48,44 +48,25 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
   const handleEnviarRegistro = async () => {
     if (isSending) {
-      console.log("[v0] Já existe um envio em andamento, ignorando...")
       return
     }
 
     setIsSending(true)
-    console.log("[v0] Iniciando envio do registro semanal...")
-    console.log("[v0] Total de máquinas:", machines.length)
-    console.log(
-      "[v0] Primeiras 3 máquinas a serem salvas:",
-      machines.slice(0, 3).map((m) => ({
-        id: m.id,
-        nome: m.nome,
-        numeroSerie: m.numeroSerie,
-        responsavel: m.responsavel,
-        acaoResponsavel: m.acaoResponsavel,
-      })),
-    )
 
     try {
-      console.log("[v0] Salvando máquinas no banco...")
       await saveMachines(machines)
-      console.log("[v0] Máquinas salvas com sucesso!")
 
-      console.log("[v0] Criando snapshot semanal...")
       const snapshot = await saveWeeklySnapshot(machines)
-      console.log("[v0] Snapshot criado:", snapshot)
 
       toast({
         title: "Registro Semanal Enviado",
         description: `Registro da semana ${snapshot.semana} foi salvo com sucesso e adicionado ao histórico.`,
       })
 
-      console.log("[v0] Recarregando máquinas atualizadas...")
       const updatedMachines = await loadMachines()
       onSaveAll(updatedMachines)
-      console.log("[v0] Processo concluído com sucesso!")
     } catch (error) {
-      console.error("[v0] Erro ao enviar registro:", error)
+      console.error("Erro ao enviar registro:", error)
       toast({
         title: "Erro ao enviar registro",
         description: error instanceof Error ? error.message : "Não foi possível salvar os dados. Tente novamente.",

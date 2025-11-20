@@ -81,9 +81,6 @@ export async function loadMachines(): Promise<Machine[]> {
       return realData.machines
     }
 
-    console.log("[v0] Carregando máquinas do banco. Total:", data.length)
-    console.log("[v0] Primeiras 3 máquinas (dados brutos):", data.slice(0, 3))
-
     const machines: Machine[] = data.map((row) => {
       let parsedData: any = {}
       try {
@@ -93,13 +90,6 @@ export async function loadMachines(): Promise<Machine[]> {
       } catch (e) {
         parsedData = { motivoParada: row.observacoes }
       }
-
-      console.log(`[v0] Máquina ${row.id}:`, {
-        numeroSerieNoJSON: parsedData.numeroSerie,
-        responsavelNoJSON: parsedData.responsavel,
-        acaoResponsavelNoBanco: row.acao_responsavel,
-        usandoIdComoNumeroSerie: !parsedData.numeroSerie,
-      })
 
       return {
         id: row.id,
@@ -116,14 +106,10 @@ export async function loadMachines(): Promise<Machine[]> {
         statusPreventiva: parsedData.statusPreventiva || "OK",
         descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
         temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
-        responsavel: parsedData.responsavel || undefined,
+        responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
         tempoParada: row.horas_operacao || 0,
       }
     })
-
-    console.log("[v0] Total de máquinas carregadas:", machines.length)
-    console.log("[v0] Máquinas com numeroSerie definido:", machines.filter((m) => m.numeroSerie !== m.id).length)
-    console.log("[v0] Máquinas com responsavel definido:", machines.filter((m) => m.responsavel).length)
 
     return machines
   } catch (error) {
