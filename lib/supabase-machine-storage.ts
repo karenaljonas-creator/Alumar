@@ -31,7 +31,15 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
     data_ultima_manutencao: m.dataParada ? new Date(m.dataParada).toISOString() : null,
     proxima_manutencao: null,
     contrato: contractId,
-    observacoes: m.motivoParada || m.descricaoDetalhada || null,
+    observacoes: JSON.stringify({
+      motivoParada: m.motivoParada,
+      descricaoDetalhada: m.descricaoDetalhada,
+      statusPreventiva: m.statusPreventiva,
+      manutencaoPreventiva: m.manutencaoPreventiva,
+      responsavel: m.responsavel,
+      temContrato: m.temContrato,
+      numeroSerie: m.numeroSerie,
+    }),
     acao_responsavel: m.acaoResponsavel || null,
     updated_at: new Date().toISOString(),
   }))
@@ -51,7 +59,11 @@ export async function loadMachines(): Promise<Machine[]> {
     const supabase = getSupabaseClient()
     const contractId = getCurrentContractId()
 
-    const { data, error } = await supabase.from("machines").select("*").eq("contrato", contractId)
+    const { data, error } = await supabase
+      .from("machines")
+      .select("*")
+      .eq("contrato", contractId)
+      .order("id", { ascending: true })
 
     if (error) {
       console.error("Erro ao carregar máquinas:", error)
@@ -69,24 +81,35 @@ export async function loadMachines(): Promise<Machine[]> {
       return realData.machines
     }
 
-    const machines: Machine[] = data.map((row) => ({
-      id: row.id,
-      nome: row.modelo,
-      tipo: row.tipo_equipamento,
-      numeroSerie: row.id,
-      data: new Date().toISOString().split("T")[0],
-      dataParada: row.data_ultima_manutencao?.split("T")[0],
-      status: row.status_operacional as Machine["status"],
-      motivoParada: row.observacoes || undefined,
-      manutencaoPreventiva: undefined,
-      localizacao: row.localizacao,
-      acaoResponsavel: row.acao_responsavel || undefined,
-      statusPreventiva: undefined,
-      descricaoDetalhada: row.observacoes || undefined,
-      temContrato: true,
-      responsavel: undefined,
-      tempoParada: row.horas_operacao || 0,
-    }))
+    const machines: Machine[] = data.map((row) => {
+      let parsedData: any = {}
+      try {
+        if (row.observacoes) {
+          parsedData = JSON.parse(row.observacoes)
+        }
+      } catch (e) {
+        parsedData = { motivoParada: row.observacoes }
+      }
+
+      return {
+        id: row.id,
+        nome: row.modelo,
+        tipo: row.tipo_equipamento,
+        numeroSerie: parsedData.numeroSerie || row.id,
+        data: new Date().toISOString().split("T")[0],
+        dataParada: row.data_ultima_manutencao?.split("T")[0],
+        status: row.status_operacional as Machine["status"],
+        motivoParada: parsedData.motivoParada || undefined,
+        manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
+        localizacao: row.localizacao,
+        acaoResponsavel: row.acao_responsavel || undefined,
+        statusPreventiva: parsedData.statusPreventiva || undefined,
+        descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
+        temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
+        responsavel: parsedData.responsavel || undefined,
+        tempoParada: row.horas_operacao || 0,
+      }
+    })
 
     return machines
   } catch (error) {
@@ -104,7 +127,23 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
   if (updates.localizacao) record.localizacao = updates.localizacao
   if (updates.status) record.status_operacional = updates.status
   if (updates.tipo) record.tipo_equipamento = updates.tipo
-  if (updates.motivoParada) record.observacoes = updates.motivoParada
+  if (
+    updates.motivoParada ||
+    updates.descricaoDetalhada ||
+    updates.statusPreventiva ||
+    updates.manutencaoPreventiva ||
+    updates.responsavel ||
+    updates.temContrato !== undefined
+  ) {
+    record.observacoes = JSON.stringify({
+      motivoParada: updates.motivoParada,
+      descricaoDetalhada: updates.descricaoDetalhada,
+      statusPreventiva: updates.statusPreventiva,
+      manutencaoPreventiva: updates.manutencaoPreventiva,
+      responsavel: updates.responsavel,
+      temContrato: updates.temContrato,
+    })
+  }
   if (updates.acaoResponsavel !== undefined) record.acao_responsavel = updates.acaoResponsavel
   if (updates.tempoParada !== undefined) record.horas_operacao = updates.tempoParada
   record.updated_at = new Date().toISOString()

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { ChevronLeft, ChevronRight, Save, X } from "@/lib/lucide-react"
 import { Textarea } from "@/components/ui/textarea"
 import { saveMachines, loadMachines } from "@/lib/supabase-machine-storage"
+import { useToast } from "@/hooks/use-toast"
 
 interface RegistroSemanalModalProps {
   machine: Machine
@@ -33,6 +34,8 @@ export function RegistroSemanalModal({
   onNext,
 }: RegistroSemanalModalProps) {
   const [editedMachine, setEditedMachine] = useState<Machine>(machine)
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
   useEffect(() => {
     setEditedMachine(machine)
@@ -58,31 +61,62 @@ export function RegistroSemanalModal({
   }
 
   const handleSave = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+
     try {
       const allMachines = await loadMachines()
       const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
 
       await saveMachines(updatedMachines)
 
+      toast({
+        title: "Máquina salva",
+        description: "As alterações foram salvas com sucesso.",
+      })
+
       onSave()
     } catch (error) {
       console.error("Erro ao salvar máquina:", error)
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
   const handleSaveAndNext = async () => {
+    if (isSaving) return
+    setIsSaving(true)
+
     try {
       const allMachines = await loadMachines()
       const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
 
       await saveMachines(updatedMachines)
 
+      toast({
+        title: "Máquina salva",
+        description: "As alterações foram salvas com sucesso.",
+      })
+
       if (currentIndex < totalMachines - 1) {
         onNext()
+      } else {
+        onSave()
       }
-      onSave()
     } catch (error) {
       console.error("Erro ao salvar máquina:", error)
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -234,27 +268,27 @@ export function RegistroSemanalModal({
 
         <DialogFooter className="flex items-center justify-between gap-2 sm:justify-between">
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onPrevious} disabled={currentIndex === 0}>
+            <Button variant="outline" onClick={onPrevious} disabled={currentIndex === 0 || isSaving}>
               <ChevronLeft className="h-4 w-4 mr-1" />
               Anterior
             </Button>
-            <Button variant="outline" onClick={onNext} disabled={currentIndex === totalMachines - 1}>
+            <Button variant="outline" onClick={onNext} disabled={currentIndex === totalMachines - 1 || isSaving}>
               Próxima
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isSaving}>
               <X className="h-4 w-4 mr-1" />
               Cancelar
             </Button>
-            <Button variant="secondary" onClick={handleSave}>
+            <Button variant="secondary" onClick={handleSave} disabled={isSaving}>
               <Save className="h-4 w-4 mr-1" />
-              Salvar
+              {isSaving ? "Salvando..." : "Salvar"}
             </Button>
-            <Button onClick={handleSaveAndNext} disabled={currentIndex === totalMachines - 1}>
+            <Button onClick={handleSaveAndNext} disabled={currentIndex === totalMachines - 1 || isSaving}>
               <Save className="h-4 w-4 mr-1" />
-              Salvar e Próxima
+              {isSaving ? "Salvando..." : "Salvar e Próxima"}
             </Button>
           </div>
         </DialogFooter>

@@ -35,28 +35,31 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
     setIsModalOpen(true)
   }
 
-  const handleSaveMachine = () => {
+  const handleSaveMachine = async () => {
     setIsModalOpen(false)
-    loadMachines().then((updatedMachines) => {
+    try {
+      const updatedMachines = await loadMachines()
       onSaveAll(updatedMachines)
-    })
+    } catch (error) {
+      console.error("Erro ao recarregar máquinas:", error)
+    }
   }
 
   const handleEnviarRegistro = async () => {
     try {
-      const currentMachines = await loadMachines()
+      await saveMachines(machines)
 
-      await saveMachines(currentMachines)
-
-      const snapshot = await saveWeeklySnapshot(currentMachines)
+      const snapshot = await saveWeeklySnapshot(machines)
 
       toast({
         title: "Registro Semanal Enviado",
-        description: `Registro da semana ${snapshot.week} foi salvo com sucesso e adicionado ao histórico.`,
+        description: `Registro da semana ${snapshot.semana} foi salvo com sucesso e adicionado ao histórico.`,
       })
 
-      onSaveAll(currentMachines)
+      const updatedMachines = await loadMachines()
+      onSaveAll(updatedMachines)
     } catch (error) {
+      console.error("Erro ao enviar registro:", error)
       toast({
         title: "Erro ao enviar registro",
         description: "Não foi possível salvar os dados. Tente novamente.",
