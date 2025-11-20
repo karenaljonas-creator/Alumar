@@ -3,7 +3,7 @@
 import { useState } from "react"
 import type { ContratoConfig } from "@/lib/types"
 import { saveContrato, loadContrato } from "@/lib/contrato-storage"
-import { clearAndResetHistory } from "@/lib/history-storage"
+import { clearAllSnapshots } from "@/lib/supabase-history-storage"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -63,21 +63,29 @@ export function Configuracoes() {
     })
   }
 
-  const handleResetHistory = () => {
+  const handleResetHistory = async () => {
     if (
       confirm(
-        "Tem certeza que deseja resetar o histórico? Isso irá recarregar os dados iniciais com suporte completo para filtros de contrato. Esta ação não pode ser desfeita.",
+        "Tem certeza que deseja resetar o histórico? Todos os snapshots semanais salvos no banco de dados serão excluídos. Esta ação não pode ser desfeita.",
       )
     ) {
-      clearAndResetHistory()
-      toast({
-        title: "Histórico resetado",
-        description:
-          "O histórico foi limpo e recarregado com os dados iniciais. Recarregue a página para ver as mudanças.",
-      })
-      setTimeout(() => {
-        window.location.reload()
-      }, 1500)
+      try {
+        await clearAllSnapshots()
+        toast({
+          title: "Histórico resetado",
+          description:
+            "Todos os snapshots foram removidos do banco de dados. Recarregue a página para ver as mudanças.",
+        })
+        setTimeout(() => {
+          window.location.reload()
+        }, 1500)
+      } catch (error) {
+        toast({
+          title: "Erro ao resetar",
+          description: "Não foi possível resetar o histórico. Tente novamente.",
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -245,8 +253,8 @@ export function Configuracoes() {
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-4">Gerenciamento de Dados</h3>
         <p className="text-sm text-muted-foreground mb-6">
-          Use esta opção se os filtros de contrato nos gráficos semanais não estiverem funcionando corretamente. Isso
-          irá resetar o histórico e recarregar com os dados iniciais que incluem informações completas de contrato.
+          Use esta opção para limpar todos os snapshots semanais salvos no banco de dados. Todos os registros históricos
+          serão permanentemente excluídos.
         </p>
         <Button onClick={handleResetHistory} variant="destructive" className="gap-2">
           <RefreshCw className="h-4 w-4" />

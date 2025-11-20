@@ -3,17 +3,28 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LabelList } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { loadHistory } from "@/lib/history-storage"
-import { useMemo } from "react"
+import { loadHistory } from "@/lib/supabase-history-storage"
+import { useMemo, useEffect, useState } from "react"
 
 interface GraficoDisponibilidadeSemanalProps {
   contratoFilter: string
 }
 
 export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponibilidadeSemanalProps) {
-  const chartData = useMemo(() => {
-    const history = loadHistory()
+  const [history, setHistory] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoading(true)
+      const data = await loadHistory()
+      setHistory(data)
+      setLoading(false)
+    }
+    fetchHistory()
+  }, [])
+
+  const chartData = useMemo(() => {
     if (!history || history.length === 0) {
       return { data: [] }
     }
@@ -49,7 +60,23 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
     })
 
     return { data }
-  }, [contratoFilter])
+  }, [history, contratoFilter])
+
+  if (loading) {
+    return (
+      <Card className="border-border shadow-sm">
+        <CardHeader className="pb-2 pt-5 px-5 text-center">
+          <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
+          <CardDescription className="text-sm text-muted-foreground">
+            Evolução da disponibilidade ao longo das semanas (Meta: 90%)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-5 flex items-center justify-center h-[280px]">
+          <div className="text-sm text-muted-foreground">Carregando dados...</div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   if (chartData.data.length === 0) {
     return (
@@ -57,7 +84,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
         <CardHeader className="pb-2 pt-5 px-5 text-center">
           <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            Evolução da disponibilidade aeno longo das semanas (Mta: 90%)
+            Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
         </CardHeader>
         <CardContent className="p-5 flex items-center justify-center h-[280px]">
@@ -72,7 +99,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
       <CardHeader className="pb-3 pt-5 px-5 text-center">
         <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
-          Evolução da disponibilidade aeno longo das semanas (Mta: 90%)
+          Evolução da disponibilidade ao longo das semanas (Meta: 90%)
         </CardDescription>
       </CardHeader>
       <CardContent className="p-5">

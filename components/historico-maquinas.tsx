@@ -1,14 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
-import type { Machine } from "@/lib/types"
+import { useState, useMemo, useEffect } from "react"
+import type { Machine, WeeklySnapshot } from "@/lib/types"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight, Trash2 } from "@/lib/lucide-react"
-import { loadHistory, deleteSnapshot } from "@/lib/history-storage"
-import { getRegistroSemanal } from "@/lib/registro-semanal-storage"
+import { loadHistory, deleteSnapshot } from "@/lib/supabase-history-storage"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
@@ -22,10 +21,18 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [semanaFilter, setSemanaFilter] = useState<string>("todas")
   const [refreshKey, setRefreshKey] = useState(0)
+  const [history, setHistory] = useState<WeeklySnapshot[]>([])
+  const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
-  const history = useMemo(() => {
-    return loadHistory().sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime())
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setLoading(true)
+      const data = await loadHistory()
+      setHistory(data.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime()))
+      setLoading(false)
+    }
+    fetchHistory()
   }, [refreshKey])
 
   const filteredHistory = useMemo(() => {
@@ -44,10 +51,10 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   }
 
   const getMaquinasDaSemana = (semana: string): Machine[] => {
-    const registro = getRegistroSemanal(semana)
-    if (!registro) return []
+    const snapshot = history.find((h) => h.semana === semana)
+    if (!snapshot) return []
 
-    let maquinas = registro.maquinas
+    let maquinas = snapshot.machines
 
     if (statusFilter !== "todos") {
       maquinas = maquinas.filter((m) => m.status === statusFilter)
@@ -79,6 +86,18 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   const semanasDisponiveis = useMemo(() => {
     return history.map((h) => h.semana)
   }, [history])
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card className="p-6">
+          <div className="text-center py-12 text-muted-foreground">
+            <p>Carregando histórico...</p>
+          </div>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

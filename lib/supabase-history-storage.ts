@@ -15,21 +15,13 @@ function getCurrentContractId(): string {
 }
 
 export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySnapshot> {
-  console.log("[v0] saveWeeklySnapshot: Iniciando...")
-  console.log("[v0] Total de máquinas recebidas:", machines.length)
-
   const now = new Date()
   const weekNumber = getWeekNumber(now)
   const year = now.getFullYear()
   const semana = `${year}-W${String(weekNumber).padStart(2, "0")}`
 
-  console.log("[v0] Semana calculada:", semana)
-
   const maquinasPrincipais = filtrarMaquinasPrincipais(machines)
-  console.log("[v0] Máquinas principais filtradas:", maquinasPrincipais.length)
-
   const stats = calculateStats(maquinasPrincipais)
-  console.log("[v0] Stats calculadas:", stats)
 
   const maquinasParadas = machines
     .filter((m) => m.status === "parada" || m.status === "manutencao")
@@ -42,8 +34,6 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
       acaoResponsavel: m.acaoResponsavel,
     }))
 
-  console.log("[v0] Máquinas paradas encontradas:", maquinasParadas.length)
-
   const snapshot: WeeklySnapshot = {
     id: Date.now().toString(),
     semana,
@@ -53,11 +43,8 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     maquinasParadas,
   }
 
-  console.log("[v0] Snapshot criado com ID:", snapshot.id)
-
   try {
     const supabase = getSupabaseClient()
-    console.log("[v0] Cliente Supabase obtido, salvando no banco...")
 
     const { error } = await supabase.from("weekly_snapshots").insert({
       week: semana,
@@ -135,6 +122,22 @@ export async function deleteSnapshot(id: string): Promise<void> {
     .eq("date", snapshot.dataRegistro)
 
   if (error) {
+    throw error
+  }
+}
+
+export async function clearAllSnapshots(): Promise<void> {
+  try {
+    const supabase = getSupabaseClient()
+
+    const { error } = await supabase.from("weekly_snapshots").delete().neq("id", 0) // Delete all records
+
+    if (error) {
+      console.error("Erro ao limpar snapshots:", error)
+      throw error
+    }
+  } catch (error) {
+    console.error("Erro ao limpar snapshots:", error)
     throw error
   }
 }
