@@ -7,11 +7,18 @@ import { loadContrato } from "./contrato-storage"
 
 // Helper to safely get Supabase client - throws if unavailable
 function getSupabaseClient() {
-  const client = createClient()
-  if (!client) {
-    throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+  console.log("[v0] getSupabaseClient (history): Obtendo cliente...")
+  try {
+    const client = createClient()
+    console.log("[v0] getSupabaseClient (history): Cliente obtido com sucesso")
+    if (!client) {
+      throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+    }
+    return client
+  } catch (error) {
+    console.error("[v0] getSupabaseClient (history): ERRO ao criar cliente:", error)
+    throw error
   }
-  return client
 }
 
 function getCurrentContractId(): string {
@@ -65,24 +72,37 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
 }
 
 export async function loadHistory(): Promise<WeeklySnapshot[]> {
-  const supabase = getSupabaseClient()
+  console.log("[v0] loadHistory: Iniciando...")
 
-  const { data, error } = await supabase
-    .from("weekly_snapshots")
-    .select("*")
-    .order("date", { ascending: false })
-    .limit(100)
+  try {
+    const supabase = getSupabaseClient()
 
-  if (error) {
-    console.error("Erro ao carregar histórico:", error)
-    throw new Error(`Erro ao carregar histórico: ${error.message}`)
+    console.log("[v0] loadHistory: Fazendo query...")
+
+    const { data, error } = await supabase
+      .from("weekly_snapshots")
+      .select("*")
+      .order("date", { ascending: false })
+      .limit(100)
+
+    console.log("[v0] loadHistory: Query concluída")
+
+    if (error) {
+      console.error("[v0] loadHistory: Erro na query:", error)
+      throw new Error(`Erro ao carregar histórico: ${error.message}`)
+    }
+
+    console.log("[v0] loadHistory: Dados recebidos:", data?.length || 0, "registros")
+
+    if (!data || data.length === 0) {
+      return []
+    }
+
+    return data.map((row) => row.snapshot as WeeklySnapshot)
+  } catch (error) {
+    console.error("[v0] loadHistory: ERRO GERAL:", error)
+    throw error
   }
-
-  if (!data || data.length === 0) {
-    return []
-  }
-
-  return data.map((row) => row.snapshot as WeeklySnapshot)
 }
 
 export async function getHistoryTrends(): Promise<HistoryTrend[]> {

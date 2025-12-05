@@ -7,11 +7,18 @@ import { loadContrato } from "./contrato-storage"
 
 // Helper to safely get Supabase client - throws if unavailable
 function getSupabaseClient() {
-  const client = createClient()
-  if (!client) {
-    throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+  console.log("[v0] getSupabaseClient: Obtendo cliente...")
+  try {
+    const client = createClient()
+    console.log("[v0] getSupabaseClient: Cliente obtido com sucesso")
+    if (!client) {
+      throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+    }
+    return client
+  } catch (error) {
+    console.error("[v0] getSupabaseClient: ERRO ao criar cliente:", error)
+    throw error
   }
-  return client
 }
 
 function getCurrentContractId(): string {
@@ -61,59 +68,74 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
 }
 
 export async function loadMachines(): Promise<Machine[]> {
-  const supabase = getSupabaseClient()
+  console.log("[v0] loadMachines: Iniciando...")
 
-  const contractId = getCurrentContractId()
+  try {
+    const supabase = getSupabaseClient()
+    const contractId = getCurrentContractId()
 
-  const { data, error } = await supabase
-    .from("machines")
-    .select("*")
-    .eq("contrato", contractId)
-    .order("id", { ascending: true })
-    .limit(500)
+    console.log("[v0] loadMachines: Contrato ID:", contractId)
+    console.log("[v0] loadMachines: Fazendo query...")
 
-  if (error) {
-    console.error("Erro ao carregar máquinas:", error)
-    throw new Error(`Erro ao carregar máquinas: ${error.message}`)
-  }
+    const { data, error } = await supabase
+      .from("machines")
+      .select("*")
+      .eq("contrato", contractId)
+      .order("id", { ascending: true })
+      .limit(500)
 
-  if (!data || data.length === 0) {
-    const realData = loadRealData()
-    await saveMachines(realData.machines)
-    return realData.machines
-  }
+    console.log("[v0] loadMachines: Query concluída")
 
-  const machines: Machine[] = data.map((row) => {
-    let parsedData: any = {}
-    try {
-      if (row.observacoes) {
-        parsedData = JSON.parse(row.observacoes)
+    if (error) {
+      console.error("[v0] loadMachines: Erro na query:", error)
+      throw new Error(`Erro ao carregar máquinas: ${error.message}`)
+    }
+
+    console.log("[v0] loadMachines: Dados recebidos:", data?.length || 0, "registros")
+
+    if (!data || data.length === 0) {
+      console.log("[v0] loadMachines: Nenhum dado, carregando dados reais...")
+      const realData = loadRealData()
+      await saveMachines(realData.machines)
+      return realData.machines
+    }
+
+    const machines: Machine[] = data.map((row) => {
+      let parsedData: any = {}
+      try {
+        if (row.observacoes) {
+          parsedData = JSON.parse(row.observacoes)
+        }
+      } catch (e) {
+        parsedData = { motivoParada: row.observacoes }
       }
-    } catch (e) {
-      parsedData = { motivoParada: row.observacoes }
-    }
 
-    return {
-      id: row.id,
-      nome: row.modelo,
-      tipo: row.tipo_equipamento,
-      numeroSerie: parsedData.numeroSerie || row.id,
-      data: new Date().toISOString().split("T")[0],
-      dataParada: row.data_ultima_manutencao?.split("T")[0],
-      status: row.status_operacional as Machine["status"],
-      motivoParada: parsedData.motivoParada || undefined,
-      manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
-      localizacao: row.localizacao,
-      acaoResponsavel: row.acao_responsavel || undefined,
-      statusPreventiva: parsedData.statusPreventiva || "OK",
-      descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
-      temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
-      responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
-      tempoParada: row.horas_operacao || 0,
-    }
-  })
+      return {
+        id: row.id,
+        nome: row.modelo,
+        tipo: row.tipo_equipamento,
+        numeroSerie: parsedData.numeroSerie || row.id,
+        data: new Date().toISOString().split("T")[0],
+        dataParada: row.data_ultima_manutencao?.split("T")[0],
+        status: row.status_operacional as Machine["status"],
+        motivoParada: parsedData.motivoParada || undefined,
+        manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
+        localizacao: row.localizacao,
+        acaoResponsavel: row.acao_responsavel || undefined,
+        statusPreventiva: parsedData.statusPreventiva || "OK",
+        descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
+        temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
+        responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
+        tempoParada: row.horas_operacao || 0,
+      }
+    })
 
-  return machines
+    console.log("[v0] loadMachines: Retornando", machines.length, "máquinas")
+    return machines
+  } catch (error) {
+    console.error("[v0] loadMachines: ERRO GERAL:", error)
+    throw error
+  }
 }
 
 export async function updateMachine(id: string, updates: Partial<Machine>): Promise<void> {
