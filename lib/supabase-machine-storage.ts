@@ -5,8 +5,13 @@ import { createClient } from "./supabase/client"
 import { loadRealData } from "./dados-reais"
 import { loadContrato } from "./contrato-storage"
 
+// Helper to safely get Supabase client - throws if unavailable
 function getSupabaseClient() {
-  return createClient()
+  const client = createClient()
+  if (!client) {
+    throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+  }
+  return client
 }
 
 function getCurrentContractId(): string {
@@ -16,6 +21,7 @@ function getCurrentContractId(): string {
 
 export async function saveMachines(machines: Machine[]): Promise<void> {
   const supabase = getSupabaseClient()
+
   const contractId = getCurrentContractId()
 
   const records = machines.map((m) => ({
@@ -50,73 +56,64 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
 
   if (error) {
     console.error("Erro ao salvar máquinas:", error)
-    throw error
+    throw new Error(`Erro ao salvar máquinas: ${error.message}`)
   }
 }
 
 export async function loadMachines(): Promise<Machine[]> {
-  try {
-    const supabase = getSupabaseClient()
-    const contractId = getCurrentContractId()
+  const supabase = getSupabaseClient()
 
-    const { data, error } = await supabase
-      .from("machines")
-      .select("*")
-      .eq("contrato", contractId)
-      .order("id", { ascending: true })
+  const contractId = getCurrentContractId()
 
-    if (error) {
-      console.error("Erro ao carregar máquinas:", error)
-      const realData = loadRealData()
-      return realData.machines
-    }
+  const { data, error } = await supabase
+    .from("machines")
+    .select("*")
+    .eq("contrato", contractId)
+    .order("id", { ascending: true })
+    .limit(500)
 
-    if (!data || data.length === 0) {
-      const realData = loadRealData()
-      try {
-        await saveMachines(realData.machines)
-      } catch (saveError) {
-        console.error("Erro ao salvar dados iniciais:", saveError)
-      }
-      return realData.machines
-    }
-
-    const machines: Machine[] = data.map((row) => {
-      let parsedData: any = {}
-      try {
-        if (row.observacoes) {
-          parsedData = JSON.parse(row.observacoes)
-        }
-      } catch (e) {
-        parsedData = { motivoParada: row.observacoes }
-      }
-
-      return {
-        id: row.id,
-        nome: row.modelo,
-        tipo: row.tipo_equipamento,
-        numeroSerie: parsedData.numeroSerie || row.id,
-        data: new Date().toISOString().split("T")[0],
-        dataParada: row.data_ultima_manutencao?.split("T")[0],
-        status: row.status_operacional as Machine["status"],
-        motivoParada: parsedData.motivoParada || undefined,
-        manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
-        localizacao: row.localizacao,
-        acaoResponsavel: row.acao_responsavel || undefined,
-        statusPreventiva: parsedData.statusPreventiva || "OK",
-        descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
-        temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
-        responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
-        tempoParada: row.horas_operacao || 0,
-      }
-    })
-
-    return machines
-  } catch (error) {
+  if (error) {
     console.error("Erro ao carregar máquinas:", error)
+    throw new Error(`Erro ao carregar máquinas: ${error.message}`)
+  }
+
+  if (!data || data.length === 0) {
     const realData = loadRealData()
+    await saveMachines(realData.machines)
     return realData.machines
   }
+
+  const machines: Machine[] = data.map((row) => {
+    let parsedData: any = {}
+    try {
+      if (row.observacoes) {
+        parsedData = JSON.parse(row.observacoes)
+      }
+    } catch (e) {
+      parsedData = { motivoParada: row.observacoes }
+    }
+
+    return {
+      id: row.id,
+      nome: row.modelo,
+      tipo: row.tipo_equipamento,
+      numeroSerie: parsedData.numeroSerie || row.id,
+      data: new Date().toISOString().split("T")[0],
+      dataParada: row.data_ultima_manutencao?.split("T")[0],
+      status: row.status_operacional as Machine["status"],
+      motivoParada: parsedData.motivoParada || undefined,
+      manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
+      localizacao: row.localizacao,
+      acaoResponsavel: row.acao_responsavel || undefined,
+      statusPreventiva: parsedData.statusPreventiva || "OK",
+      descricaoDetalhada: parsedData.descricaoDetalhada || undefined,
+      temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
+      responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
+      tempoParada: row.horas_operacao || 0,
+    }
+  })
+
+  return machines
 }
 
 export async function updateMachine(id: string, updates: Partial<Machine>): Promise<void> {
@@ -130,7 +127,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
 
   if (fetchError) {
     console.error("Erro ao buscar máquina para atualização:", fetchError)
-    throw fetchError
+    throw new Error(`Erro ao buscar máquina: ${fetchError.message}`)
   }
 
   let currentObservacoes: any = {}
@@ -139,7 +136,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
       currentObservacoes = JSON.parse(currentData.observacoes)
     }
   } catch (e) {
-    // ignore error
+    // ignore parse error
   }
 
   const record: any = {}
@@ -157,7 +154,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
     updates.temContrato !== undefined
   ) {
     record.observacoes = JSON.stringify({
-      ...currentObservacoes, // Keep existing fields
+      ...currentObservacoes,
       ...(updates.motivoParada !== undefined && { motivoParada: updates.motivoParada }),
       ...(updates.descricaoDetalhada !== undefined && { descricaoDetalhada: updates.descricaoDetalhada }),
       ...(updates.statusPreventiva !== undefined && { statusPreventiva: updates.statusPreventiva }),
@@ -175,7 +172,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
 
   if (error) {
     console.error("Erro ao atualizar máquina:", error)
-    throw error
+    throw new Error(`Erro ao atualizar máquina: ${error.message}`)
   }
 }
 

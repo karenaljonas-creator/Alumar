@@ -5,8 +5,13 @@ import { calculateStats, filtrarMaquinasPrincipais } from "./machine-utils"
 import { createClient } from "./supabase/client"
 import { loadContrato } from "./contrato-storage"
 
+// Helper to safely get Supabase client - throws if unavailable
 function getSupabaseClient() {
-  return createClient()
+  const client = createClient()
+  if (!client) {
+    throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
+  }
+  return client
 }
 
 function getCurrentContractId(): string {
@@ -43,66 +48,55 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     maquinasParadas,
   }
 
-  try {
-    const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient()
 
-    const { error } = await supabase.from("weekly_snapshots").insert({
-      week: semana,
-      date: now.toISOString(),
-      snapshot: snapshot,
-    })
+  const { error } = await supabase.from("weekly_snapshots").insert({
+    week: semana,
+    date: now.toISOString(),
+    snapshot: snapshot,
+  })
 
-    if (error) {
-      console.error("Erro ao salvar snapshot:", error)
-      throw error
-    }
-  } catch (error) {
+  if (error) {
     console.error("Erro ao salvar snapshot:", error)
-    throw error
+    throw new Error(`Erro ao salvar registro semanal: ${error.message}`)
   }
 
   return snapshot
 }
 
 export async function loadHistory(): Promise<WeeklySnapshot[]> {
-  try {
-    const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient()
 
-    const { data, error } = await supabase.from("weekly_snapshots").select("*").order("date", { ascending: false })
+  const { data, error } = await supabase
+    .from("weekly_snapshots")
+    .select("*")
+    .order("date", { ascending: false })
+    .limit(100)
 
-    if (error) {
-      console.error("Erro ao carregar histórico:", error)
-      return []
-    }
-
-    if (!data || data.length === 0) {
-      return []
-    }
-
-    return data.map((row) => row.snapshot as WeeklySnapshot)
-  } catch (error) {
+  if (error) {
     console.error("Erro ao carregar histórico:", error)
+    throw new Error(`Erro ao carregar histórico: ${error.message}`)
+  }
+
+  if (!data || data.length === 0) {
     return []
   }
+
+  return data.map((row) => row.snapshot as WeeklySnapshot)
 }
 
 export async function getHistoryTrends(): Promise<HistoryTrend[]> {
-  try {
-    const history = await loadHistory()
-    return history
-      .map((snapshot) => ({
-        semana: snapshot.semana,
-        total: snapshot.stats.total,
-        operacionais: snapshot.stats.operacionais,
-        paradas: snapshot.stats.paradas,
-        manutencao: snapshot.stats.manutencao,
-        disponibilidade: snapshot.stats.disponibilidade,
-      }))
-      .reverse()
-  } catch (error) {
-    console.error("Erro ao obter trends:", error)
-    return []
-  }
+  const history = await loadHistory()
+  return history
+    .map((snapshot) => ({
+      semana: snapshot.semana,
+      total: snapshot.stats.total,
+      operacionais: snapshot.stats.operacionais,
+      paradas: snapshot.stats.paradas,
+      manutencao: snapshot.stats.manutencao,
+      disponibilidade: snapshot.stats.disponibilidade,
+    }))
+    .reverse()
 }
 
 export async function deleteSnapshot(id: string): Promise<void> {
@@ -122,23 +116,18 @@ export async function deleteSnapshot(id: string): Promise<void> {
     .eq("date", snapshot.dataRegistro)
 
   if (error) {
-    throw error
+    throw new Error(`Erro ao deletar snapshot: ${error.message}`)
   }
 }
 
 export async function clearAllSnapshots(): Promise<void> {
-  try {
-    const supabase = getSupabaseClient()
+  const supabase = getSupabaseClient()
 
-    const { error } = await supabase.from("weekly_snapshots").delete().neq("id", 0) // Delete all records
+  const { error } = await supabase.from("weekly_snapshots").delete().neq("id", 0)
 
-    if (error) {
-      console.error("Erro ao limpar snapshots:", error)
-      throw error
-    }
-  } catch (error) {
+  if (error) {
     console.error("Erro ao limpar snapshots:", error)
-    throw error
+    throw new Error(`Erro ao limpar snapshots: ${error.message}`)
   }
 }
 
