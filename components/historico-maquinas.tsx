@@ -322,7 +322,10 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                               {maquina.statusPreventiva || "N/A"}
                                             </Badge>
                                           </TableCell>
-                                          <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
+                                          <TableCell className="text-sm">
+                                            {maquina.acaoResponsavel ||
+                                              (maquina.responsavel ? maquina.responsavel : "-")}
+                                          </TableCell>
                                           <TableCell className="text-sm min-w-[300px] whitespace-normal">
                                             {maquina.motivoParada || "-"}
                                           </TableCell>
