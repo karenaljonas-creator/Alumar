@@ -7,12 +7,13 @@ import type { Machine } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Edit, Send, ArrowUpDown, ArrowUp, ArrowDown, GripVertical } from "lucide-react"
+import { Search, Edit, Send, ArrowUpDown, ArrowUp, ArrowDown, GripVertical, Filter, X } from "lucide-react"
 import { RegistroSemanalModal } from "./registro-semanal-modal"
 import { Badge } from "@/components/ui/badge"
 import { loadMachines, saveMachines } from "@/lib/supabase-machine-storage"
 import { saveWeeklySnapshot } from "@/lib/supabase-history-storage"
 import { useToast } from "@/hooks/use-toast"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface RegistroSemanalProps {
   machines: Machine[]
@@ -24,6 +25,10 @@ type SortDirection = "asc" | "desc" | null
 
 export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [contratoFilter, setContratoFilter] = useState<string>("todos")
+  const [statusFilter, setStatusFilter] = useState<string>("todos")
+  const [localizacaoFilter, setLocalizacaoFilter] = useState<string>("todas")
+  const [tagFilter, setTagFilter] = useState<string>("todas")
   const [selectedMachineIndex, setSelectedMachineIndex] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -32,13 +37,37 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const { toast } = useToast()
 
+  const uniqueLocalizacoes = Array.from(new Set(machines.map((m) => m.localizacao))).sort()
+  const uniqueTags = Array.from(new Set(machines.map((m) => m.nome))).sort()
+
+  const clearFilters = () => {
+    setSearchTerm("")
+    setContratoFilter("todos")
+    setStatusFilter("todos")
+    setLocalizacaoFilter("todas")
+    setTagFilter("todas")
+  }
+
   const getSortedMachines = () => {
-    const filtered = machines.filter(
-      (m) =>
+    const filtered = machines.filter((m) => {
+      const matchesSearch =
         m.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.localizacao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.tipo.toLowerCase().includes(searchTerm.toLowerCase()),
-    )
+        m.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+
+      const matchesContrato =
+        contratoFilter === "todos" ||
+        (contratoFilter === "sim" && m.temContrato) ||
+        (contratoFilter === "nao" && !m.temContrato)
+
+      const matchesStatus = statusFilter === "todos" || m.status === statusFilter
+
+      const matchesLocalizacao = localizacaoFilter === "todas" || m.localizacao === localizacaoFilter
+
+      const matchesTag = tagFilter === "todas" || m.nome === tagFilter
+
+      return matchesSearch && matchesContrato && matchesStatus && matchesLocalizacao && matchesTag
+    })
 
     if (!sortColumn || !sortDirection) {
       return filtered
@@ -86,6 +115,13 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
   const filteredMachines = getSortedMachines()
 
+  const hasActiveFilters =
+    contratoFilter !== "todos" ||
+    statusFilter !== "todos" ||
+    localizacaoFilter !== "todas" ||
+    tagFilter !== "todas" ||
+    searchTerm !== ""
+
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
       // Toggle direction or clear
@@ -115,19 +151,15 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
       return
     }
 
-    // Clear any active sorting when manually reordering
     setSortColumn(null)
     setSortDirection(null)
 
     const newMachines = [...machines]
     const draggedMachine = newMachines[draggedIndex]
 
-    // Remove from old position
     newMachines.splice(draggedIndex, 1)
-    // Insert at new position
     newMachines.splice(dropIndex, 0, draggedMachine)
 
-    // Save the new order to database
     try {
       await saveMachines(newMachines)
       onSaveAll(newMachines)
@@ -244,6 +276,123 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
           <Send className="h-4 w-4" />
           {isSending ? "Enviando..." : "Enviar Registro Semanal"}
         </Button>
+      </div>
+
+      <div className="rounded-lg border border-border bg-card p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Filtros</span>
+          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2 h-8">
+              <X className="h-4 w-4" />
+              Limpar Filtros
+            </Button>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">Contrato</label>
+            <Select value={contratoFilter} onValueChange={setContratoFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="sim">Com Contrato</SelectItem>
+                <SelectItem value="nao">Sem Contrato</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">Status Operacional</label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="operacional">Operacional</SelectItem>
+                <SelectItem value="parada">Parada</SelectItem>
+                <SelectItem value="manutencao">Manutenção</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">Localização</label>
+            <Select value={localizacaoFilter} onValueChange={setLocalizacaoFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {uniqueLocalizacoes.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm text-muted-foreground">TAG</label>
+            <Select value={tagFilter} onValueChange={setTagFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">Todas</SelectItem>
+                {uniqueTags.map((tag) => (
+                  <SelectItem key={tag} value={tag}>
+                    {tag}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+            {contratoFilter !== "todos" && (
+              <Badge variant="secondary" className="gap-1">
+                Contrato: {contratoFilter === "sim" ? "Com Contrato" : "Sem Contrato"}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setContratoFilter("todos")} />
+              </Badge>
+            )}
+            {statusFilter !== "todos" && (
+              <Badge variant="secondary" className="gap-1">
+                Status:{" "}
+                {statusFilter === "operacional" ? "Operacional" : statusFilter === "parada" ? "Parada" : "Manutenção"}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setStatusFilter("todos")} />
+              </Badge>
+            )}
+            {localizacaoFilter !== "todas" && (
+              <Badge variant="secondary" className="gap-1">
+                Local: {localizacaoFilter}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setLocalizacaoFilter("todas")} />
+              </Badge>
+            )}
+            {tagFilter !== "todas" && (
+              <Badge variant="secondary" className="gap-1">
+                TAG: {tagFilter}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setTagFilter("todas")} />
+              </Badge>
+            )}
+            {searchTerm && (
+              <Badge variant="secondary" className="gap-1">
+                Busca: "{searchTerm}"
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setSearchTerm("")} />
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {sortColumn && (
