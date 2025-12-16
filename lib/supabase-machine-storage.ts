@@ -7,18 +7,11 @@ import { loadContrato } from "./contrato-storage"
 
 // Helper to safely get Supabase client - throws if unavailable
 function getSupabaseClient() {
-  console.log("[v0] getSupabaseClient: Obtendo cliente...")
-  try {
-    const client = createClient()
-    console.log("[v0] getSupabaseClient: Cliente obtido com sucesso")
-    if (!client) {
-      throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
-    }
-    return client
-  } catch (error) {
-    console.error("[v0] getSupabaseClient: ERRO ao criar cliente:", error)
-    throw error
+  const client = createClient()
+  if (!client) {
+    throw new Error("Supabase não está disponível. Verifique se a instância está ativa.")
   }
+  return client
 }
 
 function getCurrentContractId(): string {
@@ -68,14 +61,9 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
 }
 
 export async function loadMachines(): Promise<Machine[]> {
-  console.log("[v0] loadMachines: Iniciando...")
-
   try {
     const supabase = getSupabaseClient()
     const contractId = getCurrentContractId()
-
-    console.log("[v0] loadMachines: Contrato ID:", contractId)
-    console.log("[v0] loadMachines: Fazendo query...")
 
     const { data, error } = await supabase
       .from("machines")
@@ -84,17 +72,11 @@ export async function loadMachines(): Promise<Machine[]> {
       .order("id", { ascending: true })
       .limit(500)
 
-    console.log("[v0] loadMachines: Query concluída")
-
     if (error) {
-      console.error("[v0] loadMachines: Erro na query:", error)
       throw new Error(`Erro ao carregar máquinas: ${error.message}`)
     }
 
-    console.log("[v0] loadMachines: Dados recebidos:", data?.length || 0, "registros")
-
     if (!data || data.length === 0) {
-      console.log("[v0] loadMachines: Nenhum dado, carregando dados reais...")
       const realData = loadRealData()
       await saveMachines(realData.machines)
       return realData.machines
@@ -130,10 +112,9 @@ export async function loadMachines(): Promise<Machine[]> {
       }
     })
 
-    console.log("[v0] loadMachines: Retornando", machines.length, "máquinas")
     return machines
   } catch (error) {
-    console.error("[v0] loadMachines: ERRO GERAL:", error)
+    console.error("Erro ao carregar máquinas:", error)
     throw error
   }
 }
