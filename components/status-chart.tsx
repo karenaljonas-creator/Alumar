@@ -16,21 +16,8 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
     { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
   ]
 
-  console.log("[v0] StatusChart - Total de máquinas:", machines.length)
-  console.log("[v0] StatusChart - Máquinas paradas:", machines.filter((m) => m.status === "parada").length)
-
   const paradasVale = machines.filter((m) => m.status === "parada" && m.acaoResponsavel === "Vale").length
   const paradasAtlas = machines.filter((m) => m.status === "parada" && m.acaoResponsavel === "Atlas").length
-
-  console.log("[v0] StatusChart - Paradas Vale:", paradasVale)
-  console.log("[v0] StatusChart - Paradas Atlas:", paradasAtlas)
-
-  // Log das máquinas paradas com seus valores de acaoResponsavel
-  machines
-    .filter((m) => m.status === "parada")
-    .forEach((m) => {
-      console.log(`[v0] ${m.nome}: status=${m.status}, acaoResponsavel=${m.acaoResponsavel}`)
-    })
 
   return (
     <Card className="border-border shadow-sm">
