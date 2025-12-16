@@ -37,6 +37,11 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
       motivoParada: m.motivoParada || "Não especificado",
       localizacao: m.localizacao,
       acaoResponsavel: m.acaoResponsavel,
+      responsavel: m.responsavel,
+      dataParada: m.dataParada,
+      tempoParada: m.tempoParada,
+      temContrato: m.temContrato,
+      statusPreventiva: m.statusPreventiva,
     }))
 
   const snapshot: WeeklySnapshot = {
