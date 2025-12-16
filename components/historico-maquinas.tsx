@@ -20,6 +20,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [semanaFilter, setSemanaFilter] = useState<string>("todas")
+  const [contratoFilter, setContratoFilter] = useState<string>("todos")
   const [refreshKey, setRefreshKey] = useState(0)
   const [history, setHistory] = useState<WeeklySnapshot[]>([])
   const [loading, setLoading] = useState(true)
@@ -58,6 +59,12 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
 
     if (statusFilter !== "todos") {
       maquinas = maquinas.filter((m) => m.status === statusFilter)
+    }
+
+    if (contratoFilter === "sim") {
+      maquinas = maquinas.filter((m) => m.temContrato === true)
+    } else if (contratoFilter === "nao") {
+      maquinas = maquinas.filter((m) => m.temContrato === false)
     }
 
     return maquinas
@@ -102,7 +109,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="semana-filter">Filtrar por Semana</Label>
             <Select value={semanaFilter} onValueChange={setSemanaFilter}>
@@ -131,6 +138,20 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                 <SelectItem value="operacional">Operacional</SelectItem>
                 <SelectItem value="parada">Parada</SelectItem>
                 <SelectItem value="manutencao">Manutenção</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="contrato-filter">Filtrar por Contrato</Label>
+            <Select value={contratoFilter} onValueChange={setContratoFilter}>
+              <SelectTrigger id="contrato-filter">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                <SelectItem value="sim">Sim</SelectItem>
+                <SelectItem value="nao">Não</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -217,7 +238,13 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                             <div className="p-6">
                               <h4 className="text-sm font-semibold mb-4">
                                 Detalhamento - {maquinasDaSemana.length} máquinas
-                                {statusFilter !== "todos" && ` (filtradas por: ${statusFilter})`}
+                                {(statusFilter !== "todos" || contratoFilter !== "todos") &&
+                                  ` (filtradas por: ${[
+                                    statusFilter !== "todos" ? `status: ${statusFilter}` : null,
+                                    contratoFilter !== "todos" ? `contrato: ${contratoFilter}` : null,
+                                  ]
+                                    .filter(Boolean)
+                                    .join(", ")})`}
                               </h4>
                               <div className="rounded-lg border border-border overflow-hidden">
                                 <Table>
