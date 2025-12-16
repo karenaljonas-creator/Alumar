@@ -28,6 +28,13 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
   const maquinasPrincipais = filtrarMaquinasPrincipais(machines)
   const stats = calculateStats(maquinasPrincipais)
 
+  console.log("[v0] Salvando snapshot - Total de máquinas:", maquinasPrincipais.length)
+  const paradasComAcao = maquinasPrincipais.filter((m) => m.status === "parada" && m.acaoResponsavel)
+  console.log("[v0] Máquinas paradas com acaoResponsavel:", paradasComAcao.length)
+  paradasComAcao.forEach((m) => {
+    console.log(`[v0] ${m.nome}: acaoResponsavel = ${m.acaoResponsavel}`)
+  })
+
   const maquinasParadas = machines
     .filter((m) => m.status === "parada" || m.status === "manutencao")
     .map((m) => ({
@@ -66,6 +73,7 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     throw new Error(`Erro ao salvar registro semanal: ${error.message}`)
   }
 
+  console.log("[v0] Snapshot salvo com sucesso!")
   return snapshot
 }
 
