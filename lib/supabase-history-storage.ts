@@ -30,6 +30,14 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
     acaoResponsavel: m.acaoResponsavel || "Vale", // Define "Vale" como padrão se estiver vazio
   }))
 
+  console.log("[v0] Salvando snapshot - Total de máquinas:", maquinasPrincipais.length)
+  console.log(
+    "[v0] Máquinas paradas com acaoResponsavel:",
+    maquinasPrincipais
+      .filter((m) => m.status === "parada")
+      .map((m) => ({ nome: m.nome, acaoResponsavel: m.acaoResponsavel })),
+  )
+
   const stats = calculateStats(maquinasPrincipais)
 
   const maquinasParadas = machines

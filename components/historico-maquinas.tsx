@@ -30,6 +30,16 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
     const fetchHistory = async () => {
       setLoading(true)
       const data = await loadHistory()
+      console.log("[v0] Histórico carregado - Total de snapshots:", data.length)
+      if (data.length > 0) {
+        console.log("[v0] Primeiro snapshot - Máquinas:", data[0].machines.length)
+        console.log(
+          "[v0] Máquinas com acaoResponsavel:",
+          data[0].machines
+            .filter((m) => m.status === "parada")
+            .map((m) => ({ nome: m.nome, acaoResponsavel: m.acaoResponsavel })),
+        )
+      }
       setHistory(data.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime()))
       setLoading(false)
     }
