@@ -75,29 +75,19 @@ export default function Home() {
         }
 
         const history = await loadHistory()
-        console.log("[v0] Histórico carregado:", history.length, "snapshots")
 
         if (history.length > 0) {
           const sorted = history.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime())
           const latest = sorted[0]
           setLatestSnapshot(latest)
-          console.log("[v0] Snapshot mais recente:", latest.semana, "com", latest.machines.length, "máquinas")
         }
 
         const [savedMachines] = await Promise.all([loadMachines()])
 
-        console.log("[v0] Máquinas carregadas:", savedMachines.length)
-        console.log("[v0] Máquinas paradas:", savedMachines.filter((m) => m.status === "parada").length)
-        savedMachines
-          .filter((m) => m.status === "parada")
-          .forEach((m) => {
-            console.log(`  - ${m.nome}: acaoResponsavel="${m.acaoResponsavel}"`)
-          })
-
         setMachines(savedMachines)
         setHistory(history)
       } catch (error) {
-        console.error("[v0] Erro ao carregar dados:", error)
+        console.error("Erro ao carregar dados:", error)
         toast({
           title: "Erro ao carregar dados",
           description: error instanceof Error ? error.message : "Erro desconhecido",
@@ -175,7 +165,15 @@ export default function Home() {
     return Array.from(new Set(machines.map((m) => m.localizacao))).sort()
   }, [machines])
 
-  const machinesForChart = latestSnapshot ? latestSnapshot.machines : allFilteredMachines
+  const machinesForChart = useMemo(() => {
+    if (!latestSnapshot) return allFilteredMachines
+
+    // Apply the same filter to snapshot machines
+    let filtered = latestSnapshot.machines
+    if (contratoFilter === "com-contrato") filtered = filtered.filter((m) => m.temContrato === true)
+    if (contratoFilter === "sem-contrato") filtered = filtered.filter((m) => m.temContrato === false)
+    return filtered
+  }, [latestSnapshot, contratoFilter, allFilteredMachines])
 
   const handleSave = async (machineData: Omit<Machine, "id"> & { id?: string }) => {
     let updatedMachines: Machine[]

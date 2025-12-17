@@ -18,28 +18,16 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
 
   const maquinasParadas = machines.filter((m) => m.status === "parada")
 
-  console.log("[v0] Status Chart - Contando máquinas paradas")
-  console.log("[v0] Total de máquinas paradas:", maquinasParadas.length)
-
   let paradasVale = 0
   let paradasAtlas = 0
 
   maquinasParadas.forEach((m) => {
-    const acao = m.acaoResponsavel
-    console.log(`[v0] Máquina ${m.nome}: acaoResponsavel = "${acao}"`)
-
-    if (acao === "Atlas") {
+    if (m.acaoResponsavel === "Atlas") {
       paradasAtlas++
-    } else if (acao === "Vale") {
+    } else if (m.acaoResponsavel === "Vale") {
       paradasVale++
     }
-    // Ignora qualquer outra coisa (undefined, null, "Outro", etc)
   })
-
-  console.log("[v0] Resultado da contagem:")
-  console.log("[v0] - Paradas Vale:", paradasVale)
-  console.log("[v0] - Paradas Atlas:", paradasAtlas)
-  console.log("[v0] - Total contado:", paradasVale + paradasAtlas, "de", maquinasParadas.length)
 
   return (
     <Card className="border-border shadow-sm">
