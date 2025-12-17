@@ -19,25 +19,37 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
   const maquinasParadas = machines.filter((m) => m.status === "parada")
 
   const paradasVale = maquinasParadas.filter((m) => {
-    const acao = m.acaoResponsavel?.toLowerCase()?.trim() || ""
+    const acao = String(m.acaoResponsavel || "")
+      .toLowerCase()
+      .trim()
     return acao === "vale"
   }).length
 
   const paradasAtlas = maquinasParadas.filter((m) => {
-    const acao = m.acaoResponsavel?.toLowerCase()?.trim() || ""
+    const acao = String(m.acaoResponsavel || "")
+      .toLowerCase()
+      .trim()
     return acao === "atlas"
   }).length
 
   // Log para debug - TEMPORÁRIO
-  console.log("[v0] Gráfico Disponibilidade:")
-  console.log("  Total paradas:", maquinasParadas.length)
-  console.log("  Contando Vale:", paradasVale)
-  console.log("  Contando Atlas:", paradasAtlas)
-  console.log("  Detalhes de cada máquina parada:")
-  maquinasParadas.forEach((m) => {
-    console.log(`    - ${m.nome}: acaoResponsavel="${m.acaoResponsavel}"`)
+  console.log("[v0] Status Chart - Análise completa:")
+  console.log(`  Total máquinas paradas: ${maquinasParadas.length}`)
+  console.log(`  Paradas Vale (contadas): ${paradasVale}`)
+  console.log(`  Paradas Atlas (contadas): ${paradasAtlas}`)
+  console.log("  Detalhamento de cada máquina parada:")
+  maquinasParadas.forEach((m, index) => {
+    const acaoValue = m.acaoResponsavel
+    const acaoNormalized = String(acaoValue || "")
+      .toLowerCase()
+      .trim()
+    console.log(`    ${index + 1}. TAG: ${m.nome}`)
+    console.log(`       acaoResponsavel: "${acaoValue}" (tipo: ${typeof acaoValue})`)
+    console.log(`       normalizado: "${acaoNormalized}"`)
+    console.log(
+      `       classificado como: ${acaoNormalized === "vale" ? "VALE" : acaoNormalized === "atlas" ? "ATLAS" : "NÃO CONTADO"}`,
+    )
   })
-  // </CHANGE>
 
   return (
     <Card className="border-border shadow-sm">
