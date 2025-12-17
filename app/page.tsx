@@ -52,6 +52,7 @@ export default function Home() {
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMachine, setEditingMachine] = useState<Machine | undefined>()
+  const [latestSnapshot, setLatestSnapshot] = useState<WeeklySnapshot | null>(null)
   const { toast } = useToast()
   const contrato = loadContrato()
 
@@ -73,7 +74,17 @@ export default function Home() {
           setIsMigrating(false)
         }
 
-        const [savedMachines, savedHistory] = await Promise.all([loadMachines(), loadHistory()])
+        const history = await loadHistory()
+        console.log("[v0] Histórico carregado:", history.length, "snapshots")
+
+        if (history.length > 0) {
+          const sorted = history.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime())
+          const latest = sorted[0]
+          setLatestSnapshot(latest)
+          console.log("[v0] Snapshot mais recente:", latest.semana, "com", latest.machines.length, "máquinas")
+        }
+
+        const [savedMachines] = await Promise.all([loadMachines()])
 
         console.log("[v0] Máquinas carregadas:", savedMachines.length)
         console.log("[v0] Máquinas paradas:", savedMachines.filter((m) => m.status === "parada").length)
@@ -84,7 +95,7 @@ export default function Home() {
           })
 
         setMachines(savedMachines)
-        setHistory(savedHistory)
+        setHistory(history)
       } catch (error) {
         console.error("[v0] Erro ao carregar dados:", error)
         toast({
@@ -163,6 +174,8 @@ export default function Home() {
   const localizacoes = useMemo(() => {
     return Array.from(new Set(machines.map((m) => m.localizacao))).sort()
   }, [machines])
+
+  const machinesForChart = latestSnapshot ? latestSnapshot.machines : allFilteredMachines
 
   const handleSave = async (machineData: Omit<Machine, "id"> & { id?: string }) => {
     let updatedMachines: Machine[]
@@ -453,7 +466,7 @@ export default function Home() {
             <StatsCards stats={stats} />
 
             <div className="grid gap-6 md:grid-cols-3">
-              <StatusChart stats={stats} machines={allFilteredMachines} contratoFilter={contratoFilter} />
+              <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
               <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
               <PreventivasChart preventivas={preventivas} />
             </div>
