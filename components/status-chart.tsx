@@ -16,6 +16,12 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
     { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
   ]
 
+  const paradasMachines = machines.filter((m) => m.status === "parada")
+  console.log("[v0] Status Chart - Todas as máquinas paradas:")
+  paradasMachines.forEach((m) => {
+    console.log(`  TAG: ${m.tag}, acaoResponsavel: "${m.acaoResponsavel}", tipo: ${typeof m.acaoResponsavel}`)
+  })
+
   const paradasVale = machines.filter(
     (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "vale",
   ).length
@@ -23,7 +29,7 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
     (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "atlas",
   ).length
 
-  console.log("[v0] Status Chart - Máquinas paradas:", machines.filter((m) => m.status === "parada").length)
+  console.log("[v0] Status Chart - Máquinas paradas:", paradasMachines.length)
   console.log("[v0] Status Chart - Paradas Vale:", paradasVale)
   console.log("[v0] Status Chart - Paradas Atlas:", paradasAtlas)
 
