@@ -20,7 +20,15 @@ interface RegistroSemanalProps {
   onSaveAll: (machines: Machine[]) => void
 }
 
-type SortColumn = "nome" | "localizacao" | "tipo" | "numeroSerie" | "status" | "statusPreventiva" | "responsavel"
+type SortColumn =
+  | "nome"
+  | "localizacao"
+  | "tipo"
+  | "numeroSerie"
+  | "status"
+  | "statusPreventiva"
+  | "responsavel"
+  | "acaoResponsavel"
 type SortDirection = "asc" | "desc" | null
 
 export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
@@ -105,6 +113,10 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
         case "responsavel":
           aValue = a.responsavel || ""
           bValue = b.responsavel || ""
+          break
+        case "acaoResponsavel":
+          aValue = a.acaoResponsavel || ""
+          bValue = b.acaoResponsavel || ""
           break
       }
 
@@ -411,7 +423,9 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                       ? "Status"
                       : sortColumn === "statusPreventiva"
                         ? "Preventiva"
-                        : "Responsável"}
+                        : sortColumn === "responsavel"
+                          ? "Responsável"
+                          : "Ação Responsável"}
           </span>{" "}
           ({sortDirection === "asc" ? "A-Z" : "Z-A"}). Clique novamente no cabeçalho para inverter ou limpar a
           ordenação.
@@ -488,6 +502,15 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                     {renderSortIcon("responsavel")}
                   </div>
                 </TableHead>
+                <TableHead
+                  className="font-semibold w-[12%] px-2 cursor-pointer hover:bg-muted/80 select-none"
+                  onClick={() => handleSort("acaoResponsavel")}
+                >
+                  <div className="flex items-center">
+                    Ação Responsável
+                    {renderSortIcon("acaoResponsavel")}
+                  </div>
+                </TableHead>
                 <TableHead className="font-semibold text-center w-[10%] px-2">Ações</TableHead>
               </TableRow>
             </TableHeader>
@@ -530,6 +553,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="px-2">{machine.responsavel || "-"}</TableCell>
+                  <TableCell className="px-2">{machine.acaoResponsavel || "-"}</TableCell>
                   <TableCell className="text-center px-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditMachine(index)} className="gap-2">
                       <Edit className="h-4 w-4" />
