@@ -16,27 +16,28 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
     { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
   ]
 
-  const paradasMachines = machines.filter((m) => m.status === "parada")
+  const maquinasParadas = machines.filter((m) => m.status === "parada")
 
-  console.log("\n=== MÁQUINAS PARADAS (Total: " + paradasMachines.length + ") ===")
-  paradasMachines.forEach((m, i) => {
-    const acao = m.acaoResponsavel || "VAZIO"
-    const acaoLower = acao.toLowerCase()
-    console.log(
-      `${i + 1}. ${m.tag} → acaoResponsavel: "${acao}" (lower: "${acaoLower}", match vale: ${acaoLower === "vale"}, match atlas: ${acaoLower === "atlas"})`,
-    )
+  const paradasVale = maquinasParadas.filter((m) => {
+    const acao = m.acaoResponsavel?.toLowerCase()?.trim() || ""
+    return acao === "vale"
+  }).length
+
+  const paradasAtlas = maquinasParadas.filter((m) => {
+    const acao = m.acaoResponsavel?.toLowerCase()?.trim() || ""
+    return acao === "atlas"
+  }).length
+
+  // Log para debug - TEMPORÁRIO
+  console.log("[v0] Gráfico Disponibilidade:")
+  console.log("  Total paradas:", maquinasParadas.length)
+  console.log("  Contando Vale:", paradasVale)
+  console.log("  Contando Atlas:", paradasAtlas)
+  console.log("  Detalhes de cada máquina parada:")
+  maquinasParadas.forEach((m) => {
+    console.log(`    - ${m.nome}: acaoResponsavel="${m.acaoResponsavel}"`)
   })
-
-  const paradasVale = machines.filter(
-    (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "vale",
-  ).length
-  const paradasAtlas = machines.filter(
-    (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "atlas",
-  ).length
-
-  console.log(
-    `\nCONTAGEM: ${paradasVale} Vale + ${paradasAtlas} Atlas = ${paradasVale + paradasAtlas} de ${paradasMachines.length}\n`,
-  )
+  // </CHANGE>
 
   return (
     <Card className="border-border shadow-sm">

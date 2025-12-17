@@ -74,12 +74,22 @@ export default function Home() {
         }
 
         const [savedMachines, savedHistory] = await Promise.all([loadMachines(), loadHistory()])
+
+        console.log("[v0] Máquinas carregadas:", savedMachines.length)
+        console.log("[v0] Máquinas paradas:", savedMachines.filter((m) => m.status === "parada").length)
+        savedMachines
+          .filter((m) => m.status === "parada")
+          .forEach((m) => {
+            console.log(`  - ${m.nome}: acaoResponsavel="${m.acaoResponsavel}"`)
+          })
+
         setMachines(savedMachines)
         setHistory(savedHistory)
       } catch (error) {
+        console.error("[v0] Erro ao carregar dados:", error)
         toast({
           title: "Erro ao carregar dados",
-          description: "Não foi possível carregar os dados do banco. Tente novamente.",
+          description: error instanceof Error ? error.message : "Erro desconhecido",
           variant: "destructive",
         })
       } finally {
