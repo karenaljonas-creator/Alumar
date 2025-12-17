@@ -18,38 +18,25 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
 
   const maquinasParadas = machines.filter((m) => m.status === "parada")
 
-  const paradasVale = maquinasParadas.filter((m) => {
-    const acao = String(m.acaoResponsavel || "")
-      .toLowerCase()
-      .trim()
-    return acao === "vale"
-  }).length
+  let paradasVale = 0
+  let paradasAtlas = 0
 
-  const paradasAtlas = maquinasParadas.filter((m) => {
-    const acao = String(m.acaoResponsavel || "")
-      .toLowerCase()
-      .trim()
-    return acao === "atlas"
-  }).length
+  console.log("[v0] === ANÁLISE DE MÁQUINAS PARADAS ===")
+  console.log(`[v0] Total de máquinas paradas: ${maquinasParadas.length}`)
 
-  // Log para debug - TEMPORÁRIO
-  console.log("[v0] Status Chart - Análise completa:")
-  console.log(`  Total máquinas paradas: ${maquinasParadas.length}`)
-  console.log(`  Paradas Vale (contadas): ${paradasVale}`)
-  console.log(`  Paradas Atlas (contadas): ${paradasAtlas}`)
-  console.log("  Detalhamento de cada máquina parada:")
   maquinasParadas.forEach((m, index) => {
-    const acaoValue = m.acaoResponsavel
-    const acaoNormalized = String(acaoValue || "")
-      .toLowerCase()
-      .trim()
-    console.log(`    ${index + 1}. TAG: ${m.nome}`)
-    console.log(`       acaoResponsavel: "${acaoValue}" (tipo: ${typeof acaoValue})`)
-    console.log(`       normalizado: "${acaoNormalized}"`)
-    console.log(
-      `       classificado como: ${acaoNormalized === "vale" ? "VALE" : acaoNormalized === "atlas" ? "ATLAS" : "NÃO CONTADO"}`,
-    )
+    const acao = m.acaoResponsavel
+    console.log(`[v0] ${index + 1}. ${m.nome} -> acaoResponsavel: "${acao}"`)
+
+    // Contagem simples comparando diretamente
+    if (acao === "Vale") {
+      paradasVale++
+    } else if (acao === "Atlas") {
+      paradasAtlas++
+    }
   })
+
+  console.log(`[v0] RESULTADO: ${paradasVale} Vale + ${paradasAtlas} Atlas = ${paradasVale + paradasAtlas} total`)
 
   return (
     <Card className="border-border shadow-sm">
