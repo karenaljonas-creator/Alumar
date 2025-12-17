@@ -16,8 +16,12 @@ export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: 
     { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
   ]
 
-  const paradasVale = machines.filter((m) => m.status === "parada" && m.acaoResponsavel === "Vale").length
-  const paradasAtlas = machines.filter((m) => m.status === "parada" && m.acaoResponsavel === "Atlas").length
+  const paradasVale = machines.filter(
+    (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "vale",
+  ).length
+  const paradasAtlas = machines.filter(
+    (m) => m.status === "parada" && m.acaoResponsavel?.toLowerCase() === "atlas",
+  ).length
 
   return (
     <Card className="border-border shadow-sm">

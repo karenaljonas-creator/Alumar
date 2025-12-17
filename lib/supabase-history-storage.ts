@@ -25,7 +25,11 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
   const year = now.getFullYear()
   const semana = `${year}-W${String(weekNumber).padStart(2, "0")}`
 
-  const maquinasPrincipais = filtrarMaquinasPrincipais(machines)
+  const maquinasPrincipais = filtrarMaquinasPrincipais(machines).map((m) => ({
+    ...m,
+    acaoResponsavel: m.acaoResponsavel || "Vale", // Define "Vale" como padrão se estiver vazio
+  }))
+
   const stats = calculateStats(maquinasPrincipais)
 
   const maquinasParadas = machines
@@ -36,7 +40,7 @@ export async function saveWeeklySnapshot(machines: Machine[]): Promise<WeeklySna
       tipo: m.tipo,
       motivoParada: m.motivoParada || "Não especificado",
       localizacao: m.localizacao,
-      acaoResponsavel: m.acaoResponsavel,
+      acaoResponsavel: m.acaoResponsavel || "Vale", // Garantir valor padrão
       responsavel: m.responsavel,
       dataParada: m.dataParada,
       tempoParada: m.tempoParada,
