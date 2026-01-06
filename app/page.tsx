@@ -61,6 +61,8 @@ export default function Home() {
       try {
         setIsLoading(true)
 
+        console.log("[v0] Starting data load...")
+
         if (!isMigrationDone()) {
           setIsMigrating(true)
           const { machinesMigrated, historyMigrated } = await migrateLocalStorageToSupabase()
@@ -75,19 +77,24 @@ export default function Home() {
         }
 
         const history = await loadHistory()
+        console.log("[v0] Loaded history:", history.length, "snapshots")
 
         if (history.length > 0) {
           const sorted = history.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime())
           const latest = sorted[0]
+          console.log("[v0] Latest snapshot:", latest.semana, "with", latest.machines.length, "machines")
           setLatestSnapshot(latest)
+        } else {
+          console.log("[v0] No history snapshots found")
         }
 
         const [savedMachines] = await Promise.all([loadMachines()])
+        console.log("[v0] Loaded machines from localStorage:", savedMachines.length)
 
         setMachines(savedMachines)
         setHistory(history)
       } catch (error) {
-        console.error("Erro ao carregar dados:", error)
+        console.error("[v0] Erro ao carregar dados:", error)
         toast({
           title: "Erro ao carregar dados",
           description: error instanceof Error ? error.message : "Erro desconhecido",

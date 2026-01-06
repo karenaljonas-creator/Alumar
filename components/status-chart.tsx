@@ -11,23 +11,29 @@ interface StatusChartProps {
 }
 
 export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: StatusChartProps) {
+  console.log("[v0] StatusChart - machines:", machines.length, "total")
+
   const data = [
     { name: "Operacionais", value: stats.operacionais, color: "#1e5a8e" },
     { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
   ]
 
   const maquinasParadas = machines.filter((m) => m.status === "parada")
+  console.log("[v0] StatusChart - máquinas paradas:", maquinasParadas.length)
 
   let paradasVale = 0
   let paradasAtlas = 0
 
   maquinasParadas.forEach((m) => {
+    console.log("[v0] Máquina parada:", m.nome, "acaoResponsavel:", m.acaoResponsavel)
     if (m.acaoResponsavel === "Atlas") {
       paradasAtlas++
     } else if (m.acaoResponsavel === "Vale") {
       paradasVale++
     }
   })
+
+  console.log("[v0] StatusChart - Final count: Vale =", paradasVale, ", Atlas =", paradasAtlas)
 
   return (
     <Card className="border-border shadow-sm">
