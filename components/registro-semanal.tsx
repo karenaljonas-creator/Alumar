@@ -552,6 +552,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                       {machine.statusPreventiva || "OK"}
                     </Badge>
                   </TableCell>
+                  <TableCell className="px-2">{machine.responsavel || "-"}</TableCell>
                   <TableCell className="px-2">{machine.acaoResponsavel || "-"}</TableCell>
                   <TableCell className="text-center px-2">
                     <Button variant="outline" size="sm" onClick={() => handleEditMachine(index)} className="gap-2">
