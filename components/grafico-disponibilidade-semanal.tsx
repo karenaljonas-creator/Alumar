@@ -29,11 +29,9 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
       return { data: [] }
     }
 
-    const last5Weeks = history.slice(-5).sort((a, b) => {
-      const weekA = Number.parseInt(a.semana.split("-W")[1] || "0")
-      const weekB = Number.parseInt(b.semana.split("-W")[1] || "0")
-      return weekA - weekB
-    })
+    const last5Weeks = history
+      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
+      .slice(-5)
 
     const data = last5Weeks.map((snapshot) => {
       let disponibilidade: number

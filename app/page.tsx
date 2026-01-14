@@ -4,8 +4,6 @@
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
 import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
-import { migrateLocalStorageToSupabase, isMigrationDone } from "@/lib/migration"
-// Force rebuild to fix LightningCSS error
 import { loadContrato } from "@/lib/contrato-storage"
 import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } from "@/lib/supabase-history-storage"
 import {
@@ -44,7 +42,6 @@ export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
   const [history, setHistory] = useState<WeeklySnapshot[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isMigrating, setIsMigrating] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("todos")
   const [tipoFilter, setTipoFilter] = useState("todos")
@@ -60,19 +57,6 @@ export default function Home() {
     async function loadData() {
       try {
         setIsLoading(true)
-
-        if (!isMigrationDone()) {
-          setIsMigrating(true)
-          const { machinesMigrated, historyMigrated } = await migrateLocalStorageToSupabase()
-
-          if (machinesMigrated || historyMigrated) {
-            toast({
-              title: "Dados migrados para nuvem!",
-              description: "Seus dados agora estão sincronizados e podem ser compartilhados.",
-            })
-          }
-          setIsMigrating(false)
-        }
 
         const history = await loadHistory()
 
@@ -357,12 +341,7 @@ export default function Home() {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">
-            {isMigrating ? "Migrando seus dados para a nuvem..." : "Carregando dados..."}
-          </p>
-          {isMigrating && (
-            <p className="text-sm text-muted-foreground mt-2">Isso pode levar alguns segundos na primeira vez</p>
-          )}
+          <p className="text-muted-foreground">Carregando dados...</p>
         </div>
       </div>
     )
