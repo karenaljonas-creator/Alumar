@@ -29,6 +29,9 @@ export interface MachineStats {
   paradas: number
   manutencao: number
   disponibilidade: number
+  disponibilidadeContrato: number // Disponibilidade considerando apenas paradas Atlas
+  paradasVale: number
+  paradasAtlas: number
   comContrato?: number
   semContrato?: number
 }

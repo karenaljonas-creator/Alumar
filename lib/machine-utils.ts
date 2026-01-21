@@ -14,12 +14,25 @@ export function calculateStats(machines: Machine[]): MachineStats {
   const comContrato = machines.filter((m) => m.temContrato === true).length
   const semContrato = machines.filter((m) => m.temContrato === false || m.temContrato === undefined).length
 
+  // Calcular paradas por ação responsável
+  const maquinasParadas = machines.filter((m) => m.status === "parada")
+  const paradasAtlas = maquinasParadas.filter((m) => m.acaoResponsavel === "Atlas").length
+  const paradasVale = maquinasParadas.filter((m) => m.acaoResponsavel === "Vale").length
+
+  // Disponibilidade Contrato: considera apenas paradas Atlas como indisponibilidade
+  // Fórmula: (Operacionais + Paradas Vale) / Total
+  const operacionaisAjustados = operacionais + paradasVale
+  const disponibilidadeContrato = total > 0 ? (operacionaisAjustados / total) * 100 : 0
+
   return {
     total,
     operacionais,
     paradas,
     manutencao,
     disponibilidade,
+    disponibilidadeContrato,
+    paradasVale,
+    paradasAtlas,
     comContrato,
     semContrato,
   }
