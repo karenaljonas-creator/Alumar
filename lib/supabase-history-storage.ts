@@ -92,7 +92,8 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
       .limit(100)
 
     if (error) {
-      throw new Error(`Erro ao carregar histórico: ${error.message}`)
+      console.error("Erro Supabase ao carregar histórico:", error)
+      return []
     }
 
     if (!data || data.length === 0) {
@@ -102,22 +103,27 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
     return data.map((row) => row.snapshot as WeeklySnapshot)
   } catch (error) {
     console.error("Erro ao carregar histórico:", error)
-    throw error
+    return []
   }
 }
 
 export async function getHistoryTrends(): Promise<HistoryTrend[]> {
-  const history = await loadHistory()
-  return history
-    .map((snapshot) => ({
-      semana: snapshot.semana,
-      total: snapshot.stats.total,
-      operacionais: snapshot.stats.operacionais,
-      paradas: snapshot.stats.paradas,
-      manutencao: snapshot.stats.manutencao,
-      disponibilidade: snapshot.stats.disponibilidade,
-    }))
-    .reverse()
+  try {
+    const history = await loadHistory()
+    return history
+      .map((snapshot) => ({
+        semana: snapshot.semana,
+        total: snapshot.stats.total,
+        operacionais: snapshot.stats.operacionais,
+        paradas: snapshot.stats.paradas,
+        manutencao: snapshot.stats.manutencao,
+        disponibilidade: snapshot.stats.disponibilidade,
+      }))
+      .reverse()
+  } catch (error) {
+    console.error("Erro ao carregar tendências:", error)
+    return []
+  }
 }
 
 export async function deleteSnapshot(id: string): Promise<void> {
