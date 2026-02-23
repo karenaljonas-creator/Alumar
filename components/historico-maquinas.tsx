@@ -30,16 +30,6 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
     const fetchHistory = async () => {
       setLoading(true)
       const data = await loadHistory()
-      console.log("[v0] Histórico carregado - Total de snapshots:", data.length)
-      if (data.length > 0) {
-        console.log("[v0] Primeiro snapshot - Máquinas:", data[0].machines.length)
-        console.log(
-          "[v0] Máquinas com acaoResponsavel:",
-          data[0].machines
-            .filter((m) => m.status === "parada")
-            .map((m) => ({ nome: m.nome, acaoResponsavel: m.acaoResponsavel })),
-        )
-      }
       setHistory(data.sort((a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime()))
       setLoading(false)
     }
@@ -244,7 +234,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
 
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={9} className="bg-muted/20 p-0">
+                          <TableCell colSpan={10} className="bg-muted/20 p-0">
                             <div className="p-6">
                               <h4 className="text-sm font-semibold mb-4">
                                 Detalhamento - {maquinasDaSemana.length} máquinas
@@ -268,6 +258,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       <TableHead>Status</TableHead>
                                       <TableHead>Preventiva</TableHead>
                                       <TableHead>Ação</TableHead>
+                                      <TableHead>Responsável</TableHead>
                                       <TableHead className="min-w-[300px]">Observações</TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -333,6 +324,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                             </Badge>
                                           </TableCell>
                                           <TableCell className="text-sm">{maquina.acaoResponsavel}</TableCell>
+                                          <TableCell className="text-sm">{maquina.responsavel || "-"}</TableCell>
                                           <TableCell className="text-sm min-w-[300px] whitespace-normal">
                                             {maquina.motivoParada || "-"}
                                           </TableCell>
@@ -340,7 +332,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       ))
                                     ) : (
                                       <TableRow>
-                                        <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
                                           Nenhuma máquina encontrada com os filtros aplicados
                                         </TableCell>
                                       </TableRow>
