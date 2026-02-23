@@ -258,7 +258,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       <TableHead>Status</TableHead>
                                       <TableHead>Preventiva</TableHead>
                                       <TableHead>Ação</TableHead>
-                                      <TableHead>Responsável</TableHead>
+                                      <TableHead className="text-center">Responsável</TableHead>
                                       <TableHead className="min-w-[300px]">Observações</TableHead>
                                     </TableRow>
                                   </TableHeader>
@@ -324,7 +324,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                             </Badge>
                                           </TableCell>
                                           <TableCell className="text-sm">{maquina.acaoResponsavel}</TableCell>
-                                          <TableCell className="text-sm">{maquina.responsavel || "-"}</TableCell>
+                                          <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
                                           <TableCell className="text-sm min-w-[300px] whitespace-normal">
                                             {maquina.motivoParada || "-"}
                                           </TableCell>
