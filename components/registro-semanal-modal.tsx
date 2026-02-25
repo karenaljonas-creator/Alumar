@@ -165,6 +165,7 @@ export function RegistroSemanalModal({
                   <SelectItem value="operacional">Operacional</SelectItem>
                   <SelectItem value="parada">Parada</SelectItem>
                   <SelectItem value="manutencao">Manutenção</SelectItem>
+                  <SelectItem value="v0">V0</SelectItem>
                 </SelectContent>
               </Select>
             </div>

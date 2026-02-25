@@ -260,6 +260,13 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   }
 
   const getStatusBadge = (status: string) => {
+    if (status === "v0") {
+      return (
+        <Badge variant="secondary" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900">
+          V0
+        </Badge>
+      )
+    }
     const variants: Record<string, "default" | "destructive" | "secondary"> = {
       operacional: "default",
       parada: "destructive",
@@ -330,6 +337,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                 <SelectItem value="operacional">Operacional</SelectItem>
                 <SelectItem value="parada">Parada</SelectItem>
                 <SelectItem value="manutencao">Manutenção</SelectItem>
+                <SelectItem value="v0">V0</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -381,7 +389,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
             {statusFilter !== "todos" && (
               <Badge variant="secondary" className="gap-1">
                 Status:{" "}
-                {statusFilter === "operacional" ? "Operacional" : statusFilter === "parada" ? "Parada" : "Manutenção"}
+                {statusFilter === "operacional" ? "Operacional" : statusFilter === "parada" ? "Parada" : statusFilter === "v0" ? "V0" : "Manutenção"}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => setStatusFilter("todos")} />
               </Badge>
             )}
