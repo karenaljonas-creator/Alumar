@@ -297,7 +297,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                                   : maquina.status === "manutencao"
                                                     ? "bg-gray-500 hover:bg-gray-600 text-white"
                                                     : maquina.status === "v0"
-                                                      ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-900"
+                                                      ? "bg-yellow-500 hover:bg-yellow-600 text-white"
                                                       : ""
                                               }
                                             >
