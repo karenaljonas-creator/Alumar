@@ -1,13 +1,16 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import type { Machine } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Search, AlertTriangle } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+
+type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "acao" | "responsavel" | "observacoes"
+type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
@@ -18,13 +21,53 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
   const [localizacaoFilter, setLocalizacaoFilter] = useState("todas")
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+
+  const handleSort = useCallback((key: SortKey) => {
+    if (sortKey === key) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc")
+      } else {
+        setSortKey(null)
+        setSortDirection("asc")
+      }
+    } else {
+      setSortKey(key)
+      setSortDirection("asc")
+    }
+  }, [sortKey, sortDirection])
+
+  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
+    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
+    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
+    return <ArrowDown className="h-3 w-3 ml-1" />
+  }
 
   const maquinasParadas = useMemo(() => {
     return machines.filter((m) => m.status === "parada" || m.status === "v0")
   }, [machines])
 
+  const getTipoEquip = (m: Machine) => {
+    if (m.tipo.includes("Compressor")) return "Compressor"
+    if (m.tipo.includes("Secador")) return "Secador"
+    if (m.tipo.includes("Soprador")) return "Soprador"
+    return "Filtro"
+  }
+
+  const getDiasParadaNum = (dataParada?: string) => {
+    if (!dataParada) return -1
+    try {
+      const data = new Date(dataParada)
+      const hoje = new Date()
+      return Math.floor((hoje.getTime() - data.getTime()) / (1000 * 60 * 60 * 24))
+    } catch {
+      return -1
+    }
+  }
+
   const filteredMachines = useMemo(() => {
-    return maquinasParadas.filter((m) => {
+    const filtered = maquinasParadas.filter((m) => {
       const matchesSearch =
         m.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -39,7 +82,43 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
         localizacaoFilter === "todas" || m.localizacao === localizacaoFilter
       return matchesSearch && matchesContrato && matchesAcao && matchesLocalizacao
     })
-  }, [maquinasParadas, searchTerm, contratoFilter, acaoFilter, localizacaoFilter])
+
+    if (!sortKey) return filtered
+
+    return [...filtered].sort((a, b) => {
+      let valA: string | number = ""
+      let valB: string | number = ""
+
+      switch (sortKey) {
+        case "nome":
+          valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); break
+        case "tipo":
+          valA = a.tipo.toLowerCase(); valB = b.tipo.toLowerCase(); break
+        case "localizacao":
+          valA = a.localizacao.toLowerCase(); valB = b.localizacao.toLowerCase(); break
+        case "contrato":
+          valA = a.temContrato ? 1 : 0; valB = b.temContrato ? 1 : 0; break
+        case "tipoEquip":
+          valA = getTipoEquip(a).toLowerCase(); valB = getTipoEquip(b).toLowerCase(); break
+        case "status":
+          valA = a.status; valB = b.status; break
+        case "dataParada":
+          valA = a.dataParada || ""; valB = b.dataParada || ""; break
+        case "diasParada":
+          valA = getDiasParadaNum(a.dataParada); valB = getDiasParadaNum(b.dataParada); break
+        case "acao":
+          valA = (a.acaoResponsavel || "").toLowerCase(); valB = (b.acaoResponsavel || "").toLowerCase(); break
+        case "responsavel":
+          valA = (a.responsavel || "").toLowerCase(); valB = (b.responsavel || "").toLowerCase(); break
+        case "observacoes":
+          valA = (a.motivoParada || "").toLowerCase(); valB = (b.motivoParada || "").toLowerCase(); break
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
+  }, [maquinasParadas, searchTerm, contratoFilter, acaoFilter, localizacaoFilter, sortKey, sortDirection])
 
   const localizacoes = useMemo(() => {
     return Array.from(new Set(maquinasParadas.map((m) => m.localizacao))).sort()
@@ -154,17 +233,61 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead>TAG</TableHead>
-                  <TableHead>Modelo</TableHead>
-                  <TableHead>Localizacao</TableHead>
-                  <TableHead>Contrato</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Data de Parada</TableHead>
-                  <TableHead className="text-center">Dias Parada</TableHead>
-                  <TableHead>Acao</TableHead>
-                  <TableHead className="text-center">Responsavel</TableHead>
-                  <TableHead className="min-w-[300px]">Observacoes</TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      TAG <SortIcon columnKey="nome" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Modelo <SortIcon columnKey="tipo" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("localizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Localizacao <SortIcon columnKey="localizacao" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Contrato <SortIcon columnKey="contrato" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Tipo <SortIcon columnKey="tipoEquip" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Status <SortIcon columnKey="status" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Data de Parada <SortIcon columnKey="dataParada" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Dias Parada <SortIcon columnKey="diasParada" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Acao <SortIcon columnKey="acao" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Responsavel <SortIcon columnKey="responsavel" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="min-w-[300px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
+                    </button>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
