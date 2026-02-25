@@ -1,4 +1,4 @@
-export type MachineStatus = "operacional" | "parada" | "manutencao"
+export type MachineStatus = "operacional" | "parada" | "manutencao" | "v0"
 export type AcaoResponsavel = "Vale" | "Atlas" | "Outro"
 export type StatusPreventiva = "OK" | "Em Planejamento" | "Em Atraso"
 

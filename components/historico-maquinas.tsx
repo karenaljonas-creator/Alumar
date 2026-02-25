@@ -138,6 +138,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                 <SelectItem value="operacional">Operacional</SelectItem>
                 <SelectItem value="parada">Parada</SelectItem>
                 <SelectItem value="manutencao">Manutenção</SelectItem>
+                <SelectItem value="v0">V0</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -294,15 +295,19 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                                 maquina.status === "operacional"
                                                   ? "bg-green-500 hover:bg-green-600"
                                                   : maquina.status === "manutencao"
-                                                    ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                                                    : ""
+                                                    ? "bg-gray-500 hover:bg-gray-600 text-white"
+                                                    : maquina.status === "v0"
+                                                      ? "bg-yellow-400 hover:bg-yellow-500 text-yellow-900"
+                                                      : ""
                                               }
                                             >
                                               {maquina.status === "operacional"
                                                 ? "Operacional"
                                                 : maquina.status === "parada"
                                                   ? "Parada"
-                                                  : "Manutenção"}
+                                                  : maquina.status === "v0"
+                                                    ? "V0"
+                                                    : "Manutenção"}
                                             </Badge>
                                           </TableCell>
                                           <TableCell>

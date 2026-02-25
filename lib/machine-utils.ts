@@ -46,6 +46,8 @@ export function getStatusColor(status: Machine["status"]): string {
       return "text-destructive bg-destructive/10"
     case "manutencao":
       return "text-warning bg-warning/10"
+    case "v0":
+      return "text-yellow-700 bg-yellow-100"
     default:
       return "text-muted-foreground bg-muted"
   }
@@ -59,6 +61,8 @@ export function getStatusLabel(status: Machine["status"]): string {
       return "Parada"
     case "manutencao":
       return "Manutenção"
+    case "v0":
+      return "V0"
     default:
       return status
   }
