@@ -1,12 +1,16 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight, Trash2 } from "@/lib/lucide-react"
+import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+
+type DetailSortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "preventiva" | "acao" | "responsavel" | "observacoes"
+type SortDirection = "asc" | "desc"
 import { loadHistory, deleteSnapshot } from "@/lib/supabase-history-storage"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
