@@ -37,6 +37,8 @@ import { GraficoLocalizacao } from "@/components/grafico-localizacao"
 import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
+import { GestaoParadas } from "@/components/gestao-paradas"
+import { OctagonX } from "lucide-react"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -390,7 +392,7 @@ export default function Home() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="painel" className="space-y-8">
-          <TabsList className="grid w-full max-w-4xl grid-cols-6">
+          <TabsList className="grid w-full max-w-5xl grid-cols-7">
             <TabsTrigger value="painel">Painel</TabsTrigger>
             <TabsTrigger value="registro" className="gap-2">
               <ClipboardList className="h-4 w-4" />
@@ -398,7 +400,11 @@ export default function Home() {
             </TabsTrigger>
             <TabsTrigger value="historico-maquina" className="gap-2">
               <TrendingUp className="h-4 w-4" />
-              Histórico
+              Historico
+            </TabsTrigger>
+            <TabsTrigger value="paradas" className="gap-2">
+              <OctagonX className="h-4 w-4" />
+              Paradas
             </TabsTrigger>
             <TabsTrigger value="gerenciar" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -406,7 +412,7 @@ export default function Home() {
             </TabsTrigger>
             <TabsTrigger value="analises" className="gap-2">
               <BarChart3 className="h-4 w-4" />
-              Análises
+              Analises
             </TabsTrigger>
             <TabsTrigger value="config" className="gap-2">
               <Settings className="h-4 w-4" />
@@ -492,6 +498,17 @@ export default function Home() {
             </div>
 
             <HistoricoMaquinas machines={machines} />
+          </TabsContent>
+
+          <TabsContent value="paradas" className="space-y-8">
+            <div>
+              <h2 className="text-2xl font-semibold">Gestao de Maquinas Paradas</h2>
+              <p className="text-sm text-muted-foreground">
+                Acompanhe todas as maquinas paradas com dados do ultimo registro semanal
+              </p>
+            </div>
+
+            <GestaoParadas machines={machines} />
           </TabsContent>
 
           <TabsContent value="gerenciar" className="space-y-8">
