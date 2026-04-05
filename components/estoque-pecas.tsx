@@ -35,6 +35,7 @@ const ORIGENS = [
   "Estoque estratégico - corretivos",
   "Corretiva Contrato",
   "Plano - Manutenção Preventiva",
+  "Acordo inicial",
 ]
 
 export function EstoquePecas() {
