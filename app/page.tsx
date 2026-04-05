@@ -38,9 +38,10 @@ import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
 import { GestaoParadas } from "@/components/gestao-paradas"
-import { EstoquePecas } from "@/components/estoque-pecas"
+import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
-import { OctagonX, Package, PackageMinus } from "lucide-react"
+import { EstoqueSaldo } from "@/components/estoque-saldo"
+import { OctagonX, Package, PackageMinus, PackagePlus, Boxes } from "lucide-react"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -394,7 +395,7 @@ export default function Home() {
 
       <div className="container mx-auto px-4 py-8">
         <Tabs defaultValue="painel" className="space-y-8">
-<TabsList className="grid w-full max-w-6xl grid-cols-9">
+<TabsList className="grid w-full max-w-7xl grid-cols-10">
   <TabsTrigger value="painel">Painel</TabsTrigger>
   <TabsTrigger value="registro" className="gap-2">
   <ClipboardList className="h-4 w-4" />
@@ -408,13 +409,17 @@ export default function Home() {
   <OctagonX className="h-4 w-4" />
   Paradas
   </TabsTrigger>
-  <TabsTrigger value="estoque" className="gap-2">
-  <Package className="h-4 w-4" />
-  Estoque
+  <TabsTrigger value="entrada" className="gap-2">
+  <PackagePlus className="h-4 w-4" />
+  Entrada
   </TabsTrigger>
   <TabsTrigger value="saida" className="gap-2">
   <PackageMinus className="h-4 w-4" />
   Saída
+  </TabsTrigger>
+  <TabsTrigger value="estoque" className="gap-2">
+  <Boxes className="h-4 w-4" />
+  Estoque
   </TabsTrigger>
   <TabsTrigger value="gerenciar" className="gap-2">
   <Settings className="h-4 w-4" />
@@ -521,12 +526,16 @@ export default function Home() {
 <GestaoParadas machines={machines} />
   </TabsContent>
 
-  <TabsContent value="estoque" className="space-y-8">
-  <EstoquePecas />
+  <TabsContent value="entrada" className="space-y-8">
+  <EntradaPecas />
   </TabsContent>
 
   <TabsContent value="saida" className="space-y-8">
   <SaidaPecas machines={machines} />
+  </TabsContent>
+
+  <TabsContent value="estoque" className="space-y-8">
+  <EstoqueSaldo />
   </TabsContent>
   
   <TabsContent value="gerenciar" className="space-y-8">
