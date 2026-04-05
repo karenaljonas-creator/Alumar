@@ -1,0 +1,549 @@
+"use client"
+
+import { useState, useEffect, useCallback } from "react"
+import type { Machine } from "@/lib/types"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
+import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
+
+interface SaidaPeca {
+  id: string
+  codigo: string
+  descricao: string
+  quantidade: number
+  data_saida: string
+  ordem_servico: string
+  area: string
+  tag_equipamento: string
+  utilizacao: string
+  created_at: string
+}
+
+interface EstoquePeca {
+  codigo: string
+  descricao: string
+}
+
+type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "tag_equipamento" | "utilizacao"
+type SortDirection = "asc" | "desc"
+
+const UTILIZACOES = ["Corretiva", "Preventiva"]
+
+interface SaidaPecasProps {
+  machines: Machine[]
+}
+
+export function SaidaPecas({ machines }: SaidaPecasProps) {
+  const [saidas, setSaidas] = useState<SaidaPeca[]>([])
+  const [estoquePecas, setEstoquePecas] = useState<EstoquePeca[]>([])
+  const [loading, setLoading] = useState(true)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingSaida, setEditingSaida] = useState<SaidaPeca | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [codigoEncontrado, setCodigoEncontrado] = useState<boolean | null>(null)
+  const { toast } = useToast()
+  const supabase = createClient()
+
+  const [formData, setFormData] = useState({
+    codigo: "",
+    descricao: "",
+    quantidade: 1,
+    data_saida: new Date().toISOString().split("T")[0],
+    ordem_servico: "",
+    area: "",
+    tag_equipamento: "",
+    utilizacao: "",
+  })
+
+  // Get unique areas from machines
+  const areas = [...new Set(machines.map((m) => m.localizacao))].filter(Boolean).sort()
+
+  const loadSaidas = useCallback(async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from("saida_pecas")
+      .select("*")
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      toast({ title: "Erro ao carregar saídas", description: error.message, variant: "destructive" })
+    } else {
+      setSaidas(data || [])
+    }
+    setLoading(false)
+  }, [supabase, toast])
+
+  const loadEstoquePecas = useCallback(async () => {
+    const { data, error } = await supabase
+      .from("estoque_pecas")
+      .select("codigo, descricao")
+      .order("codigo")
+
+    if (error) {
+      console.error("Erro ao carregar estoque:", error)
+    } else {
+      // Get unique codes with their descriptions
+      const uniquePecas = data?.reduce((acc: EstoquePeca[], curr) => {
+        if (!acc.find((p) => p.codigo === curr.codigo)) {
+          acc.push({ codigo: curr.codigo, descricao: curr.descricao })
+        }
+        return acc
+      }, []) || []
+      setEstoquePecas(uniquePecas)
+    }
+  }, [supabase])
+
+  useEffect(() => {
+    loadSaidas()
+    loadEstoquePecas()
+  }, [loadSaidas, loadEstoquePecas])
+
+  // Auto-fill description when code changes
+  const handleCodigoChange = (codigo: string) => {
+    setFormData((prev) => ({ ...prev, codigo }))
+    
+    if (codigo.length >= 3) {
+      const peca = estoquePecas.find((p) => p.codigo.toLowerCase() === codigo.toLowerCase())
+      if (peca) {
+        setFormData((prev) => ({ ...prev, codigo: peca.codigo, descricao: peca.descricao }))
+        setCodigoEncontrado(true)
+      } else {
+        setCodigoEncontrado(false)
+      }
+    } else {
+      setCodigoEncontrado(null)
+    }
+  }
+
+  const handleSort = useCallback((key: SortKey) => {
+    if (sortKey === key) {
+      if (sortDirection === "asc") {
+        setSortDirection("desc")
+      } else {
+        setSortKey(null)
+        setSortDirection("asc")
+      }
+    } else {
+      setSortKey(key)
+      setSortDirection("asc")
+    }
+  }, [sortKey, sortDirection])
+
+  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
+    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
+    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
+    return <ArrowDown className="h-3 w-3 ml-1" />
+  }
+
+  const filteredSaidas = saidas
+    .filter((s) =>
+      s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.tag_equipamento.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .sort((a, b) => {
+      if (!sortKey) return 0
+      let valA: string | number = ""
+      let valB: string | number = ""
+
+      switch (sortKey) {
+        case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
+        case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
+        case "quantidade": valA = a.quantidade; valB = b.quantidade; break
+        case "data_saida": valA = a.data_saida; valB = b.data_saida; break
+        case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
+        case "area": valA = a.area.toLowerCase(); valB = b.area.toLowerCase(); break
+        case "tag_equipamento": valA = a.tag_equipamento.toLowerCase(); valB = b.tag_equipamento.toLowerCase(); break
+        case "utilizacao": valA = a.utilizacao.toLowerCase(); valB = b.utilizacao.toLowerCase(); break
+      }
+
+      if (valA < valB) return sortDirection === "asc" ? -1 : 1
+      if (valA > valB) return sortDirection === "asc" ? 1 : -1
+      return 0
+    })
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (editingSaida) {
+      const { error } = await supabase
+        .from("saida_pecas")
+        .update(formData)
+        .eq("id", editingSaida.id)
+
+      if (error) {
+        toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
+      } else {
+        toast({ title: "Saída atualizada com sucesso!" })
+        loadSaidas()
+        resetForm()
+      }
+    } else {
+      const { error } = await supabase
+        .from("saida_pecas")
+        .insert(formData)
+
+      if (error) {
+        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
+      } else {
+        toast({ title: "Saída registrada com sucesso!" })
+        loadSaidas()
+        resetForm()
+      }
+    }
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta saída?")) return
+
+    const { error } = await supabase.from("saida_pecas").delete().eq("id", id)
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" })
+    } else {
+      toast({ title: "Saída excluída com sucesso!" })
+      loadSaidas()
+    }
+  }
+
+  const handleEdit = (saida: SaidaPeca) => {
+    setEditingSaida(saida)
+    setFormData({
+      codigo: saida.codigo,
+      descricao: saida.descricao,
+      quantidade: saida.quantidade,
+      data_saida: saida.data_saida,
+      ordem_servico: saida.ordem_servico,
+      area: saida.area,
+      tag_equipamento: saida.tag_equipamento,
+      utilizacao: saida.utilizacao,
+    })
+    setCodigoEncontrado(true)
+    setDialogOpen(true)
+  }
+
+  const resetForm = () => {
+    setFormData({
+      codigo: "",
+      descricao: "",
+      quantidade: 1,
+      data_saida: new Date().toISOString().split("T")[0],
+      ordem_servico: "",
+      area: "",
+      tag_equipamento: "",
+      utilizacao: "",
+    })
+    setEditingSaida(null)
+    setCodigoEncontrado(null)
+    setDialogOpen(false)
+  }
+
+  // Filter machines by selected area
+  const machinesInArea = formData.area
+    ? machines.filter((m) => m.localizacao === formData.area)
+    : machines
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold">Saída de Peças</h2>
+          <p className="text-sm text-muted-foreground">Registro de saída de peças do estoque</p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Saída
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{editingSaida ? "Editar Saída" : "Registrar Saída de Peça"}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="codigo">Código (PN)</Label>
+                  <div className="relative">
+                    <Input
+                      id="codigo"
+                      value={formData.codigo}
+                      onChange={(e) => handleCodigoChange(e.target.value)}
+                      placeholder="Digite o código da peça"
+                      required
+                      list="codigos-list"
+                      className={codigoEncontrado === true ? "border-green-500 pr-10" : codigoEncontrado === false ? "border-amber-500 pr-10" : ""}
+                    />
+                    {codigoEncontrado === true && (
+                      <Check className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                    )}
+                    {codigoEncontrado === false && (
+                      <AlertCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-500" />
+                    )}
+                  </div>
+                  <datalist id="codigos-list">
+                    {estoquePecas.map((p) => (
+                      <option key={p.codigo} value={p.codigo}>{p.descricao}</option>
+                    ))}
+                  </datalist>
+                  {codigoEncontrado === true && (
+                    <p className="text-xs text-green-600">Código encontrado no estoque!</p>
+                  )}
+                  {codigoEncontrado === false && (
+                    <p className="text-xs text-amber-600">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="descricao">Descrição</Label>
+                  <Input
+                    id="descricao"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Preenchido automaticamente"
+                    required
+                    readOnly={codigoEncontrado === true}
+                    className={codigoEncontrado === true ? "bg-muted" : ""}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="quantidade">Quantidade</Label>
+                  <Input
+                    id="quantidade"
+                    type="number"
+                    min="1"
+                    value={formData.quantidade}
+                    onChange={(e) => setFormData({ ...formData, quantidade: parseInt(e.target.value) || 1 })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="data_saida">Data</Label>
+                  <Input
+                    id="data_saida"
+                    type="date"
+                    value={formData.data_saida}
+                    onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="ordem_servico">Ordem de Serviço</Label>
+                  <Input
+                    id="ordem_servico"
+                    value={formData.ordem_servico}
+                    onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
+                    placeholder="Ex: 408103074"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="area">Área</Label>
+                  <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, tag_equipamento: "" })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a área" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {areas.map((a) => (
+                        <SelectItem key={a} value={a}>{a}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tag_equipamento">Equipamento (TAG)</Label>
+                  <Select value={formData.tag_equipamento} onValueChange={(v) => setFormData({ ...formData, tag_equipamento: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o equipamento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {machinesInArea.map((m) => (
+                        <SelectItem key={m.id} value={m.nome}>{m.nome} - {m.tipo}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="utilizacao">Utilização</Label>
+                  <Select value={formData.utilizacao} onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {UTILIZACOES.map((u) => (
+                        <SelectItem key={u} value={u}>{u}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
+                <Button type="submit">{editingSaida ? "Salvar Alterações" : "Registrar Saída"}</Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total de Saídas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filteredSaidas.length}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Utilizados</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filteredSaidas.reduce((acc, s) => acc + s.quantidade, 0)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Corretiva / Preventiva</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              <span className="text-amber-600">{filteredSaidas.filter((s) => s.utilizacao === "Corretiva").length}</span>
+              {" / "}
+              <span className="text-blue-600">{filteredSaidas.filter((s) => s.utilizacao === "Preventiva").length}</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <PackageMinus className="h-5 w-5" />
+              Registro de Saídas
+            </CardTitle>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por código, descrição, OS ou TAG..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="py-8 text-center text-muted-foreground">Carregando...</div>
+          ) : filteredSaidas.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              Nenhuma saída registrada. Clique em &quot;Nova Saída&quot; para adicionar.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted">
+                    <TableHead>
+                      <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Código <SortIcon columnKey="codigo" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Descrição <SortIcon columnKey="descricao" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Qtd <SortIcon columnKey="quantidade" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("data_saida")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Data <SortIcon columnKey="data_saida" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Ordem Serviço <SortIcon columnKey="ordem_servico" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("area")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Área <SortIcon columnKey="area" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("tag_equipamento")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Equipamento <SortIcon columnKey="tag_equipamento" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("utilizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Utilização <SortIcon columnKey="utilizacao" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredSaidas.map((saida) => (
+                    <TableRow key={saida.id}>
+                      <TableCell className="font-mono font-medium">{saida.codigo}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{saida.descricao}</TableCell>
+                      <TableCell className="text-center">{saida.quantidade}</TableCell>
+                      <TableCell>
+                        {saida.data_saida ? new Date(saida.data_saida).toLocaleDateString("pt-BR") : "-"}
+                      </TableCell>
+                      <TableCell>{saida.ordem_servico || "-"}</TableCell>
+                      <TableCell>{saida.area}</TableCell>
+                      <TableCell className="font-medium">{saida.tag_equipamento}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={saida.utilizacao === "Corretiva" ? "destructive" : "default"}
+                          className={saida.utilizacao === "Preventiva" ? "bg-blue-500 hover:bg-blue-600" : ""}
+                        >
+                          {saida.utilizacao}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(saida)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(saida.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
