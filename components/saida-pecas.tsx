@@ -22,7 +22,7 @@ interface SaidaPeca {
   data_saida: string
   ordem_servico: string
   area: string
-  tag_equipamento: string
+  compressor: string
   utilizacao: string
   created_at: string
 }
@@ -32,7 +32,7 @@ interface EstoquePeca {
   descricao: string
 }
 
-type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "tag_equipamento" | "utilizacao"
+type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao"
 type SortDirection = "asc" | "desc"
 
 const UTILIZACOES = ["Corretiva", "Preventiva"]
@@ -61,7 +61,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     data_saida: new Date().toISOString().split("T")[0],
     ordem_servico: "",
     area: "",
-    tag_equipamento: "",
+    compressor: "",
     utilizacao: "",
   })
 
@@ -150,7 +150,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.tag_equipamento.toLowerCase().includes(searchTerm.toLowerCase())
+      s.compressor.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       if (!sortKey) return 0
@@ -164,7 +164,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         case "data_saida": valA = a.data_saida; valB = b.data_saida; break
         case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
         case "area": valA = a.area.toLowerCase(); valB = b.area.toLowerCase(); break
-        case "tag_equipamento": valA = a.tag_equipamento.toLowerCase(); valB = b.tag_equipamento.toLowerCase(); break
+        case "compressor": valA = a.compressor.toLowerCase(); valB = b.compressor.toLowerCase(); break
         case "utilizacao": valA = a.utilizacao.toLowerCase(); valB = b.utilizacao.toLowerCase(); break
       }
 
@@ -225,7 +225,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       data_saida: saida.data_saida,
       ordem_servico: saida.ordem_servico,
       area: saida.area,
-      tag_equipamento: saida.tag_equipamento,
+      compressor: saida.compressor,
       utilizacao: saida.utilizacao,
     })
     setCodigoEncontrado(true)
@@ -240,7 +240,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       data_saida: new Date().toISOString().split("T")[0],
       ordem_servico: "",
       area: "",
-      tag_equipamento: "",
+      compressor: "",
       utilizacao: "",
     })
     setEditingSaida(null)
@@ -354,7 +354,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="area">Área</Label>
-                  <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, tag_equipamento: "" })}>
+                  <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a área" />
                     </SelectTrigger>
@@ -366,8 +366,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tag_equipamento">Equipamento (TAG)</Label>
-                  <Select value={formData.tag_equipamento} onValueChange={(v) => setFormData({ ...formData, tag_equipamento: v })}>
+                  <Label htmlFor="compressor">Equipamento (TAG)</Label>
+                  <Select value={formData.compressor} onValueChange={(v) => setFormData({ ...formData, compressor: v })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione o equipamento" />
                     </SelectTrigger>
@@ -494,8 +494,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </button>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("tag_equipamento")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Equipamento <SortIcon columnKey="tag_equipamento" />
+                      <button onClick={() => handleSort("compressor")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Equipamento <SortIcon columnKey="compressor" />
                       </button>
                     </TableHead>
                     <TableHead>
@@ -517,7 +517,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </TableCell>
                       <TableCell>{saida.ordem_servico || "-"}</TableCell>
                       <TableCell>{saida.area}</TableCell>
-                      <TableCell className="font-medium">{saida.tag_equipamento}</TableCell>
+                      <TableCell className="font-medium">{saida.compressor}</TableCell>
                       <TableCell>
                         <Badge
                           variant={saida.utilizacao === "Corretiva" ? "destructive" : "default"}
