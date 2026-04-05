@@ -19,12 +19,10 @@ import { StatusChart } from "@/components/status-chart"
 import { MachineFilters } from "@/components/machine-filters"
 import { MachineTable } from "@/components/machine-table"
 import { MachineFormDialog } from "@/components/machine-form-dialog"
-import { AnalysisCharts } from "@/components/analysis-charts"
 import { RegistroSemanal } from "@/components/registro-semanal"
 import { Configuracoes } from "@/components/configuracoes"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Download, Upload, BarChart3, Settings, ClipboardList, TrendingUp } from "lucide-react"
+import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -38,9 +36,12 @@ import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
 import { GestaoParadas } from "@/components/gestao-paradas"
-import { EstoquePecas } from "@/components/estoque-pecas"
+import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
-import { OctagonX, Package, PackageMinus } from "lucide-react"
+import { EstoqueSaldo } from "@/components/estoque-saldo"
+import { cn } from "@/lib/utils"
+
+type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "gerenciar" | "config"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -54,6 +55,8 @@ export default function Home() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingMachine, setEditingMachine] = useState<Machine | undefined>()
   const [latestSnapshot, setLatestSnapshot] = useState<WeeklySnapshot | null>(null)
+  const [activeSection, setActiveSection] = useState<MenuSection>("painel")
+  const [materiaisExpanded, setMateriaisExpanded] = useState(false)
   const { toast } = useToast()
   const contrato = loadContrato()
 
@@ -116,18 +119,9 @@ export default function Home() {
     return filtrarMaquinasPrincipais(filtered)
   }, [latestSnapshot, contratoFilter])
 
-  const allFilteredMachines = useMemo(() => {
-    let filtered = machines
-    if (contratoFilter === "com-contrato") filtered = filtered.filter((m) => m.temContrato === true)
-    if (contratoFilter === "sem-contrato") filtered = filtered.filter((m) => m.temContrato === false)
-    return filtered
-  }, [machines, contratoFilter])
-
   const stats = useMemo(() => {
     return calculateStats(dashboardFilteredMachines)
   }, [dashboardFilteredMachines])
-
-  const trends = useMemo(() => getHistoryTrends(), [history])
 
   const maquinasParadasFiltradas = useMemo(() => {
     let filtered = machines.filter((m) => m.status === "parada")
@@ -136,18 +130,9 @@ export default function Home() {
     return filtered
   }, [machines, contratoFilter])
 
-  const periodoInoperante = useMemo(
-    () => analisarPeriodoInoperante(maquinasParadasFiltradas),
-    [maquinasParadasFiltradas],
-  )
   const porTipo = useMemo(() => analisarPorTipo(maquinasParadasFiltradas), [maquinasParadasFiltradas])
   const porLocalizacao = useMemo(() => analisarPorLocalizacao(maquinasParadasFiltradas), [maquinasParadasFiltradas])
-  const acaoResponsavel = useMemo(() => analisarAcaoResponsavel(machines), [machines])
   const preventivas = useMemo(() => analisarPreventivas(dashboardFilteredMachines), [dashboardFilteredMachines])
-
-  const preventivasOK = useMemo(() => {
-    return dashboardFilteredMachines.filter((m) => m.statusPreventiva === "OK").length
-  }, [dashboardFilteredMachines])
 
   const tipos = useMemo(() => {
     return Array.from(new Set(machines.map((m) => m.tipo))).sort()
@@ -159,10 +144,9 @@ export default function Home() {
 
   const machinesForChart = useMemo(() => {
     if (!latestSnapshot || !latestSnapshot.machines || latestSnapshot.machines.length === 0) {
-      return [] // Return empty if no snapshot available
+      return []
     }
 
-    // Apply the same filter to snapshot machines
     let filtered = latestSnapshot.machines
     if (contratoFilter === "com-contrato") filtered = filtered.filter((m) => m.temContrato === true)
     if (contratoFilter === "sem-contrato") filtered = filtered.filter((m) => m.temContrato === false)
@@ -272,44 +256,6 @@ export default function Home() {
     input.click()
   }
 
-  const handleSaveSnapshot = async () => {
-    try {
-      const snapshot = await saveWeeklySnapshot(machines)
-      const updatedHistory = await loadHistory()
-      setHistory(updatedHistory)
-      toast({
-        title: "Snapshot salvo",
-        description: `Registro da semana ${snapshot.semana} foi salvo com sucesso.`,
-      })
-    } catch (error) {
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o snapshot. Tente novamente.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDeleteSnapshot = async (id: string) => {
-    if (confirm("Tem certeza que deseja excluir este registro?")) {
-      try {
-        await deleteSnapshot(id)
-        const updatedHistory = await loadHistory()
-        setHistory(updatedHistory)
-        toast({
-          title: "Registro excluído",
-          description: "O snapshot foi removido do histórico.",
-        })
-      } catch (error) {
-        toast({
-          title: "Erro ao excluir",
-          description: "Não foi possível excluir o snapshot. Tente novamente.",
-          variant: "destructive",
-        })
-      }
-    }
-  }
-
   const handleSaveRegistroSemanal = async (updatedMachines: Machine[]) => {
     try {
       await saveMachines(updatedMachines)
@@ -351,241 +297,302 @@ export default function Home() {
     )
   }
 
+  const menuItems = [
+    { id: "painel" as const, label: "Painel de Controle", icon: LayoutDashboard },
+    { id: "registro" as const, label: "Registro Semanal", icon: ClipboardList },
+    { id: "historico" as const, label: "Histórico", icon: TrendingUp },
+    { id: "paradas" as const, label: "Paradas", icon: OctagonX },
+  ]
+
+  const materiaisItems = [
+    { id: "entrada" as const, label: "Entrada", icon: PackagePlus },
+    { id: "saida" as const, label: "Saída", icon: PackageMinus },
+    { id: "estoque" as const, label: "Estoque", icon: Boxes },
+  ]
+
+  const configItems = [
+    { id: "gerenciar" as const, label: "Gerenciar Máquinas", icon: Wrench },
+    { id: "config" as const, label: "Configurações", icon: Settings },
+  ]
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-foreground mb-4">Gestão de Máquinas</h1>
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-baseline gap-2 flex-wrap">
-                  <span className="text-base font-semibold text-foreground">Contrato:</span>
-                  <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-sm font-semibold text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                    {contrato.numero}
-                  </span>
-                  <span className="text-muted-foreground">|</span>
-                  <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-sm font-semibold text-green-700 ring-1 ring-inset ring-green-700/10">
-                    {contrato.localizacao}
-                  </span>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-sm font-medium text-muted-foreground">Vigência:</span>
-                  <span className="text-sm font-medium text-foreground">
-                    {new Date(contrato.dataInicio).toLocaleDateString("pt-BR")} até{" "}
-                    {new Date(contrato.dataFim).toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleImport} className="gap-2 bg-transparent">
-                <Upload className="h-4 w-4" />
-                Importar
-              </Button>
-              <Button variant="outline" onClick={handleExport} className="gap-2 bg-transparent">
-                <Download className="h-4 w-4" />
-                Exportar
-              </Button>
-            </div>
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className="w-64 border-r border-border bg-card flex flex-col fixed h-screen">
+        {/* Logo/Header */}
+        <div className="p-4 border-b border-border">
+          <h1 className="text-lg font-bold text-foreground">Gestão de Máquinas</h1>
+          <div className="mt-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-blue-700 font-medium">
+              {contrato.numero}
+            </span>
+            <span className="mx-1">|</span>
+            <span className="text-green-700">{contrato.localizacao}</span>
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="painel" className="space-y-8">
-<TabsList className="grid w-full max-w-6xl grid-cols-9">
-  <TabsTrigger value="painel">Painel</TabsTrigger>
-  <TabsTrigger value="registro" className="gap-2">
-  <ClipboardList className="h-4 w-4" />
-  Registro Semanal
-  </TabsTrigger>
-  <TabsTrigger value="historico-maquina" className="gap-2">
-  <TrendingUp className="h-4 w-4" />
-  Historico
-  </TabsTrigger>
-  <TabsTrigger value="paradas" className="gap-2">
-  <OctagonX className="h-4 w-4" />
-  Paradas
-  </TabsTrigger>
-  <TabsTrigger value="estoque" className="gap-2">
-  <Package className="h-4 w-4" />
-  Estoque
-  </TabsTrigger>
-  <TabsTrigger value="saida" className="gap-2">
-  <PackageMinus className="h-4 w-4" />
-  Saída
-  </TabsTrigger>
-  <TabsTrigger value="gerenciar" className="gap-2">
-  <Settings className="h-4 w-4" />
-              Gerenciar
-            </TabsTrigger>
-            <TabsTrigger value="analises" className="gap-2">
-              <BarChart3 className="h-4 w-4" />
-              Analises
-            </TabsTrigger>
-            <TabsTrigger value="config" className="gap-2">
-              <Settings className="h-4 w-4" />
-              Config
-            </TabsTrigger>
-          </TabsList>
+        {/* Navigation */}
+        <nav className="flex-1 p-3 overflow-y-auto">
+          {/* Main Menu Items */}
+          <div className="space-y-1">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  activeSection === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            ))}
+          </div>
 
-          <TabsContent value="painel" className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold">Painel de Controle</h2>
-                <p className="text-sm text-muted-foreground">
-                  {new Date()
-                    .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
-                    .replace(".", "")}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  * KPIs calculados apenas com Compressores, Secadores e Sopradores
-                </p>
+          {/* Gestão de Materiais Section */}
+          <div className="mt-6">
+            <button
+              onClick={() => setMateriaisExpanded(!materiaisExpanded)}
+              className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
+            >
+              <span>Gestão de Materiais</span>
+              {materiaisExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
+            </button>
+            {materiaisExpanded && (
+              <div className="mt-1 space-y-1 pl-2">
+                {materiaisItems.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveSection(item.id)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                      activeSection === item.id
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                ))}
               </div>
-              <div className="flex gap-3 items-center">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="contratoFilter" className="text-sm font-medium whitespace-nowrap">
-                    Filtrar por:
-                  </Label>
-                  <Select value={contratoFilter} onValueChange={setContratoFilter}>
-                    <SelectTrigger id="contratoFilter" className="w-[180px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="todos">Todas as Máquinas</SelectItem>
-                      <SelectItem value="com-contrato">Com Contrato</SelectItem>
-                      <SelectItem value="sem-contrato">Sem Contrato</SelectItem>
-                    </SelectContent>
-                  </Select>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="my-6 border-t border-border" />
+
+          {/* Config Items */}
+          <div className="space-y-1">
+            {configItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  activeSection === item.id
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-3 border-t border-border">
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleImport} className="flex-1 text-xs">
+              <Upload className="h-3 w-3 mr-1" />
+              Importar
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 text-xs">
+              <Download className="h-3 w-3 mr-1" />
+              Exportar
+            </Button>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 ml-64">
+        <div className="p-6">
+          {/* Painel de Controle */}
+          {activeSection === "painel" && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold">Painel de Controle</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {new Date()
+                      .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
+                      .replace(".", "")}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    * KPIs calculados apenas com Compressores, Secadores e Sopradores
+                  </p>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="contratoFilter" className="text-sm font-medium whitespace-nowrap">
+                      Filtrar por:
+                    </Label>
+                    <Select value={contratoFilter} onValueChange={setContratoFilter}>
+                      <SelectTrigger id="contratoFilter" className="w-[180px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todas as Máquinas</SelectItem>
+                        <SelectItem value="com-contrato">Com Contrato</SelectItem>
+                        <SelectItem value="sem-contrato">Sem Contrato</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              <StatsCards stats={stats} />
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
+                <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
+                <PreventivasChart preventivas={preventivas} />
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold">Análise de Máquinas Paradas</h3>
+                  <p className="text-sm text-muted-foreground">Visualização detalhada das máquinas inoperantes</p>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
+                  <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
+                  <GraficoTipoEquipamento data={porTipo} />
+                  <GraficoLocalizacao data={porLocalizacao} />
                 </div>
               </div>
             </div>
+          )}
 
-            <StatsCards stats={stats} />
-
-            <div className="grid gap-6 md:grid-cols-3">
-              <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
-              <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
-              <PreventivasChart preventivas={preventivas} />
-            </div>
-
-            <div className="space-y-4">
+          {/* Registro Semanal */}
+          {activeSection === "registro" && (
+            <div className="space-y-8">
               <div>
-                <h3 className="text-xl font-semibold">Análise de Máquinas Paradas</h3>
-                <p className="text-sm text-muted-foreground">Visualização detalhada das máquinas inoperantes</p>
-              </div>
-
-              <div className="grid gap-6 md:grid-cols-2">
-                <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
-                <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
-                <GraficoTipoEquipamento data={porTipo} />
-                <GraficoLocalizacao data={porLocalizacao} />
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="registro" className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold">Registro Semanal ⭐</h2>
-              <p className="text-sm text-muted-foreground">
-                Preencha os dados de todas as máquinas semanalmente - Formato planilha
-              </p>
-            </div>
-
-            <RegistroSemanal machines={machines} onSaveAll={handleSaveRegistroSemanal} />
-          </TabsContent>
-
-          <TabsContent value="historico-maquina" className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold">Histórico de Máquinas</h2>
+                <h2 className="text-2xl font-semibold">Registro Semanal</h2>
                 <p className="text-sm text-muted-foreground">
-                  Visualize a evolução completa semana a semana de todas as máquinas
+                  Preencha os dados de todas as máquinas semanalmente - Formato planilha
                 </p>
               </div>
-              <ImportHistoricalButton />
+              <RegistroSemanal machines={machines} onSaveAll={handleSaveRegistroSemanal} />
             </div>
+          )}
 
-            <HistoricoMaquinas machines={machines} />
-          </TabsContent>
-
-          <TabsContent value="paradas" className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold">Gestao de Maquinas Paradas</h2>
-              <p className="text-sm text-muted-foreground">
-                Acompanhe todas as maquinas paradas com dados do ultimo registro semanal
-              </p>
-            </div>
-
-<GestaoParadas machines={machines} />
-  </TabsContent>
-
-  <TabsContent value="estoque" className="space-y-8">
-  <EstoquePecas />
-  </TabsContent>
-
-  <TabsContent value="saida" className="space-y-8">
-  <SaidaPecas machines={machines} />
-  </TabsContent>
-  
-  <TabsContent value="gerenciar" className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-semibold">Gerenciar Máquinas</h2>
-                <p className="text-sm text-muted-foreground">Adicione, edite ou remova máquinas do sistema</p>
+          {/* Histórico */}
+          {activeSection === "historico" && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold">Histórico de Máquinas</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Visualize a evolução completa semana a semana de todas as máquinas
+                  </p>
+                </div>
+                <ImportHistoricalButton />
               </div>
-              <Button onClick={handleAddNew} className="gap-2 bg-primary">
-                <Plus className="h-4 w-4" />
-                Nova Máquina
-              </Button>
+              <HistoricoMaquinas machines={machines} />
             </div>
+          )}
 
-            <MachineFilters
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-              statusFilter={statusFilter}
-              onStatusFilterChange={setStatusFilter}
-              tipoFilter={tipoFilter}
-              onTipoFilterChange={setTipoFilter}
-              localizacaoFilter={localizacaoFilter}
-              onLocalizacaoFilterChange={setLocalizacaoFilter}
-              contratoFilter={contratoFilter}
-              onContratoFilterChange={setContratoFilter}
-              tipos={tipos}
-              localizacoes={localizacoes}
-            />
-
-            <MachineTable machines={filteredMachines} onEdit={handleEdit} onDelete={handleDelete} />
-          </TabsContent>
-
-          <TabsContent value="analises" className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold">Análises Detalhadas</h2>
-              <p className="text-sm text-muted-foreground">
-                Visualização completa de período inoperante, tipos, localização e preventivas
-              </p>
+          {/* Paradas */}
+          {activeSection === "paradas" && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-semibold">Gestão de Máquinas Paradas</h2>
+                <p className="text-sm text-muted-foreground">
+                  Acompanhe todas as máquinas paradas com dados do último registro semanal
+                </p>
+              </div>
+              <GestaoParadas machines={machines} />
             </div>
+          )}
 
-            <AnalysisCharts
-              periodoInoperante={periodoInoperante}
-              porTipo={porTipo}
-              porLocalizacao={porLocalizacao}
-              acaoResponsavel={acaoResponsavel}
-              preventivas={preventivas}
-            />
-          </TabsContent>
-
-          <TabsContent value="config" className="space-y-8">
-            <div>
-              <h2 className="text-2xl font-semibold">Configurações</h2>
-              <p className="text-sm text-muted-foreground">Edite as informações do contrato e configurações gerais</p>
+          {/* Entrada */}
+          {activeSection === "entrada" && (
+            <div className="space-y-8">
+              <EntradaPecas />
             </div>
+          )}
 
-            <Configuracoes />
-          </TabsContent>
-        </Tabs>
-      </div>
+          {/* Saída */}
+          {activeSection === "saida" && (
+            <div className="space-y-8">
+              <SaidaPecas machines={machines} />
+            </div>
+          )}
+
+          {/* Estoque */}
+          {activeSection === "estoque" && (
+            <div className="space-y-8">
+              <EstoqueSaldo />
+            </div>
+          )}
+
+          {/* Gerenciar */}
+          {activeSection === "gerenciar" && (
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-semibold">Gerenciar Máquinas</h2>
+                  <p className="text-sm text-muted-foreground">Adicione, edite ou remova máquinas do sistema</p>
+                </div>
+                <Button onClick={handleAddNew} className="gap-2 bg-primary">
+                  <Plus className="h-4 w-4" />
+                  Nova Máquina
+                </Button>
+              </div>
+
+              <MachineFilters
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                statusFilter={statusFilter}
+                onStatusFilterChange={setStatusFilter}
+                tipoFilter={tipoFilter}
+                onTipoFilterChange={setTipoFilter}
+                localizacaoFilter={localizacaoFilter}
+                onLocalizacaoFilterChange={setLocalizacaoFilter}
+                contratoFilter={contratoFilter}
+                onContratoFilterChange={setContratoFilter}
+                tipos={tipos}
+                localizacoes={localizacoes}
+              />
+
+              <MachineTable machines={filteredMachines} onEdit={handleEdit} onDelete={handleDelete} />
+            </div>
+          )}
+
+          {/* Configurações */}
+          {activeSection === "config" && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-semibold">Configurações</h2>
+                <p className="text-sm text-muted-foreground">Edite as informações do contrato e configurações gerais</p>
+              </div>
+              <Configuracoes />
+            </div>
+          )}
+        </div>
+      </main>
 
       <MachineFormDialog open={isFormOpen} onOpenChange={setIsFormOpen} machine={editingMachine} onSave={handleSave} />
     </div>

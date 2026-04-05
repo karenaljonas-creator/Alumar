@@ -38,7 +38,7 @@ const ORIGENS = [
   "Acordo inicial",
 ]
 
-export function EstoquePecas() {
+export function EntradaPecas() {
   const [pecas, setPecas] = useState<EstoquePeca[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -222,8 +222,8 @@ export function EstoquePecas() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold">Estoque de Peças</h2>
-          <p className="text-sm text-muted-foreground">Cadastro e controle de entrada de peças</p>
+          <h2 className="text-2xl font-semibold">Entrada de Peças</h2>
+          <p className="text-sm text-muted-foreground">Registro de entrada de peças no estoque</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
           <DialogTrigger asChild>
