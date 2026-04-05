@@ -494,8 +494,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </button>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("tag_equipamento")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Equipamento <SortIcon columnKey="tag_equipamento" />
+                      <button onClick={() => handleSort("compressor")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Equipamento <SortIcon columnKey="compressor" />
                       </button>
                     </TableHead>
                     <TableHead>
@@ -517,7 +517,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </TableCell>
                       <TableCell>{saida.ordem_servico || "-"}</TableCell>
                       <TableCell>{saida.area}</TableCell>
-                      <TableCell className="font-medium">{saida.tag_equipamento}</TableCell>
+                      <TableCell className="font-medium">{saida.compressor}</TableCell>
                       <TableCell>
                         <Badge
                           variant={saida.utilizacao === "Corretiva" ? "destructive" : "default"}
