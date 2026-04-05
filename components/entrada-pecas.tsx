@@ -25,6 +25,7 @@ interface EstoquePeca {
   valor_unitario: number
   valor_total: number
   origem: string
+  observacao: string
   created_at: string
 }
 
@@ -59,6 +60,7 @@ export function EntradaPecas() {
     data_emissao: new Date().toISOString().split("T")[0],
     valor_unitario: 0,
     origem: "",
+    observacao: "",
   })
 
   const loadPecas = useCallback(async () => {
@@ -191,6 +193,7 @@ export function EntradaPecas() {
       data_emissao: peca.data_emissao,
       valor_unitario: peca.valor_unitario,
       origem: peca.origem,
+      observacao: peca.observacao || "",
     })
     setDialogOpen(true)
   }
@@ -206,6 +209,7 @@ export function EntradaPecas() {
       data_emissao: new Date().toISOString().split("T")[0],
       valor_unitario: 0,
       origem: "",
+      observacao: "",
     })
     setEditingPeca(null)
     setDialogOpen(false)
@@ -326,18 +330,29 @@ export function EntradaPecas() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="origem">Origem</Label>
-                <Select value={formData.origem} onValueChange={(v) => setFormData({ ...formData, origem: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a origem" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ORIGENS.map((o) => (
-                      <SelectItem key={o} value={o}>{o}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="origem">Origem</Label>
+                  <Select value={formData.origem} onValueChange={(v) => setFormData({ ...formData, origem: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORIGENS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="observacao">Observação</Label>
+                  <Input
+                    id="observacao"
+                    value={formData.observacao}
+                    onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+                    placeholder="Ex: UTILIZAR NO CB-2316SA-04 EM DEZEMBRO/2025"
+                  />
+                </div>
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -456,6 +471,7 @@ export function EntradaPecas() {
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
+                    <TableHead>Observação</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -477,6 +493,9 @@ export function EntradaPecas() {
                         <Badge variant="outline" className="text-xs whitespace-nowrap">
                           {peca.origem || "-"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={peca.observacao || ""}>
+                        {peca.observacao || "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
