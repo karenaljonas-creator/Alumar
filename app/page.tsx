@@ -22,7 +22,7 @@ import { MachineFormDialog } from "@/components/machine-form-dialog"
 import { RegistroSemanal } from "@/components/registro-semanal"
 import { Configuracoes } from "@/components/configuracoes"
 import { Button } from "@/components/ui/button"
-import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench } from "lucide-react"
+import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench, Shield } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -39,9 +39,10 @@ import { GestaoParadas } from "@/components/gestao-paradas"
 import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
 import { EstoqueSaldo } from "@/components/estoque-saldo"
+import { EstoqueEstrategico } from "@/components/estoque-estrategico"
 import { cn } from "@/lib/utils"
 
-type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "gerenciar" | "config"
+type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "estoque-estrategico" | "gerenciar" | "config"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -502,6 +503,7 @@ export default function Home() {
     { id: "entrada" as const, label: "Entrada", icon: PackagePlus },
     { id: "saida" as const, label: "Saída", icon: PackageMinus },
     { id: "estoque" as const, label: "Estoque", icon: Boxes },
+    { id: "estoque-estrategico" as const, label: "Estoque Estratégico", icon: Shield },
   ]
 
   const configItems = [
@@ -608,7 +610,8 @@ export default function Home() {
           <p className="text-xs text-muted-foreground mb-2 text-center">
             {activeSection === "entrada" ? "Entrada de Peças" : 
              activeSection === "saida" ? "Saída de Peças" :
-             activeSection === "estoque" ? "Estoque" : "Máquinas"}
+             activeSection === "estoque" ? "Estoque" : 
+  activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
           </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleImport} className="flex-1 text-xs">
@@ -744,6 +747,17 @@ export default function Home() {
           {activeSection === "estoque" && (
             <div className="space-y-8">
               <EstoqueSaldo />
+            </div>
+          )}
+
+          {/* Estoque Estratégico */}
+          {activeSection === "estoque-estrategico" && (
+            <div className="space-y-8">
+              <div>
+                <h2 className="text-2xl font-semibold">Estoque Estratégico</h2>
+                <p className="text-sm text-muted-foreground">Controle de estoque mínimo para peças críticas</p>
+              </div>
+              <EstoqueEstrategico />
             </div>
           )}
 
