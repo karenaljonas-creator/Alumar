@@ -254,75 +254,152 @@ export default function Home() {
   const handleImport = () => {
     const input = document.createElement("input")
     input.type = "file"
-    input.accept = ".csv"
+    input.accept = ".csv,.xlsx,.xls"
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
-      if (file) {
+      if (!file) return
+
+      const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls")
+      
+      // Importar baseado na seção ativa
+      if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
+        try {
+          const supabase = (await import("@/lib/supabase/client")).createClient()
+          const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
+          
+          let rows: Record<string, string | number>[] = []
+          
+          if (isExcel) {
+            // Importar Excel usando xlsx
+            const XLSX = await import("xlsx")
+            const data = await file.arrayBuffer()
+            const workbook = XLSX.read(data, { type: "array" })
+            const sheetName = workbook.SheetNames[0]
+            const worksheet = workbook.Sheets[sheetName]
+            const jsonData = XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet)
+            
+            // Mapear colunas do Excel para colunas do banco
+            const columnMapping: Record<string, string> = {
+              "Código": "codigo",
+              "codigo": "codigo",
+              "Descrição": "descricao",
+              "descricao": "descricao",
+              "QTD": "quantidade",
+              "quantidade": "quantidade",
+              "Pedido / O.S": "ordem_servico",
+              "ordem_servico": "ordem_servico",
+              "SERIE": "numero_serie",
+              "numero_serie": "numero_serie",
+              "NF": "nota_fiscal",
+              "nota_fiscal": "nota_fiscal",
+              "Data envio": "data_emissao",
+              "data_emissao": "data_emissao",
+              "Valor": "valor_unitario",
+              "valor_unitario": "valor_unitario",
+              "Valor total": "valor_total",
+              "valor_total": "valor_total",
+              "Origem": "origem",
+              "origem": "origem",
+              "obs": "observacao",
+              "observacao": "observacao",
+            }
+            
+            rows = jsonData.map(row => {
+              const mappedRow: Record<string, string | number> = {}
+              Object.entries(row).forEach(([key, value]) => {
+                const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
+                if (mappedKey !== "id" && mappedKey !== "created_at") {
+                  // Converter valores monetários (R$ 40.530,04 -> 40530.04)
+                  if (typeof value === "string" && value.includes("R$")) {
+                    const numStr = value.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()
+                    mappedRow[mappedKey] = parseFloat(numStr) || 0
+                  } else if (mappedKey === "valor_unitario" || mappedKey === "valor_total" || mappedKey === "quantidade") {
+                    mappedRow[mappedKey] = typeof value === "number" ? value : parseFloat(String(value).replace(",", ".")) || 0
+                  } else {
+                    mappedRow[mappedKey] = value ?? ""
+                  }
+                }
+              })
+              // Garantir campos obrigatórios
+              if (!mappedRow.codigo) return null
+              if (!mappedRow.valor_total && mappedRow.valor_unitario && mappedRow.quantidade) {
+                mappedRow.valor_total = Number(mappedRow.valor_unitario) * Number(mappedRow.quantidade)
+              }
+              return mappedRow
+            }).filter(Boolean) as Record<string, string | number>[]
+          } else {
+            // Importar CSV
+            const reader = new FileReader()
+            const csvContent = await new Promise<string>((resolve) => {
+              reader.onload = (event) => resolve(event.target?.result as string)
+              reader.readAsText(file)
+            })
+            
+            const lines = csvContent.split("\n").filter(line => line.trim())
+            const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
+            
+            rows = lines.slice(1).map(line => {
+              const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
+              const obj: Record<string, string> = {}
+              headers.forEach((h, i) => {
+                if (h !== "id" && h !== "created_at") {
+                  obj[h] = values[i] || ""
+                }
+              })
+              return obj
+            }).filter(row => Object.keys(row).length > 0)
+          }
+          
+          if (rows.length > 0) {
+            const { error } = await supabase.from(tableName).insert(rows)
+            if (error) throw error
+            
+            toast({
+              title: "Importação concluída",
+              description: `${rows.length} registros importados para ${activeSection}.`,
+            })
+            window.location.reload()
+          } else {
+            toast({
+              title: "Nenhum dado",
+              description: "Nenhum registro válido encontrado no arquivo.",
+              variant: "destructive",
+            })
+          }
+        } catch (error) {
+          console.error("Erro na importação:", error)
+          toast({
+            title: "Erro na importação",
+            description: error instanceof Error ? error.message : "Não foi possível importar os dados.",
+            variant: "destructive",
+          })
+        }
+      } else {
+        // Importar máquinas (comportamento padrão - apenas CSV)
         const reader = new FileReader()
         reader.onload = async (event) => {
           const csvContent = event.target?.result as string
-          
-          // Importar baseado na seção ativa
-          if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
-            try {
-              const supabase = (await import("@/lib/supabase/client")).createClient()
-              const lines = csvContent.split("\n").filter(line => line.trim())
-              const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
-              const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
-              
-              const rows = lines.slice(1).map(line => {
-                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
-                const obj: Record<string, string> = {}
-                headers.forEach((h, i) => {
-                  if (h !== "id" && h !== "created_at") {
-                    obj[h] = values[i] || ""
-                  }
-                })
-                return obj
-              }).filter(row => Object.keys(row).length > 0)
-              
-              if (rows.length > 0) {
-                const { error } = await supabase.from(tableName).insert(rows)
-                if (error) throw error
-                
-                toast({
-                  title: "Importação concluída",
-                  description: `${rows.length} registros importados para ${activeSection}.`,
-                })
-                // Recarregar a página para atualizar os dados
-                window.location.reload()
-              }
-            } catch (error) {
+          try {
+            const importedMachines = await importFromCSV(csvContent)
+            if (importedMachines.length > 0) {
+              setMachines(importedMachines)
               toast({
-                title: "Erro na importação",
-                description: error instanceof Error ? error.message : "Não foi possível importar os dados.",
-                variant: "destructive",
+                title: "Importação concluída",
+                description: `${importedMachines.length} máquinas foram importadas com sucesso.`,
               })
-            }
-          } else {
-            // Importar máquinas (comportamento padrão)
-            try {
-              const importedMachines = await importFromCSV(csvContent)
-              if (importedMachines.length > 0) {
-                setMachines(importedMachines)
-                toast({
-                  title: "Importação concluída",
-                  description: `${importedMachines.length} máquinas foram importadas com sucesso.`,
-                })
-              } else {
-                toast({
-                  title: "Erro na importação",
-                  description: "Não foi possível importar os dados do arquivo.",
-                  variant: "destructive",
-                })
-              }
-            } catch (error) {
+            } else {
               toast({
                 title: "Erro na importação",
                 description: "Não foi possível importar os dados do arquivo.",
                 variant: "destructive",
               })
             }
+          } catch (error) {
+            toast({
+              title: "Erro na importação",
+              description: "Não foi possível importar os dados do arquivo.",
+              variant: "destructive",
+            })
           }
         }
         reader.readAsText(file)
