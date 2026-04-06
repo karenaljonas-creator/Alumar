@@ -305,16 +305,34 @@ export default function Home() {
             }
             
             rows = jsonData.map(row => {
-              const mappedRow: Record<string, string | number> = {}
+              const mappedRow: Record<string, string | number | null> = {}
               Object.entries(row).forEach(([key, value]) => {
                 const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
-                if (mappedKey !== "id" && mappedKey !== "created_at") {
+                if (mappedKey !== "id" && mappedKey !== "created_at" && mappedKey !== "updated_at") {
                   // Converter valores monetários (R$ 40.530,04 -> 40530.04)
                   if (typeof value === "string" && value.includes("R$")) {
                     const numStr = value.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()
                     mappedRow[mappedKey] = parseFloat(numStr) || 0
                   } else if (mappedKey === "valor_unitario" || mappedKey === "valor_total" || mappedKey === "quantidade") {
                     mappedRow[mappedKey] = typeof value === "number" ? value : parseFloat(String(value).replace(",", ".")) || 0
+                  } else if (mappedKey === "data_emissao" || mappedKey === "data_envio") {
+                    // Converter data do Excel para formato ISO
+                    if (typeof value === "number") {
+                      // Excel serial date
+                      const excelEpoch = new Date(1899, 11, 30)
+                      const date = new Date(excelEpoch.getTime() + value * 86400000)
+                      mappedRow["data_emissao"] = date.toISOString().split("T")[0]
+                    } else if (typeof value === "string" && value) {
+                      // DD/MM/YYYY format
+                      const parts = value.split("/")
+                      if (parts.length === 3) {
+                        mappedRow["data_emissao"] = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
+                      } else {
+                        mappedRow["data_emissao"] = value
+                      }
+                    } else {
+                      mappedRow["data_emissao"] = null
+                    }
                   } else {
                     mappedRow[mappedKey] = value ?? ""
                   }
@@ -322,11 +340,19 @@ export default function Home() {
               })
               // Garantir campos obrigatórios
               if (!mappedRow.codigo) return null
+              // Converter codigo para string
+              mappedRow.codigo = String(mappedRow.codigo)
               if (!mappedRow.valor_total && mappedRow.valor_unitario && mappedRow.quantidade) {
                 mappedRow.valor_total = Number(mappedRow.valor_unitario) * Number(mappedRow.quantidade)
               }
+              // Garantir que campos numéricos estejam corretos
+              if (mappedRow.quantidade) mappedRow.quantidade = Number(mappedRow.quantidade)
+              if (mappedRow.valor_unitario) mappedRow.valor_unitario = Number(mappedRow.valor_unitario)
+              if (mappedRow.valor_total) mappedRow.valor_total = Number(mappedRow.valor_total)
+              
+              console.log("[v0] Row mapped:", mappedRow)
               return mappedRow
-            }).filter(Boolean) as Record<string, string | number>[]
+            }).filter(Boolean) as Record<string, string | number | null>[]
           } else {
             // Importar CSV
             const reader = new FileReader()
@@ -351,8 +377,13 @@ export default function Home() {
           }
           
           if (rows.length > 0) {
+            console.log("[v0] Inserting rows:", rows.length, "into table:", tableName)
+            console.log("[v0] First row sample:", rows[0])
             const { error } = await supabase.from(tableName).insert(rows)
-            if (error) throw error
+            if (error) {
+              console.error("[v0] Supabase error:", error)
+              throw error
+            }
             
             toast({
               title: "Importação concluída",
