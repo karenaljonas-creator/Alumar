@@ -249,7 +249,7 @@ export function EstoqueSaldo() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Corretiva Contrato</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigem["Corretiva Contrato"])}</div>
@@ -257,7 +257,7 @@ export function EstoqueSaldo() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Plano Manutenção</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigem["Plano Manutenção"])}</div>
