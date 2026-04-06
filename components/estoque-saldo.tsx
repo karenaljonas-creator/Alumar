@@ -172,8 +172,33 @@ export function EstoqueSaldo() {
   const totalPNs = filteredEstoque.length
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
-  const itensZerados = filteredEstoque.filter((item) => item.saldo === 0).length
-  const itensNegativos = filteredEstoque.filter((item) => item.saldo < 0).length
+
+  // Calcular valores por origem
+  const valoresPorOrigem = useMemo(() => {
+    const origens = {
+      "Estoque Estratégico": 0,
+      "Corretiva Contrato": 0,
+      "Plano Manutenção": 0,
+      "Acordo inicial": 0,
+    }
+
+    entradas.forEach((entrada) => {
+      const origem = entrada.origem || ""
+      const valor = entrada.valor_total || 0
+
+      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
+        origens["Estoque Estratégico"] += valor
+      } else if (origem.toLowerCase().includes("corretiva contrato")) {
+        origens["Corretiva Contrato"] += valor
+      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
+        origens["Plano Manutenção"] += valor
+      } else if (origem.toLowerCase().includes("acordo inicial")) {
+        origens["Acordo inicial"] += valor
+      }
+    })
+
+    return origens
+  }, [entradas])
 
   return (
     <div className="space-y-6">
@@ -184,7 +209,8 @@ export function EstoqueSaldo() {
         </div>
       </div>
 
-      <div className="grid grid-cols-5 gap-4">
+      {/* Resumo geral */}
+      <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de PNs</CardTitle>
@@ -203,26 +229,46 @@ export function EstoqueSaldo() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total em Estoque</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">{formatCurrency(valorTotalEstoque)}</div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* Valores por Origem */}
+      <div className="grid grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Zerados</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{itensZerados}</div>
+            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigem["Estoque Estratégico"])}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Negativos</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{itensNegativos}</div>
+            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigem["Corretiva Contrato"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigem["Plano Manutenção"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigem["Acordo inicial"])}</div>
           </CardContent>
         </Card>
       </div>
