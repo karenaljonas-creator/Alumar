@@ -209,12 +209,46 @@ export default function Home() {
     }
   }
 
-  const handleExport = () => {
-    downloadCSV(machines)
-    toast({
-      title: "Exportação concluída",
-      description: "O arquivo CSV foi baixado com sucesso.",
-    })
+  const handleExport = async () => {
+    // Exportar baseado na seção ativa
+    if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
+      // Exportar dados de peças (entrada ou saída)
+      const supabase = (await import("@/lib/supabase/client")).createClient()
+      const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
+      const fileName = activeSection === "entrada" ? "entrada-pecas" : activeSection === "saida" ? "saida-pecas" : "estoque"
+      
+      const { data, error } = await supabase.from(tableName).select("*").order("created_at", { ascending: false })
+      
+      if (error) {
+        toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
+        return
+      }
+      
+      if (!data || data.length === 0) {
+        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
+        return
+      }
+      
+      // Criar CSV
+      const headers = Object.keys(data[0]).join(",")
+      const rows = data.map(row => Object.values(row).map(v => `"${v ?? ""}"`).join(","))
+      const csv = [headers, ...rows].join("\n")
+      
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = `${fileName}-${new Date().toISOString().split("T")[0]}.csv`
+      link.click()
+      
+      toast({ title: "Exportação concluída", description: `Dados de ${activeSection} exportados com sucesso.` })
+    } else {
+      // Exportar máquinas (comportamento padrão)
+      downloadCSV(machines)
+      toast({
+        title: "Exportação concluída",
+        description: "O arquivo CSV de máquinas foi baixado com sucesso.",
+      })
+    }
   }
 
   const handleImport = () => {
@@ -227,27 +261,68 @@ export default function Home() {
         const reader = new FileReader()
         reader.onload = async (event) => {
           const csvContent = event.target?.result as string
-          try {
-            const importedMachines = await importFromCSV(csvContent)
-            if (importedMachines.length > 0) {
-              setMachines(importedMachines)
+          
+          // Importar baseado na seção ativa
+          if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
+            try {
+              const supabase = (await import("@/lib/supabase/client")).createClient()
+              const lines = csvContent.split("\n").filter(line => line.trim())
+              const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
+              const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
+              
+              const rows = lines.slice(1).map(line => {
+                const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
+                const obj: Record<string, string> = {}
+                headers.forEach((h, i) => {
+                  if (h !== "id" && h !== "created_at") {
+                    obj[h] = values[i] || ""
+                  }
+                })
+                return obj
+              }).filter(row => Object.keys(row).length > 0)
+              
+              if (rows.length > 0) {
+                const { error } = await supabase.from(tableName).insert(rows)
+                if (error) throw error
+                
+                toast({
+                  title: "Importação concluída",
+                  description: `${rows.length} registros importados para ${activeSection}.`,
+                })
+                // Recarregar a página para atualizar os dados
+                window.location.reload()
+              }
+            } catch (error) {
               toast({
-                title: "Importação concluída",
-                description: `${importedMachines.length} máquinas foram importadas com sucesso.`,
+                title: "Erro na importação",
+                description: error instanceof Error ? error.message : "Não foi possível importar os dados.",
+                variant: "destructive",
               })
-            } else {
+            }
+          } else {
+            // Importar máquinas (comportamento padrão)
+            try {
+              const importedMachines = await importFromCSV(csvContent)
+              if (importedMachines.length > 0) {
+                setMachines(importedMachines)
+                toast({
+                  title: "Importação concluída",
+                  description: `${importedMachines.length} máquinas foram importadas com sucesso.`,
+                })
+              } else {
+                toast({
+                  title: "Erro na importação",
+                  description: "Não foi possível importar os dados do arquivo.",
+                  variant: "destructive",
+                })
+              }
+            } catch (error) {
               toast({
                 title: "Erro na importação",
                 description: "Não foi possível importar os dados do arquivo.",
                 variant: "destructive",
               })
             }
-          } catch (error) {
-            toast({
-              title: "Erro na importação",
-              description: "Não foi possível importar os dados do arquivo.",
-              variant: "destructive",
-            })
           }
         }
         reader.readAsText(file)
@@ -411,6 +486,11 @@ export default function Home() {
 
         {/* Footer */}
         <div className="p-3 border-t border-border">
+          <p className="text-xs text-muted-foreground mb-2 text-center">
+            {activeSection === "entrada" ? "Entrada de Peças" : 
+             activeSection === "saida" ? "Saída de Peças" :
+             activeSection === "estoque" ? "Estoque" : "Máquinas"}
+          </p>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleImport} className="flex-1 text-xs">
               <Upload className="h-3 w-3 mr-1" />
