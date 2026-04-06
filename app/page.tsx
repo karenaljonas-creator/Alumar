@@ -304,53 +304,59 @@ export default function Home() {
               "observacao": "observacao",
             }
             
+            // Campos válidos da tabela estoque_pecas
+            const validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
+            
             rows = jsonData.map(row => {
               const mappedRow: Record<string, string | number | null> = {}
               Object.entries(row).forEach(([key, value]) => {
                 const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
-                if (mappedKey !== "id" && mappedKey !== "created_at" && mappedKey !== "updated_at") {
-                  // Converter valores monetários (R$ 40.530,04 -> 40530.04)
-                  if (typeof value === "string" && value.includes("R$")) {
-                    const numStr = value.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()
-                    mappedRow[mappedKey] = parseFloat(numStr) || 0
-                  } else if (mappedKey === "valor_unitario" || mappedKey === "valor_total" || mappedKey === "quantidade") {
-                    mappedRow[mappedKey] = typeof value === "number" ? value : parseFloat(String(value).replace(",", ".")) || 0
-                  } else if (mappedKey === "data_emissao" || mappedKey === "data_envio") {
-                    // Converter data do Excel para formato ISO
-                    if (typeof value === "number") {
-                      // Excel serial date
-                      const excelEpoch = new Date(1899, 11, 30)
-                      const date = new Date(excelEpoch.getTime() + value * 86400000)
-                      mappedRow["data_emissao"] = date.toISOString().split("T")[0]
-                    } else if (typeof value === "string" && value) {
-                      // DD/MM/YYYY format
-                      const parts = value.split("/")
-                      if (parts.length === 3) {
-                        mappedRow["data_emissao"] = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
-                      } else {
-                        mappedRow["data_emissao"] = value
-                      }
+                
+                // Só incluir campos válidos
+                if (!validFields.includes(mappedKey)) return
+                
+                // Converter valores monetários (R$ 40.530,04 -> 40530.04)
+                if (typeof value === "string" && value.includes("R$")) {
+                  const numStr = value.replace("R$", "").replace(/\./g, "").replace(",", ".").trim()
+                  mappedRow[mappedKey] = parseFloat(numStr) || 0
+                } else if (mappedKey === "valor_unitario" || mappedKey === "valor_total") {
+                  mappedRow[mappedKey] = typeof value === "number" ? value : parseFloat(String(value).replace(/\./g, "").replace(",", ".")) || 0
+                } else if (mappedKey === "quantidade") {
+                  mappedRow[mappedKey] = typeof value === "number" ? Math.floor(value) : parseInt(String(value)) || 1
+                } else if (mappedKey === "data_emissao") {
+                  // Converter data do Excel para formato ISO
+                  if (typeof value === "number") {
+                    // Excel serial date
+                    const excelEpoch = new Date(1899, 11, 30)
+                    const date = new Date(excelEpoch.getTime() + value * 86400000)
+                    mappedRow["data_emissao"] = date.toISOString().split("T")[0]
+                  } else if (typeof value === "string" && value) {
+                    // DD/MM/YYYY format
+                    const parts = value.split("/")
+                    if (parts.length === 3) {
+                      mappedRow["data_emissao"] = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`
                     } else {
                       mappedRow["data_emissao"] = null
                     }
                   } else {
-                    mappedRow[mappedKey] = value ?? ""
+                    mappedRow["data_emissao"] = null
                   }
+                } else {
+                  mappedRow[mappedKey] = String(value ?? "")
                 }
               })
+              
               // Garantir campos obrigatórios
               if (!mappedRow.codigo) return null
+              
               // Converter codigo para string
               mappedRow.codigo = String(mappedRow.codigo)
+              
+              // Calcular valor_total se não existir
               if (!mappedRow.valor_total && mappedRow.valor_unitario && mappedRow.quantidade) {
                 mappedRow.valor_total = Number(mappedRow.valor_unitario) * Number(mappedRow.quantidade)
               }
-              // Garantir que campos numéricos estejam corretos
-              if (mappedRow.quantidade) mappedRow.quantidade = Number(mappedRow.quantidade)
-              if (mappedRow.valor_unitario) mappedRow.valor_unitario = Number(mappedRow.valor_unitario)
-              if (mappedRow.valor_total) mappedRow.valor_total = Number(mappedRow.valor_total)
               
-              console.log("[v0] Row mapped:", mappedRow)
               return mappedRow
             }).filter(Boolean) as Record<string, string | number | null>[]
           } else {
@@ -397,11 +403,16 @@ export default function Home() {
               variant: "destructive",
             })
           }
-        } catch (error) {
-          console.error("Erro na importação:", error)
+        } catch (error: unknown) {
+          console.error("[v0] Erro na importação:", error)
+          let errorMsg = "Não foi possível importar os dados."
+          if (error && typeof error === "object") {
+            const err = error as { message?: string; details?: string; hint?: string }
+            errorMsg = err.message || err.details || err.hint || errorMsg
+          }
           toast({
             title: "Erro na importação",
-            description: error instanceof Error ? error.message : "Não foi possível importar os dados.",
+            description: errorMsg,
             variant: "destructive",
           })
         }
