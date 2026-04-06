@@ -92,6 +92,11 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
       .limit(100)
 
     if (error) {
+      // Check if it's a network error
+      if (error.message?.includes("fetch") || error.code === "NETWORK_ERROR") {
+        console.warn("Erro de conexão ao carregar histórico - tentando novamente...")
+        return []
+      }
       console.error("Erro Supabase ao carregar histórico:", error)
       return []
     }
@@ -101,7 +106,12 @@ export async function loadHistory(): Promise<WeeklySnapshot[]> {
     }
 
     return data.map((row) => row.snapshot as WeeklySnapshot)
-  } catch (error) {
+  } catch (error: unknown) {
+    // Handle network errors gracefully
+    if (error instanceof TypeError && error.message === "Failed to fetch") {
+      console.warn("Conexão com Supabase temporariamente indisponível")
+      return []
+    }
     console.error("Erro ao carregar histórico:", error)
     return []
   }
