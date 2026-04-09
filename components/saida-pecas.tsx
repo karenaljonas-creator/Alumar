@@ -10,7 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -32,6 +33,21 @@ interface EstoquePeca {
   descricao: string
 }
 
+interface EstoquePecaCompleta {
+  id: string
+  codigo: string
+  descricao: string
+  quantidade: number
+  ordem_servico: string
+  numero_serie: string
+  nota_fiscal: string
+  data_emissao: string
+  valor_unitario: number
+  valor_total: number
+  origem: string
+  observacao: string
+}
+
 type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao"
 type SortDirection = "asc" | "desc"
 
@@ -51,6 +67,11 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [codigoEncontrado, setCodigoEncontrado] = useState<boolean | null>(null)
+  const [buscaNF, setBuscaNF] = useState("")
+  const [itensNF, setItensNF] = useState<EstoquePecaCompleta[]>([])
+  const [itensSelecionados, setItensSelecionados] = useState<Set<string>>(new Set())
+  const [buscandoNF, setBuscandoNF] = useState(false)
+  const [nfDialogOpen, setNfDialogOpen] = useState(false)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -107,6 +128,137 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     loadSaidas()
     loadEstoquePecas()
   }, [loadSaidas, loadEstoquePecas])
+
+  // Buscar itens por NF
+  const buscarPorNF = useCallback(async () => {
+    if (!buscaNF.trim()) {
+      toast({ title: "Digite um número de NF", variant: "destructive" })
+      return
+    }
+
+    setBuscandoNF(true)
+    const { data, error } = await supabase
+      .from("estoque_pecas")
+      .select("*")
+      .ilike("nota_fiscal", `%${buscaNF.trim()}%`)
+      .order("codigo")
+
+    if (error) {
+      toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
+    } else if (!data || data.length === 0) {
+      toast({ title: "Nenhum item encontrado", description: `Não há itens com a NF "${buscaNF}"`, variant: "destructive" })
+    } else {
+      setItensNF(data)
+      setItensSelecionados(new Set())
+      setNfDialogOpen(true)
+    }
+    setBuscandoNF(false)
+  }, [buscaNF, supabase, toast])
+
+  // Toggle seleção de item
+  const toggleItemSelecionado = (id: string) => {
+    setItensSelecionados((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }
+
+  // Selecionar/Desselecionar todos
+  const toggleTodos = () => {
+    if (itensSelecionados.size === itensNF.length) {
+      setItensSelecionados(new Set())
+    } else {
+      setItensSelecionados(new Set(itensNF.map((i) => i.id)))
+    }
+  }
+
+  // Usar itens selecionados
+  const usarItensSelecionados = () => {
+    const selecionados = itensNF.filter((i) => itensSelecionados.has(i.id))
+    if (selecionados.length === 0) {
+      toast({ title: "Selecione pelo menos um item", variant: "destructive" })
+      return
+    }
+
+    // Se apenas um item selecionado, preenche o formulário diretamente
+    if (selecionados.length === 1) {
+      const item = selecionados[0]
+      setFormData((prev) => ({
+        ...prev,
+        codigo: item.codigo,
+        descricao: item.descricao,
+        quantidade: item.quantidade,
+        ordem_servico: item.ordem_servico || "",
+      }))
+      setCodigoEncontrado(true)
+      setNfDialogOpen(false)
+      setDialogOpen(true)
+      toast({ title: "Item carregado", description: `Peça ${item.codigo} pronta para saída` })
+    } else {
+      // Se múltiplos itens, cria uma saída para cada
+      setNfDialogOpen(false)
+      criarSaidasMultiplas(selecionados)
+    }
+  }
+
+  // Criar múltiplas saídas
+  const criarSaidasMultiplas = async (itens: EstoquePecaCompleta[]) => {
+    // Abre o dialog para preencher dados comuns (área, compressor, utilização, data)
+    setFormData((prev) => ({
+      ...prev,
+      codigo: "",
+      descricao: "",
+      quantidade: 1,
+    }))
+    
+    // Armazena os itens selecionados para processar depois
+    setItensSelecionadosParaSaida(itens)
+    setSaidaMultiplaDialogOpen(true)
+  }
+
+  // Estados para saída múltipla
+  const [itensSelecionadosParaSaida, setItensSelecionadosParaSaida] = useState<EstoquePecaCompleta[]>([])
+  const [saidaMultiplaDialogOpen, setSaidaMultiplaDialogOpen] = useState(false)
+
+  // Processar saídas múltiplas
+  const processarSaidasMultiplas = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!formData.area || !formData.compressor || !formData.utilizacao) {
+      toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" })
+      return
+    }
+
+    const saidasParaInserir = itensSelecionadosParaSaida.map((item) => ({
+      codigo: item.codigo,
+      descricao: item.descricao,
+      quantidade: item.quantidade,
+      data_saida: formData.data_saida,
+      ordem_servico: item.ordem_servico || formData.ordem_servico,
+      area: formData.area,
+      compressor: formData.compressor,
+      utilizacao: formData.utilizacao,
+    }))
+
+    const { error } = await supabase
+      .from("saida_pecas")
+      .insert(saidasParaInserir)
+
+    if (error) {
+      toast({ title: "Erro ao registrar saídas", description: error.message, variant: "destructive" })
+    } else {
+      toast({ title: `${saidasParaInserir.length} saídas registradas com sucesso!` })
+      loadSaidas()
+      setSaidaMultiplaDialogOpen(false)
+      setItensSelecionadosParaSaida([])
+      resetForm()
+    }
+  }
 
   // Auto-fill description when code changes
   const handleCodigoChange = (codigo: string) => {
@@ -260,7 +412,25 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           <h2 className="text-2xl font-semibold">Saída de Peças</h2>
           <p className="text-sm text-muted-foreground">Registro de saída de peças do estoque</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+        <div className="flex items-center gap-2">
+          {/* Busca por NF */}
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <FileSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por NF..."
+                value={buscaNF}
+                onChange={(e) => setBuscaNF(e.target.value)}
+                className="w-48 pl-10"
+                onKeyDown={(e) => e.key === "Enter" && buscarPorNF()}
+              />
+            </div>
+            <Button variant="secondary" onClick={buscarPorNF} disabled={buscandoNF}>
+              {buscandoNF ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar NF"}
+            </Button>
+          </div>
+
+          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -400,7 +570,177 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
+
+      {/* Dialog de Busca por NF */}
+      <Dialog open={nfDialogOpen} onOpenChange={setNfDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileSearch className="h-5 w-5" />
+              Itens da NF: {buscaNF}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-muted-foreground">
+                {itensNF.length} item(ns) encontrado(s). Selecione os itens que deseja dar saída.
+              </p>
+              <Button variant="outline" size="sm" onClick={toggleTodos}>
+                {itensSelecionados.size === itensNF.length ? "Desselecionar Todos" : "Selecionar Todos"}
+              </Button>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted">
+                  <TableHead className="w-12">
+                    <Checkbox
+                      checked={itensSelecionados.size === itensNF.length && itensNF.length > 0}
+                      onCheckedChange={toggleTodos}
+                    />
+                  </TableHead>
+                  <TableHead>Código</TableHead>
+                  <TableHead>Descrição</TableHead>
+                  <TableHead>Qtd</TableHead>
+                  <TableHead>OS</TableHead>
+                  <TableHead>Nº Série</TableHead>
+                  <TableHead>Origem</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {itensNF.map((item) => (
+                  <TableRow 
+                    key={item.id} 
+                    className={itensSelecionados.has(item.id) ? "bg-primary/10" : ""}
+                    onClick={() => toggleItemSelecionado(item.id)}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={itensSelecionados.has(item.id)}
+                        onCheckedChange={() => toggleItemSelecionado(item.id)}
+                      />
+                    </TableCell>
+                    <TableCell className="font-mono font-medium">{item.codigo}</TableCell>
+                    <TableCell className="max-w-[200px] truncate">{item.descricao}</TableCell>
+                    <TableCell className="text-center">{item.quantidade}</TableCell>
+                    <TableCell>{item.ordem_servico || "-"}</TableCell>
+                    <TableCell>{item.numero_serie || "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">{item.origem}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="flex justify-between items-center pt-4 border-t">
+            <p className="text-sm font-medium">
+              {itensSelecionados.size} item(ns) selecionado(s)
+            </p>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setNfDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={usarItensSelecionados} disabled={itensSelecionados.size === 0}>
+                Usar Selecionados
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog de Saída Múltipla */}
+      <Dialog open={saidaMultiplaDialogOpen} onOpenChange={setSaidaMultiplaDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Registrar Saída de {itensSelecionadosParaSaida.length} Itens</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={processarSaidasMultiplas} className="space-y-4">
+            <div className="bg-muted p-3 rounded-lg">
+              <p className="text-sm font-medium mb-2">Itens selecionados:</p>
+              <div className="space-y-1 max-h-32 overflow-auto">
+                {itensSelecionadosParaSaida.map((item) => (
+                  <p key={item.id} className="text-xs text-muted-foreground">
+                    • {item.codigo} - {item.descricao} (Qtd: {item.quantidade})
+                  </p>
+                ))}
+              </div>
+            </div>
+
+            <p className="text-sm text-muted-foreground">
+              Preencha os dados comuns para todas as saídas:
+            </p>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="multi_data_saida">Data</Label>
+                <Input
+                  id="multi_data_saida"
+                  type="date"
+                  value={formData.data_saida}
+                  onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="multi_ordem_servico">Ordem de Serviço (Padrão)</Label>
+                <Input
+                  id="multi_ordem_servico"
+                  value={formData.ordem_servico}
+                  onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
+                  placeholder="Usada se item não tiver OS"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="multi_area">Área *</Label>
+                <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione a área" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {areas.map((a) => (
+                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="multi_compressor">Equipamento (TAG) *</Label>
+                <Select value={formData.compressor} onValueChange={(v) => setFormData({ ...formData, compressor: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o equipamento" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {machinesInArea.map((m) => (
+                      <SelectItem key={m.id} value={m.nome}>{m.nome} - {m.tipo}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="multi_utilizacao">Utilização *</Label>
+                <Select value={formData.utilizacao} onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {UTILIZACOES.map((u) => (
+                      <SelectItem key={u} value={u}>{u}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setSaidaMultiplaDialogOpen(false)}>Cancelar</Button>
+              <Button type="submit">Registrar {itensSelecionadosParaSaida.length} Saídas</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid grid-cols-3 gap-4">
         <Card>
