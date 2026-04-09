@@ -412,25 +412,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           <h2 className="text-2xl font-semibold">Saída de Peças</h2>
           <p className="text-sm text-muted-foreground">Registro de saída de peças do estoque</p>
         </div>
-        <div className="flex items-center gap-2">
-          {/* Busca por NF */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <FileSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por NF..."
-                value={buscaNF}
-                onChange={(e) => setBuscaNF(e.target.value)}
-                className="w-48 pl-10"
-                onKeyDown={(e) => e.key === "Enter" && buscarPorNF()}
-              />
-            </div>
-            <Button variant="secondary" onClick={buscarPorNF} disabled={buscandoNF}>
-              {buscandoNF ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar NF"}
-            </Button>
-          </div>
-
-          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
@@ -442,6 +424,36 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <DialogTitle>{editingSaida ? "Editar Saída" : "Registrar Saída de Peça"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Busca por NF */}
+              {!editingSaida && (
+                <div className="bg-muted/50 p-3 rounded-lg border border-dashed">
+                  <Label className="text-sm font-medium mb-2 flex items-center gap-2">
+                    <FileSearch className="h-4 w-4" />
+                    Buscar itens por Nota Fiscal
+                  </Label>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Input
+                      placeholder="Digite o número da NF..."
+                      value={buscaNF}
+                      onChange={(e) => setBuscaNF(e.target.value)}
+                      className="flex-1"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault()
+                          buscarPorNF()
+                        }
+                      }}
+                    />
+                    <Button type="button" variant="secondary" onClick={buscarPorNF} disabled={buscandoNF}>
+                      {buscandoNF ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buscar"}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Busque pela NF da Entrada para carregar os itens automaticamente
+                  </p>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="codigo">Código (PN)</Label>
@@ -570,7 +582,6 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             </form>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
 
       {/* Dialog de Busca por NF */}
