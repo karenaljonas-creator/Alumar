@@ -199,7 +199,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         descricao: item.descricao,
         quantidade: item.quantidade,
         ordem_servico: item.ordem_servico || "",
-        nota_fiscal: item.nota_fiscal || "",
+        nota_fiscal: item.nota_fiscal || buscaNF || "",
       }))
       setCodigoEncontrado(true)
       setNfDialogOpen(false)
@@ -246,7 +246,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: item.quantidade,
       data_saida: formData.data_saida,
       ordem_servico: item.ordem_servico || formData.ordem_servico,
-      nota_fiscal: item.nota_fiscal || "",
+      nota_fiscal: item.nota_fiscal || buscaNF || "",
       area: formData.area,
       compressor: formData.compressor,
       utilizacao: formData.utilizacao,
@@ -840,6 +840,11 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     <TableHead>
                       <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Ordem Serviço <SortIcon columnKey="ordem_servico" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        NF <SortIcon columnKey="nota_fiscal" />
                       </button>
                     </TableHead>
                     <TableHead>
