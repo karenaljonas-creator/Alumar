@@ -449,9 +449,10 @@ export function EntradaPecas() {
                 <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
                 <Button type="submit">{editingPeca ? "Salvar Alterações" : "Cadastrar"}</Button>
               </div>
-            </form>
+</form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
