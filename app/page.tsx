@@ -532,7 +532,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col fixed h-screen">
+      <aside className="w-64 border-r border-border bg-card flex flex-col fixed top-0 left-0 h-screen z-50 overflow-y-auto">
         {/* Logo/Header */}
         <div className="p-4 border-b border-border">
           <h1 className="text-lg font-bold text-foreground">Gestão de Máquinas</h1>

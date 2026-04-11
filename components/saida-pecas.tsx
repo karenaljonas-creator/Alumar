@@ -843,6 +843,11 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </button>
                     </TableHead>
                     <TableHead>
+                      <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        NF <SortIcon columnKey="nota_fiscal" />
+                      </button>
+                    </TableHead>
+                    <TableHead>
                       <button onClick={() => handleSort("area")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Área <SortIcon columnKey="area" />
                       </button>
