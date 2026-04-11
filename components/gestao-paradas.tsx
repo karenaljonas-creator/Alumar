@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Input } from "@/components/ui/input"
 import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 
@@ -213,19 +214,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Localizacao</label>
-              <Select value={localizacaoFilter} onValueChange={setLocalizacaoFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todas">Todas</SelectItem>
-                  {localizacoes.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <SearchableSelect
+                options={[{ value: "todas", label: "Todas" }, ...localizacoes.map((loc) => ({ value: loc, label: loc }))]}
+                value={localizacaoFilter}
+                onValueChange={setLocalizacaoFilter}
+                placeholder="Todas"
+                searchPlaceholder="Pesquisar localização..."
+                className="w-[180px]"
+              />
             </div>
           </div>
 

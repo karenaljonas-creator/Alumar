@@ -14,6 +14,7 @@ import { loadMachines, saveMachines } from "@/lib/supabase-machine-storage"
 import { saveWeeklySnapshot } from "@/lib/supabase-history-storage"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 
 interface RegistroSemanalProps {
   machines: Machine[]
@@ -344,36 +345,24 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
           <div className="space-y-2">
             <label className="text-sm text-muted-foreground">Localização</label>
-            <Select value={localizacaoFilter} onValueChange={setLocalizacaoFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                {uniqueLocalizacoes.map((loc) => (
-                  <SelectItem key={loc} value={loc}>
-                    {loc}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[{ value: "todas", label: "Todas" }, ...uniqueLocalizacoes.map((loc) => ({ value: loc, label: loc }))]}
+              value={localizacaoFilter}
+              onValueChange={setLocalizacaoFilter}
+              placeholder="Todas"
+              searchPlaceholder="Pesquisar localização..."
+            />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm text-muted-foreground">TAG</label>
-            <Select value={tagFilter} onValueChange={setTagFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Todas" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas</SelectItem>
-                {uniqueTags.map((tag) => (
-                  <SelectItem key={tag} value={tag}>
-                    {tag}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[{ value: "todas", label: "Todas" }, ...uniqueTags.map((tag) => ({ value: tag, label: tag }))]}
+              value={tagFilter}
+              onValueChange={setTagFilter}
+              placeholder="Todas"
+              searchPlaceholder="Pesquisar TAG..."
+            />
           </div>
         </div>
 

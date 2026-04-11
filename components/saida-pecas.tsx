@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2 } from "lucide-react"
@@ -536,42 +537,33 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="area">Área</Label>
-                  <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a área" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {areas.map((a) => (
-                        <SelectItem key={a} value={a}>{a}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={areas.map((a) => ({ value: a, label: a }))}
+                    value={formData.area}
+                    onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}
+                    placeholder="Selecione a área"
+                    searchPlaceholder="Pesquisar área..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="compressor">Equipamento (TAG)</Label>
-                  <Select value={formData.compressor} onValueChange={(v) => setFormData({ ...formData, compressor: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o equipamento" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {machinesInArea.map((m) => (
-                        <SelectItem key={m.id} value={m.nome}>{m.nome} - {m.tipo}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={machinesInArea.map((m) => ({ value: m.nome, label: `${m.nome} - ${m.tipo}` }))}
+                    value={formData.compressor}
+                    onValueChange={(v) => setFormData({ ...formData, compressor: v })}
+                    placeholder="Selecione o equipamento"
+                    searchPlaceholder="Pesquisar equipamento..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="utilizacao">Utilização</Label>
-                  <Select value={formData.utilizacao} onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {UTILIZACOES.map((u) => (
-                        <SelectItem key={u} value={u}>{u}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={UTILIZACOES.map((u) => ({ value: u, label: u }))}
+                    value={formData.utilizacao}
+                    onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}
+                    placeholder="Selecione"
+                    searchPlaceholder="Pesquisar..."
+                  />
                 </div>
               </div>
 
@@ -706,42 +698,33 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="multi_area">Área *</Label>
-                <Select value={formData.area} onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a área" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {areas.map((a) => (
-                      <SelectItem key={a} value={a}>{a}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={areas.map((a) => ({ value: a, label: a }))}
+                  value={formData.area}
+                  onValueChange={(v) => setFormData({ ...formData, area: v, compressor: "" })}
+                  placeholder="Selecione a área"
+                  searchPlaceholder="Pesquisar área..."
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="multi_compressor">Equipamento (TAG) *</Label>
-                <Select value={formData.compressor} onValueChange={(v) => setFormData({ ...formData, compressor: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o equipamento" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {machinesInArea.map((m) => (
-                      <SelectItem key={m.id} value={m.nome}>{m.nome} - {m.tipo}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={machinesInArea.map((m) => ({ value: m.nome, label: `${m.nome} - ${m.tipo}` }))}
+                  value={formData.compressor}
+                  onValueChange={(v) => setFormData({ ...formData, compressor: v })}
+                  placeholder="Selecione o equipamento"
+                  searchPlaceholder="Pesquisar equipamento..."
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="multi_utilizacao">Utilização *</Label>
-                <Select value={formData.utilizacao} onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {UTILIZACOES.map((u) => (
-                      <SelectItem key={u} value={u}>{u}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <SearchableSelect
+                  options={UTILIZACOES.map((u) => ({ value: u, label: u }))}
+                  value={formData.utilizacao}
+                  onValueChange={(v) => setFormData({ ...formData, utilizacao: v })}
+                  placeholder="Selecione"
+                  searchPlaceholder="Pesquisar..."
+                />
               </div>
             </div>
 

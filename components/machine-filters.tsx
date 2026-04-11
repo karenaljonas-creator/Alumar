@@ -3,6 +3,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Search } from "lucide-react"
 
 interface MachineFiltersProps {
@@ -60,33 +61,23 @@ export function MachineFilters({
           </SelectContent>
         </Select>
 
-        <Select value={tipoFilter} onValueChange={onTipoFilterChange}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos os Tipos</SelectItem>
-            {tipos.map((tipo) => (
-              <SelectItem key={tipo} value={tipo}>
-                {tipo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={[{ value: "todos", label: "Todos os Tipos" }, ...tipos.map((tipo) => ({ value: tipo, label: tipo }))]}
+          value={tipoFilter}
+          onValueChange={onTipoFilterChange}
+          placeholder="Tipo"
+          searchPlaceholder="Pesquisar tipo..."
+          className="w-full md:w-[180px]"
+        />
 
-        <Select value={localizacaoFilter} onValueChange={onLocalizacaoFilterChange}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Localização" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todas Localizações</SelectItem>
-            {localizacoes.map((loc) => (
-              <SelectItem key={loc} value={loc}>
-                {loc}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <SearchableSelect
+          options={[{ value: "todos", label: "Todas Localizações" }, ...localizacoes.map((loc) => ({ value: loc, label: loc }))]}
+          value={localizacaoFilter}
+          onValueChange={onLocalizacaoFilterChange}
+          placeholder="Localização"
+          searchPlaceholder="Pesquisar localização..."
+          className="w-full md:w-[180px]"
+        />
 
         {contratoFilter !== undefined && onContratoFilterChange && (
           <div className="flex items-center gap-2">

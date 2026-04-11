@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -333,16 +334,13 @@ export function EntradaPecas() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="origem">Origem</Label>
-                  <Select value={formData.origem} onValueChange={(v) => setFormData({ ...formData, origem: v })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a origem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ORIGENS.map((o) => (
-                        <SelectItem key={o} value={o}>{o}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <SearchableSelect
+                    options={ORIGENS.map((o) => ({ value: o, label: o }))}
+                    value={formData.origem}
+                    onValueChange={(v) => setFormData({ ...formData, origem: v })}
+                    placeholder="Selecione a origem"
+                    searchPlaceholder="Pesquisar origem..."
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="observacao">Observação</Label>

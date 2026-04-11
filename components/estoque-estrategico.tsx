@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Search, AlertTriangle, CheckCircle, Package } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -182,19 +183,14 @@ export function EstoqueEstrategico() {
             <CardTitle>Controle de Estoque Mínimo</CardTitle>
           </div>
           <div className="flex items-center gap-4">
-            <Select value={equipamentoFilter} onValueChange={setEquipamentoFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Equipamento" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos Equipamentos</SelectItem>
-                {equipamentos.map((equip) => (
-                  <SelectItem key={equip} value={equip}>
-                    {equip}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[{ value: "all", label: "Todos Equipamentos" }, ...equipamentos.map((equip) => ({ value: equip, label: equip }))]}
+              value={equipamentoFilter}
+              onValueChange={setEquipamentoFilter}
+              placeholder="Equipamento"
+              searchPlaceholder="Pesquisar equipamento..."
+              className="w-[180px]"
+            />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="Status" />
