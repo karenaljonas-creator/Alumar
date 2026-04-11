@@ -115,13 +115,16 @@ export function EntradaPecas() {
   }
 
   const filteredPecas = pecas
-    .filter((p) =>
-      p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.nota_fiscal.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.numero_serie.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((p) => {
+      const term = searchTerm.toLowerCase()
+      return (
+        (p.codigo || "").toLowerCase().includes(term) ||
+        (p.descricao || "").toLowerCase().includes(term) ||
+        (p.ordem_servico || "").toLowerCase().includes(term) ||
+        (p.nota_fiscal || "").toLowerCase().includes(term) ||
+        (p.numero_serie || "").toLowerCase().includes(term)
+      )
+    })
     .sort((a, b) => {
       if (!sortKey) return 0
       let valA: string | number = ""
