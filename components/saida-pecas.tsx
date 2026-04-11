@@ -23,6 +23,7 @@ interface SaidaPeca {
   quantidade: number
   data_saida: string
   ordem_servico: string
+  nota_fiscal: string
   area: string
   compressor: string
   utilizacao: string
@@ -83,6 +84,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     quantidade: 1,
     data_saida: new Date().toISOString().split("T")[0],
     ordem_servico: "",
+    nota_fiscal: "",
     area: "",
     compressor: "",
     utilizacao: "",
@@ -197,6 +199,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         descricao: item.descricao,
         quantidade: item.quantidade,
         ordem_servico: item.ordem_servico || "",
+        nota_fiscal: item.nota_fiscal || "",
       }))
       setCodigoEncontrado(true)
       setNfDialogOpen(false)
@@ -243,6 +246,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: item.quantidade,
       data_saida: formData.data_saida,
       ordem_servico: item.ordem_servico || formData.ordem_servico,
+      nota_fiscal: item.nota_fiscal || "",
       area: formData.area,
       compressor: formData.compressor,
       utilizacao: formData.utilizacao,
@@ -379,6 +383,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: saida.quantidade,
       data_saida: saida.data_saida,
       ordem_servico: saida.ordem_servico,
+      nota_fiscal: saida.nota_fiscal || "",
       area: saida.area,
       compressor: saida.compressor,
       utilizacao: saida.utilizacao,
@@ -395,6 +400,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: 1,
       data_saida: new Date().toISOString().split("T")[0],
       ordem_servico: "",
+      nota_fiscal: "",
       area: "",
       compressor: "",
       utilizacao: "",
@@ -865,6 +871,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         {saida.data_saida ? new Date(saida.data_saida).toLocaleDateString("pt-BR") : "-"}
                       </TableCell>
                       <TableCell>{saida.ordem_servico || "-"}</TableCell>
+                      <TableCell>{saida.nota_fiscal || "-"}</TableCell>
                       <TableCell>{saida.area}</TableCell>
                       <TableCell className="font-medium">{saida.compressor}</TableCell>
                       <TableCell>
