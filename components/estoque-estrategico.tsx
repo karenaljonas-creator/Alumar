@@ -116,9 +116,11 @@ export function EstoqueEstrategico() {
   // Filtrar itens
   const filteredItens = useMemo(() => {
     return itensComSaldo.filter((item) => {
+      const term = searchTerm.toLowerCase()
       const matchesSearch =
-        item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+        item.codigo.toLowerCase().includes(term) ||
+        item.descricao.toLowerCase().includes(term) ||
+        item.equipamento.toLowerCase().includes(term)
 
       const matchesEquipamento = equipamentoFilter === "all" || item.equipamento === equipamentoFilter
 
@@ -285,7 +287,7 @@ export function EstoqueEstrategico() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por código ou descrição..."
+                placeholder="Buscar por código, descrição ou equipamento..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-[300px] pl-10"
