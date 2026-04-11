@@ -316,12 +316,18 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   }
 
   const filteredSaidas = saidas
-    .filter((s) =>
-      s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.compressor.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((s) => {
+      const term = searchTerm.toLowerCase()
+      return (
+        s.codigo.toLowerCase().includes(term) ||
+        s.descricao.toLowerCase().includes(term) ||
+        s.ordem_servico.toLowerCase().includes(term) ||
+        (s.nota_fiscal || "").toLowerCase().includes(term) ||
+        s.compressor.toLowerCase().includes(term) ||
+        s.area.toLowerCase().includes(term) ||
+        (s.observacao || "").toLowerCase().includes(term)
+      )
+    })
     .sort((a, b) => {
       if (!sortKey) return 0
       let valA: string | number = ""
@@ -911,7 +917,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por código, descrição, OS ou TAG..."
+                placeholder="Buscar por código, descrição, OS, NF, equipamento, área..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
