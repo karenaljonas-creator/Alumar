@@ -517,9 +517,14 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         </div>
         <div className="flex items-center gap-2">
           {selectedRows.size > 0 && (
-            <Button variant="outline" className="gap-2" onClick={openBulkEdit}>
+            <Button variant="secondary" className="gap-2 bg-yellow-100 hover:bg-yellow-200 text-yellow-900 border border-yellow-300" onClick={openBulkEdit}>
               <Edit2 className="h-4 w-4" />
               Editar {selectedRows.size} selecionados
+            </Button>
+          )}
+          {selectedRows.size > 0 && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedRows(new Set())}>
+              Limpar seleção
             </Button>
           )}
           <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
