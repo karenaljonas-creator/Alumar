@@ -26,6 +26,7 @@ interface SaidaPeca {
   area: string
   compressor: string
   utilizacao: string
+  observacao: string
   created_at: string
 }
 
@@ -85,6 +86,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     area: "",
     compressor: "",
     utilizacao: "",
+    observacao: "",
   })
 
   // Get unique areas from machines
@@ -380,6 +382,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       area: saida.area,
       compressor: saida.compressor,
       utilizacao: saida.utilizacao,
+      observacao: saida.observacao || "",
     })
     setCodigoEncontrado(true)
     setDialogOpen(true)
@@ -395,6 +398,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       area: "",
       compressor: "",
       utilizacao: "",
+      observacao: "",
     })
     setEditingSaida(null)
     setCodigoEncontrado(null)
@@ -565,6 +569,16 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     searchPlaceholder="Pesquisar..."
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="observacao">Observação</Label>
+                <Input
+                  id="observacao"
+                  value={formData.observacao}
+                  onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+                  placeholder="Observações adicionais sobre a saída..."
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
@@ -837,6 +851,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         Utilização <SortIcon columnKey="utilizacao" />
                       </button>
                     </TableHead>
+                    <TableHead>Observação</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -859,6 +874,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         >
                           {saida.utilizacao}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-[150px] truncate" title={saida.observacao || ""}>
+                        {saida.observacao || "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
