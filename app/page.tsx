@@ -230,12 +230,21 @@ export default function Home() {
         return
       }
       
-      // Criar CSV
-      const headers = Object.keys(data[0]).join(",")
-      const rows = data.map(row => Object.values(row).map(v => `"${v ?? ""}"`).join(","))
+      // Criar CSV com ponto-e-vírgula para Excel PT-BR
+      const headers = Object.keys(data[0]).join(";")
+      const rows = data.map(row => Object.values(row).map(v => {
+        const value = v ?? ""
+        // Escapar valores que contêm ponto-e-vírgula ou quebras de linha
+        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
+          return `"${String(value).replace(/"/g, '""')}"`
+        }
+        return String(value)
+      }).join(";"))
       const csv = [headers, ...rows].join("\n")
       
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+      // Adicionar BOM UTF-8 para o Excel reconhecer a codificação
+      const BOM = "\uFEFF"
+      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
       const link = document.createElement("a")
       link.href = URL.createObjectURL(blob)
       link.download = `${fileName}-${new Date().toISOString().split("T")[0]}.csv`
@@ -361,21 +370,27 @@ export default function Home() {
               return mappedRow
             }).filter(Boolean) as Record<string, string | number | null>[]
           } else {
-            // Importar CSV
+            // Importar CSV (suporta vírgula e ponto-e-vírgula como separador)
             const reader = new FileReader()
             const csvContent = await new Promise<string>((resolve) => {
               reader.onload = (event) => resolve(event.target?.result as string)
-              reader.readAsText(file)
+              reader.readAsText(file, "UTF-8")
             })
             
-            const lines = csvContent.split("\n").filter(line => line.trim())
-            const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
+            const lines = csvContent.replace(/^\uFEFF/, "").split("\n").filter(line => line.trim())
+            // Detectar separador (ponto-e-vírgula ou vírgula)
+            const separator = lines[0].includes(";") ? ";" : ","
+            const headers = lines[0].split(separator).map(h => h.replace(/"/g, "").trim())
             
             rows = lines.slice(1).map(line => {
-              const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
+              // Regex que suporta tanto vírgula quanto ponto-e-vírgula
+              const regex = separator === ";" 
+                ? /(".*?"|[^";]+)(?=\s*;|\s*$)/g 
+                : /(".*?"|[^",]+)(?=\s*,|\s*$)/g
+              const values = line.match(regex)?.map(v => v.replace(/"/g, "").trim()) || []
               const obj: Record<string, string> = {}
               headers.forEach((h, i) => {
-                if (h !== "id" && h !== "created_at") {
+                if (h !== "id" && h !== "created_at" && h !== "updated_at") {
                   obj[h] = values[i] || ""
                 }
               })
