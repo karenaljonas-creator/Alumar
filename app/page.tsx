@@ -161,7 +161,7 @@ export default function Home() {
       updatedMachines = machines.map((m) => (m.id === machineData.id ? (machineData as Machine) : m))
       toast({
         title: "Máquina atualizada",
-        description: "As alterações foram salvas com sucesso.",
+        description: "As alteraç��es foram salvas com sucesso.",
       })
     } else {
       const newMachine: Machine = {
@@ -300,6 +300,7 @@ export default function Home() {
               "ordem_servico": "ordem_servico",
               "SERIE": "numero_serie",
               "numero_serie": "numero_serie",
+              "numero_serie_equipamento": "numero_serie",
               "NF": "nota_fiscal",
               "nota_fiscal": "nota_fiscal",
               "Data envio": "data_emissao",
@@ -316,6 +317,8 @@ export default function Home() {
             
             // Campos válidos da tabela estoque_pecas
             const validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
+            
+            console.log("[v0] Excel headers found:", Object.keys(jsonData[0] || {}))
             
             rows = jsonData.map(row => {
               const mappedRow: Record<string, string | number | null> = {}
