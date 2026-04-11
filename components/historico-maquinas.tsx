@@ -13,6 +13,7 @@ type DetailSortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" 
 type SortDirection = "asc" | "desc"
 import { loadHistory, deleteSnapshot } from "@/lib/supabase-history-storage"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/hooks/use-toast"
 
@@ -116,19 +117,13 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
         <div className="grid gap-4 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="semana-filter">Filtrar por Semana</Label>
-            <Select value={semanaFilter} onValueChange={setSemanaFilter}>
-              <SelectTrigger id="semana-filter">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">Todas as Semanas</SelectItem>
-                {semanasDisponiveis.map((semana) => (
-                  <SelectItem key={semana} value={semana}>
-                    {semana}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <SearchableSelect
+              options={[{ value: "todas", label: "Todas as Semanas" }, ...semanasDisponiveis.map((semana) => ({ value: semana, label: semana }))]}
+              value={semanaFilter}
+              onValueChange={setSemanaFilter}
+              placeholder="Todas as Semanas"
+              searchPlaceholder="Pesquisar semana..."
+            />
           </div>
 
           <div className="space-y-2">
