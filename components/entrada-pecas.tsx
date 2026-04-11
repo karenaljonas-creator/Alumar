@@ -118,7 +118,9 @@ export function EntradaPecas() {
     .filter((p) =>
       p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase())
+      p.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.nota_fiscal.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.numero_serie.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       if (!sortKey) return 0
@@ -492,7 +494,7 @@ export function EntradaPecas() {
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por código, descrição ou OS..."
+                placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
