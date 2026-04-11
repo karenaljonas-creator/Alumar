@@ -5,14 +5,6 @@ import { Check, ChevronsUpDown, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
@@ -80,7 +72,7 @@ export function SearchableSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-        <Command shouldFilter={false}>
+        <div className="flex flex-col">
           <div className="flex items-center border-b px-3">
             <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
             <input
@@ -88,21 +80,27 @@ export function SearchableSelect({
               placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
             />
           </div>
-          <CommandList className="max-h-[300px]">
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <CommandGroup>
-              {filteredOptions.map((option) => (
-                <CommandItem
+          <div className="max-h-[300px] overflow-y-auto p-1">
+            {filteredOptions.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                {emptyMessage}
+              </div>
+            ) : (
+              filteredOptions.map((option) => (
+                <div
                   key={option.value}
-                  value={option.value}
-                  onSelect={() => {
+                  onClick={() => {
                     onValueChange?.(option.value)
                     setOpen(false)
                     setSearchQuery("")
                   }}
-                  className="cursor-pointer"
+                  className={cn(
+                    "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground",
+                    value === option.value && "bg-accent text-accent-foreground"
+                  )}
                 >
                   <Check
                     className={cn(
@@ -111,11 +109,11 @@ export function SearchableSelect({
                     )}
                   />
                   <span className="truncate">{option.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   )
