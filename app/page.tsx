@@ -57,7 +57,7 @@ export default function Home() {
   const [editingMachine, setEditingMachine] = useState<Machine | undefined>()
   const [latestSnapshot, setLatestSnapshot] = useState<WeeklySnapshot | null>(null)
   const [activeSection, setActiveSection] = useState<MenuSection>("painel")
-  const [materiaisExpanded, setMateriaisExpanded] = useState(false)
+  const [materiaisExpanded, setMateriaisExpanded] = useState(true)
   const { toast } = useToast()
   const contrato = loadContrato()
 

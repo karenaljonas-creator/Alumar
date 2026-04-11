@@ -511,7 +511,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="quantidade">Quantidade</Label>
                   <Input
@@ -540,6 +540,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     value={formData.ordem_servico}
                     onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
                     placeholder="Ex: 408103074"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nota_fiscal">Nota Fiscal</Label>
+                  <Input
+                    id="nota_fiscal"
+                    value={formData.nota_fiscal}
+                    onChange={(e) => setFormData({ ...formData, nota_fiscal: e.target.value })}
+                    placeholder="Ex: 276521-15"
                   />
                 </div>
               </div>
