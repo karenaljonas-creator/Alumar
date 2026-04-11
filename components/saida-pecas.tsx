@@ -702,6 +702,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* Dialog de Busca por NF */}
