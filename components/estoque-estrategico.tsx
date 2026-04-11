@@ -3,11 +3,15 @@
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/ui/searchable-select"
-import { Search, AlertTriangle, CheckCircle, Package } from "lucide-react"
+import { Search, AlertTriangle, CheckCircle, Package, Plus, Edit, Trash2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 
 interface EstoqueEstrategicoItem {
@@ -36,7 +40,15 @@ export function EstoqueEstrategico() {
   const [equipamentoFilter, setEquipamentoFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
-
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<EstoqueEstrategicoItem | null>(null)
+  const [formData, setFormData] = useState({
+    codigo: "",
+    equipamento: "",
+    descricao: "",
+    quantidade_minima: 1,
+  })
+  const { toast } = useToast()
   const supabase = createClient()
 
   useEffect(() => {
@@ -125,6 +137,75 @@ export function EstoqueEstrategico() {
   const itensAbaixo = itensComSaldo.filter((item) => item.status === "abaixo").length
   const percentualOk = totalItens > 0 ? Math.round((itensOk / totalItens) * 100) : 0
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (editingItem) {
+      const { error } = await supabase
+        .from("estoque_estrategico")
+        .update(formData)
+        .eq("id", editingItem.id)
+      
+      if (error) {
+        toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
+      } else {
+        toast({ title: "Item atualizado com sucesso!" })
+        loadAllData()
+        resetForm()
+      }
+    } else {
+      const { error } = await supabase
+        .from("estoque_estrategico")
+        .insert([formData])
+      
+      if (error) {
+        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
+      } else {
+        toast({ title: "Item cadastrado com sucesso!" })
+        loadAllData()
+        resetForm()
+      }
+    }
+  }
+
+  const handleEdit = (item: EstoqueEstrategicoItem) => {
+    setEditingItem(item)
+    setFormData({
+      codigo: item.codigo,
+      equipamento: item.equipamento,
+      descricao: item.descricao,
+      quantidade_minima: item.quantidade_minima,
+    })
+    setDialogOpen(true)
+  }
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir este item?")) return
+    
+    const { error } = await supabase
+      .from("estoque_estrategico")
+      .delete()
+      .eq("id", id)
+    
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" })
+    } else {
+      toast({ title: "Item excluído com sucesso!" })
+      loadAllData()
+    }
+  }
+
+  const resetForm = () => {
+    setFormData({
+      codigo: "",
+      equipamento: "",
+      descricao: "",
+      quantidade_minima: 1,
+    })
+    setEditingItem(null)
+    setDialogOpen(false)
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {/* Cards de resumo */}
@@ -210,6 +291,68 @@ export function EstoqueEstrategico() {
                 className="w-[300px] pl-10"
               />
             </div>
+            <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Novo Item
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{editingItem ? "Editar Item Estratégico" : "Novo Item Estratégico"}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="codigo">Código (PN)</Label>
+                      <Input
+                        id="codigo"
+                        value={formData.codigo}
+                        onChange={(e) => setFormData({ ...formData, codigo: e.target.value })}
+                        placeholder="Ex: 1613610590"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="equipamento">Equipamento</Label>
+                      <Input
+                        id="equipamento"
+                        value={formData.equipamento}
+                        onChange={(e) => setFormData({ ...formData, equipamento: e.target.value })}
+                        placeholder="Ex: GA90"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="descricao">Descrição</Label>
+                    <Input
+                      id="descricao"
+                      value={formData.descricao}
+                      onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                      placeholder="Ex: KIT DE MANUTENCAO - 1 ANO"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quantidade_minima">Quantidade Mínima</Label>
+                    <Input
+                      id="quantidade_minima"
+                      type="number"
+                      min="1"
+                      value={formData.quantidade_minima}
+                      onChange={(e) => setFormData({ ...formData, quantidade_minima: parseInt(e.target.value) || 1 })}
+                      required
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2 pt-4">
+                    <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
+                    <Button type="submit">{editingItem ? "Salvar Alterações" : "Cadastrar"}</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
           </div>
         </CardHeader>
         <CardContent>
@@ -229,12 +372,13 @@ export function EstoqueEstrategico() {
                     <TableHead className="text-center">Saldo Atual</TableHead>
                     <TableHead className="text-center">Diferença</TableHead>
                     <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredItens.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground">
                         Nenhum item encontrado
                       </TableCell>
                     </TableRow>
@@ -269,6 +413,16 @@ export function EstoqueEstrategico() {
                               Repor
                             </Badge>
                           )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))

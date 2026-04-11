@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown, Edit2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -48,6 +49,16 @@ export function EntradaPecas() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
+  const [bulkEditData, setBulkEditData] = useState({
+    ordem_servico: "",
+    numero_serie: "",
+    nota_fiscal: "",
+    data_emissao: "",
+    origem: "",
+    observacao: "",
+  })
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -131,6 +142,9 @@ export function EntradaPecas() {
       if (valA > valB) return sortDirection === "asc" ? 1 : -1
       return 0
     })
+
+  // Alias for sorted list
+  const sortedPecas = filteredPecas
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -223,6 +237,77 @@ export function EntradaPecas() {
   const totalEstoque = filteredPecas.reduce((acc, p) => acc + p.valor_total, 0)
   const totalItens = filteredPecas.reduce((acc, p) => acc + p.quantidade, 0)
 
+  // Toggle row selection
+  const toggleRowSelection = (id: string) => {
+    setSelectedRows((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) {
+        newSet.delete(id)
+      } else {
+        newSet.add(id)
+      }
+      return newSet
+    })
+  }
+
+  // Select/deselect all visible rows
+  const toggleSelectAll = () => {
+    const visibleIds = sortedPecas.map((p) => p.id)
+    if (selectedRows.size === visibleIds.length && visibleIds.every((id) => selectedRows.has(id))) {
+      setSelectedRows(new Set())
+    } else {
+      setSelectedRows(new Set(visibleIds))
+    }
+  }
+
+  // Open bulk edit dialog
+  const openBulkEdit = () => {
+    setBulkEditData({
+      ordem_servico: "",
+      numero_serie: "",
+      nota_fiscal: "",
+      data_emissao: "",
+      origem: "",
+      observacao: "",
+    })
+    setBulkEditDialogOpen(true)
+  }
+
+  // Process bulk edit
+  const handleBulkEdit = async () => {
+    if (selectedRows.size === 0) {
+      toast({ title: "Selecione pelo menos um item", variant: "destructive" })
+      return
+    }
+
+    const updates: Record<string, string | number> = {}
+    if (bulkEditData.ordem_servico) updates.ordem_servico = bulkEditData.ordem_servico
+    if (bulkEditData.numero_serie) updates.numero_serie = bulkEditData.numero_serie
+    if (bulkEditData.nota_fiscal) updates.nota_fiscal = bulkEditData.nota_fiscal
+    if (bulkEditData.data_emissao) updates.data_emissao = bulkEditData.data_emissao
+    if (bulkEditData.origem) updates.origem = bulkEditData.origem
+    if (bulkEditData.observacao) updates.observacao = bulkEditData.observacao
+
+    if (Object.keys(updates).length === 0) {
+      toast({ title: "Preencha ao menos um campo para alterar", variant: "destructive" })
+      return
+    }
+
+    const { error } = await supabase
+      .from("estoque_pecas")
+      .update(updates)
+      .in("id", Array.from(selectedRows))
+
+    if (error) {
+      toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
+    } else {
+      toast({ title: `${selectedRows.size} registros atualizados com sucesso!` })
+      loadPecas()
+      setSelectedRows(new Set())
+      setBulkEditDialogOpen(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -230,13 +315,20 @@ export function EntradaPecas() {
           <h2 className="text-2xl font-semibold">Entrada de Peças</h2>
           <p className="text-sm text-muted-foreground">Registro de entrada de peças no estoque</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Entrada
+        <div className="flex items-center gap-2">
+          {selectedRows.size > 0 && (
+            <Button variant="outline" className="gap-2" onClick={openBulkEdit}>
+              <Edit2 className="h-4 w-4" />
+              Editar {selectedRows.size} selecionados
             </Button>
-          </DialogTrigger>
+          )}
+          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Entrada
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingPeca ? "Editar Peça" : "Registrar Entrada de Peça"}</DialogTitle>
@@ -419,6 +511,12 @@ export function EntradaPecas() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted">
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedRows.size > 0 && sortedPecas.every((p) => selectedRows.has(p.id))}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
                     <TableHead>
                       <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Código <SortIcon columnKey="codigo" />
@@ -474,8 +572,14 @@ export function EntradaPecas() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredPecas.map((peca) => (
-                    <TableRow key={peca.id}>
+                  {sortedPecas.map((peca) => (
+                    <TableRow key={peca.id} className={selectedRows.has(peca.id) ? "bg-primary/10" : ""}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedRows.has(peca.id)}
+                          onCheckedChange={() => toggleRowSelection(peca.id)}
+                        />
+                      </TableCell>
                       <TableCell className="font-mono font-medium">{peca.codigo}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{peca.descricao}</TableCell>
                       <TableCell className="text-center">{peca.quantidade}</TableCell>
@@ -513,6 +617,82 @@ export function EntradaPecas() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Edição em Massa */}
+      <Dialog open={bulkEditDialogOpen} onOpenChange={setBulkEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar {selectedRows.size} Registros em Massa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Preencha apenas os campos que deseja alterar. Campos vazios não serão modificados.
+            </p>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Ordem de Serviço</Label>
+                <Input
+                  value={bulkEditData.ordem_servico}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, ordem_servico: e.target.value })}
+                  placeholder="Ex: 409522732"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nº Série</Label>
+                <Input
+                  value={bulkEditData.numero_serie}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, numero_serie: e.target.value })}
+                  placeholder="Ex: APF220302"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Nota Fiscal</Label>
+                <Input
+                  value={bulkEditData.nota_fiscal}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, nota_fiscal: e.target.value })}
+                  placeholder="Ex: 276521-15"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Data Emissão</Label>
+                <Input
+                  type="date"
+                  value={bulkEditData.data_emissao}
+                  onChange={(e) => setBulkEditData({ ...bulkEditData, data_emissao: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Origem</Label>
+                <SearchableSelect
+                  options={[{ value: "", label: "Não alterar" }, ...ORIGENS.map((o) => ({ value: o, label: o }))]}
+                  value={bulkEditData.origem}
+                  onValueChange={(v) => setBulkEditData({ ...bulkEditData, origem: v })}
+                  placeholder="Não alterar"
+                  searchPlaceholder="Pesquisar origem..."
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Observação</Label>
+              <Input
+                value={bulkEditData.observacao}
+                onChange={(e) => setBulkEditData({ ...bulkEditData, observacao: e.target.value })}
+                placeholder="Nova observação para todos os selecionados..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setBulkEditDialogOpen(false)}>Cancelar</Button>
+              <Button onClick={handleBulkEdit}>Salvar Alterações</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
