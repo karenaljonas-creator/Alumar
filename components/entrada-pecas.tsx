@@ -185,8 +185,6 @@ export function EntradaPecas() {
       } else {
         // Se a origem contiver "Estoque estratégico", criar automaticamente um item no estoque estratégico
         if (formData.origem && formData.origem.toLowerCase().includes("estoque estratégico")) {
-          console.log("[v0] Origem é estoque estratégico, verificando se já existe:", formData.codigo)
-          
           // Verificar se já existe no estoque estratégico
           const { data: existingItem, error: checkError } = await supabase
             .from("estoque_estrategico")
@@ -194,12 +192,9 @@ export function EntradaPecas() {
             .eq("codigo", formData.codigo)
             .maybeSingle()
 
-          console.log("[v0] Item existente:", existingItem, "Erro:", checkError)
-
           if (!existingItem && !checkError) {
-            console.log("[v0] Criando novo item no estoque estratégico")
             // Criar novo item no estoque estratégico com quantidade mínima 0
-            const { error: insertError } = await supabase
+            await supabase
               .from("estoque_estrategico")
               .insert({
                 codigo: formData.codigo,
@@ -207,12 +202,6 @@ export function EntradaPecas() {
                 equipamento: "GERAL",
                 quantidade_minima: 0,
               })
-            
-            if (insertError) {
-              console.log("[v0] Erro ao criar item estratégico:", insertError)
-            } else {
-              console.log("[v0] Item estratégico criado com sucesso!")
-            }
           }
         }
         
@@ -548,7 +537,7 @@ export function EntradaPecas() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="table-auto">
+              <Table className="w-full">
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead className="w-10">
@@ -562,7 +551,7 @@ export function EntradaPecas() {
                         Código <SortIcon columnKey="codigo" />
                       </button>
                     </TableHead>
-                    <TableHead className="max-w-[200px]">
+                    <TableHead className="w-[180px] max-w-[180px]">
                       <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Descrição <SortIcon columnKey="descricao" />
                       </button>
@@ -637,7 +626,7 @@ export function EntradaPecas() {
                         />
                       </TableCell>
                       <TableCell className="font-mono font-medium">{peca.codigo}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{peca.descricao}</TableCell>
+                      <TableCell className="w-[180px] max-w-[180px] truncate" title={peca.descricao}>{peca.descricao}</TableCell>
                       <TableCell className="text-center">{peca.quantidade}</TableCell>
                       <TableCell>{peca.ordem_servico}</TableCell>
                       <TableCell>{peca.numero_serie}</TableCell>
