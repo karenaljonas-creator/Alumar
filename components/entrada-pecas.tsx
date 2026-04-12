@@ -117,16 +117,24 @@ export function EntradaPecas() {
     return <ArrowDown className="h-3 w-3 ml-1" />
   }
 
+  // Lista de origens únicas para o filtro
+  const origensUnicas = useMemo(() => {
+    const origens = new Set(pecas.map(p => p.origem).filter(Boolean))
+    return Array.from(origens).sort()
+  }, [pecas])
+
   const filteredPecas = pecas
     .filter((p) => {
       const term = searchTerm.toLowerCase()
-      return (
+      const matchesSearch = (
         (p.codigo || "").toLowerCase().includes(term) ||
         (p.descricao || "").toLowerCase().includes(term) ||
         (p.ordem_servico || "").toLowerCase().includes(term) ||
         (p.nota_fiscal || "").toLowerCase().includes(term) ||
         (p.numero_serie || "").toLowerCase().includes(term)
       )
+      const matchesOrigem = origemFilter === "all" || p.origem === origemFilter
+      return matchesSearch && matchesOrigem
     })
     .sort((a, b) => {
       if (!sortKey) return 0
