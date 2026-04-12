@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown, Edit2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown, Edit2, ChevronRight, ChevronDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
@@ -50,6 +50,7 @@ export function EntradaPecas() {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [showUploadDate, setShowUploadDate] = useState(false)
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [bulkEditData, setBulkEditData] = useState({
     ordem_servico: "",
@@ -575,6 +576,22 @@ export function EntradaPecas() {
                     </TableHead>
                     <TableHead>Observação</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="w-10">
+                      <button 
+                        onClick={() => setShowUploadDate(!showUploadDate)}
+                        className="flex items-center gap-1 font-medium hover:text-foreground cursor-pointer"
+                        title={showUploadDate ? "Ocultar Data de Upload" : "Mostrar Data de Upload"}
+                      >
+                        {showUploadDate ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                    </TableHead>
+                    {showUploadDate && (
+                      <TableHead>
+                        <button onClick={() => handleSort("created_at")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                          Data Upload <SortIcon columnKey="created_at" />
+                        </button>
+                      </TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -615,6 +632,20 @@ export function EntradaPecas() {
                           </Button>
                         </div>
                       </TableCell>
+                      <TableCell>
+                        {/* Espaço para o botão de expansão */}
+                      </TableCell>
+                      {showUploadDate && (
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {peca.created_at ? new Date(peca.created_at).toLocaleString("pt-BR", { 
+                            day: "2-digit", 
+                            month: "2-digit", 
+                            year: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          }) : "-"}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
