@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/ui/searchable-select"
-import { Search, AlertTriangle, CheckCircle, Package, Plus, Edit, Trash2 } from "lucide-react"
+import { Search, AlertTriangle, CheckCircle, Package, Plus, Edit, Trash2, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 
@@ -40,6 +40,8 @@ export function EstoqueEstrategico() {
   const [equipamentoFilter, setEquipamentoFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [loading, setLoading] = useState(true)
+  const [sortKey, setSortKey] = useState<string>("equipamento")
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc")
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingItem, setEditingItem] = useState<EstoqueEstrategicoItem | null>(null)
   const [formData, setFormData] = useState({
@@ -58,6 +60,9 @@ export function EstoqueEstrategico() {
   const loadAllData = async () => {
     setLoading(true)
     try {
+      // Primeiro, sincronizar itens de entrada que são "estoque estratégico" mas ainda não existem
+      await syncEstoqueEstrategicoFromEntradas()
+      
       const [estrategicoRes, entradasRes, saidasRes] = await Promise.all([
         supabase.from("estoque_estrategico").select("*").order("equipamento").order("descricao"),
         supabase.from("estoque_pecas").select("codigo, quantidade"),
@@ -71,6 +76,48 @@ export function EstoqueEstrategico() {
       console.error("Erro ao carregar dados:", error)
     }
     setLoading(false)
+  }
+
+  // Sincronizar itens de entrada com origem "estoque estratégico" para a tabela estoque_estrategico
+  const syncEstoqueEstrategicoFromEntradas = async () => {
+    try {
+      // Buscar itens de entrada com origem "estoque estratégico"
+      const { data: entradasEstrategicas } = await supabase
+        .from("estoque_pecas")
+        .select("codigo, descricao, origem")
+        .ilike("origem", "%estoque estratégico%")
+
+      if (!entradasEstrategicas || entradasEstrategicas.length === 0) return
+
+      // Buscar códigos já existentes no estoque estratégico
+      const { data: existingItems } = await supabase
+        .from("estoque_estrategico")
+        .select("codigo")
+
+      const existingCodes = new Set(existingItems?.map(item => item.codigo) || [])
+
+      // Filtrar itens que ainda não existem e remover duplicados
+      const uniqueNewItems = new Map<string, { codigo: string; descricao: string }>()
+      entradasEstrategicas.forEach(item => {
+        if (!existingCodes.has(item.codigo) && !uniqueNewItems.has(item.codigo)) {
+          uniqueNewItems.set(item.codigo, { codigo: item.codigo, descricao: item.descricao })
+        }
+      })
+
+      // Inserir novos itens
+      if (uniqueNewItems.size > 0) {
+        const newItems = Array.from(uniqueNewItems.values()).map(item => ({
+          codigo: item.codigo,
+          descricao: item.descricao,
+          equipamento: "GERAL",
+          quantidade_minima: 0,
+        }))
+
+        await supabase.from("estoque_estrategico").insert(newItems)
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar estoque estratégico:", error)
+    }
   }
 
   // Calcular saldo atual por código
@@ -116,6 +163,22 @@ export function EstoqueEstrategico() {
     return unique.sort()
   }, [itensEstrategicos])
 
+  // Função de ordenação
+  const handleSort = (key: string) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDirection("asc")
+    }
+  }
+
+  // Ícone de ordenação
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortKey !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 opacity-50" />
+    return sortDirection === "asc" ? <ArrowUp className="ml-1 h-3 w-3" /> : <ArrowDown className="ml-1 h-3 w-3" />
+  }
+
   // Filtrar itens
   const filteredItens = useMemo(() => {
     return itensComSaldo.filter((item) => {
@@ -134,13 +197,57 @@ export function EstoqueEstrategico() {
         (statusFilter === "analisar" && item.status === "analisar")
 
       return matchesSearch && matchesEquipamento && matchesStatus
+    }).sort((a, b) => {
+      let aValue: string | number = ""
+      let bValue: string | number = ""
+
+      switch (sortKey) {
+        case "codigo":
+          aValue = a.codigo
+          bValue = b.codigo
+          break
+        case "equipamento":
+          aValue = a.equipamento
+          bValue = b.equipamento
+          break
+        case "descricao":
+          aValue = a.descricao
+          bValue = b.descricao
+          break
+        case "quantidade_minima":
+          aValue = a.quantidade_minima
+          bValue = b.quantidade_minima
+          break
+        case "saldoAtual":
+          aValue = a.saldoAtual
+          bValue = b.saldoAtual
+          break
+        case "diferenca":
+          aValue = a.diferenca
+          bValue = b.diferenca
+          break
+        case "status":
+          aValue = a.status
+          bValue = b.status
+          break
+        default:
+          return 0
+      }
+
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue
+      }
+      
+      const comparison = String(aValue).localeCompare(String(bValue))
+      return sortDirection === "asc" ? comparison : -comparison
     })
-  }, [itensComSaldo, searchTerm, equipamentoFilter, statusFilter])
+  }, [itensComSaldo, searchTerm, equipamentoFilter, statusFilter, sortKey, sortDirection])
 
   // Estatísticas
   const totalItens = itensComSaldo.length
   const itensOk = itensComSaldo.filter((item) => item.status === "ok").length
   const itensAbaixo = itensComSaldo.filter((item) => item.status === "abaixo").length
+  const itensAnalisar = itensComSaldo.filter((item) => item.status === "analisar").length
   const percentualOk = totalItens > 0 ? Math.round((itensOk / totalItens) * 100) : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -215,7 +322,7 @@ export function EstoqueEstrategico() {
   return (
     <div className="flex flex-col gap-6">
       {/* Cards de resumo */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Itens</CardTitle>
@@ -243,6 +350,17 @@ export function EstoqueEstrategico() {
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <span className="text-2xl font-bold text-red-600">{itensAbaixo}</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens a Analisar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <span className="text-2xl font-bold text-yellow-600">{itensAnalisar}</span>
             </div>
           </CardContent>
         </Card>
@@ -372,13 +490,41 @@ export function EstoqueEstrategico() {
               <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap">Código</TableHead>
-                    <TableHead className="whitespace-nowrap">Equipamento</TableHead>
-                    <TableHead className="max-w-[250px]">Descrição</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">Qtde Mín.</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">Saldo Atual</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">Diferença</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">Status</TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Código <SortIcon columnKey="codigo" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="whitespace-nowrap">
+                      <button onClick={() => handleSort("equipamento")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Equipamento <SortIcon columnKey="equipamento" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="max-w-[250px]">
+                      <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Descrição <SortIcon columnKey="descricao" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap">
+                      <button onClick={() => handleSort("quantidade_minima")} className="flex items-center justify-center font-medium hover:text-foreground cursor-pointer">
+                        Qtde Mín. <SortIcon columnKey="quantidade_minima" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap">
+                      <button onClick={() => handleSort("saldoAtual")} className="flex items-center justify-center font-medium hover:text-foreground cursor-pointer">
+                        Saldo Atual <SortIcon columnKey="saldoAtual" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap">
+                      <button onClick={() => handleSort("diferenca")} className="flex items-center justify-center font-medium hover:text-foreground cursor-pointer">
+                        Diferença <SortIcon columnKey="diferenca" />
+                      </button>
+                    </TableHead>
+                    <TableHead className="text-center whitespace-nowrap">
+                      <button onClick={() => handleSort("status")} className="flex items-center justify-center font-medium hover:text-foreground cursor-pointer">
+                        Status <SortIcon columnKey="status" />
+                      </button>
+                    </TableHead>
                     <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -391,7 +537,7 @@ export function EstoqueEstrategico() {
                     </TableRow>
                   ) : (
                     filteredItens.map((item) => (
-                      <TableRow key={item.id} className={item.status === "abaixo" ? "bg-red-50" : ""}>
+                      <TableRow key={item.id} className={item.status === "abaixo" ? "bg-red-50" : item.status === "analisar" ? "bg-yellow-50" : ""}>
                         <TableCell className="font-mono">{item.codigo}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{item.equipamento}</Badge>
