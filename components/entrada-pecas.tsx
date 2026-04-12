@@ -183,6 +183,28 @@ export function EntradaPecas() {
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
       } else {
+        // Se a origem for "Estoque estratégico - corretivos", criar automaticamente um item no estoque estratégico
+        if (formData.origem === "Estoque estratégico - corretivos") {
+          // Verificar se já existe no estoque estratégico
+          const { data: existingItem } = await supabase
+            .from("estoque_estrategico")
+            .select("id")
+            .eq("codigo", formData.codigo)
+            .single()
+
+          if (!existingItem) {
+            // Criar novo item no estoque estratégico com quantidade mínima 0
+            await supabase
+              .from("estoque_estrategico")
+              .insert({
+                codigo: formData.codigo,
+                descricao: formData.descricao,
+                equipamento: "GERAL",
+                quantidade_minima: 0,
+              })
+          }
+        }
+        
         toast({ title: "Peça cadastrada com sucesso!" })
         loadPecas()
         resetForm()
