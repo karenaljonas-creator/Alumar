@@ -52,6 +52,7 @@ export function EntradaPecas() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showUploadDate, setShowUploadDate] = useState(false)
+  const [origemFilter, setOrigemFilter] = useState<string>("all")
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [bulkEditData, setBulkEditData] = useState({
     ordem_servico: "",
