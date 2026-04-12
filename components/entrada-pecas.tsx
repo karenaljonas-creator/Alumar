@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -517,15 +517,28 @@ export function EntradaPecas() {
               <Package className="h-5 w-5" />
               Registro de Entradas
             </CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+<Select value={origemFilter} onValueChange={setOrigemFilter}>
+    <SelectTrigger className="w-[200px]">
+      <SelectValue placeholder="Filtrar por Origem" />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectItem value="all">Todas Origens</SelectItem>
+      {origensUnicas.map((origem) => (
+        <SelectItem key={origem} value={origem}>
+          {origem}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+  <div className="relative w-80">
+  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+  <Input
+    placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="pl-10"
+  />
+  </div>
           </div>
         </CardHeader>
         <CardContent>
