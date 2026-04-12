@@ -39,6 +39,7 @@ const ORIGENS = [
   "Corretiva Contrato",
   "Plano - Manutenção Preventiva",
   "Acordo inicial",
+  "Vendas",
 ]
 
 export function EntradaPecas() {
