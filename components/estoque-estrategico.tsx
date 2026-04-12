@@ -97,7 +97,10 @@ export function EstoqueEstrategico() {
     return itensEstrategicos.map((item) => {
       const saldoAtual = saldoPorCodigo[item.codigo] || 0
       const diferenca = saldoAtual - item.quantidade_minima
-      const status = diferenca >= 0 ? "ok" : "abaixo"
+      // Se quantidade mínima for 0, status é "analisar"
+      // Se diferença >= 0, status é "ok"
+      // Se diferença < 0, status é "abaixo"
+      const status = item.quantidade_minima === 0 ? "analisar" : (diferenca >= 0 ? "ok" : "abaixo")
       return {
         ...item,
         saldoAtual,
@@ -127,7 +130,8 @@ export function EstoqueEstrategico() {
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "ok" && item.status === "ok") ||
-        (statusFilter === "abaixo" && item.status === "abaixo")
+        (statusFilter === "abaixo" && item.status === "abaixo") ||
+        (statusFilter === "analisar" && item.status === "analisar")
 
       return matchesSearch && matchesEquipamento && matchesStatus
     })
@@ -279,10 +283,11 @@ export function EstoqueEstrategico() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos Status</SelectItem>
-                <SelectItem value="ok">OK</SelectItem>
-                <SelectItem value="abaixo">Abaixo do Mínimo</SelectItem>
-              </SelectContent>
+<SelectItem value="all">Todos Status</SelectItem>
+  <SelectItem value="ok">OK</SelectItem>
+  <SelectItem value="abaixo">Abaixo do Mínimo</SelectItem>
+  <SelectItem value="analisar">Analisar</SelectItem>
+  </SelectContent>
             </Select>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -364,17 +369,17 @@ export function EstoqueEstrategico() {
             </div>
           ) : (
             <div className="max-h-[500px] overflow-auto">
-              <Table>
+              <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-center">Qtde Mínima</TableHead>
-                    <TableHead className="text-center">Saldo Atual</TableHead>
-                    <TableHead className="text-center">Diferença</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="whitespace-nowrap">Código</TableHead>
+                    <TableHead className="whitespace-nowrap">Equipamento</TableHead>
+                    <TableHead className="max-w-[250px]">Descrição</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Qtde Mín.</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Saldo Atual</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Diferença</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -408,6 +413,11 @@ export function EstoqueEstrategico() {
                             <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                               <CheckCircle className="mr-1 h-3 w-3" />
                               OK
+                            </Badge>
+                          ) : item.status === "analisar" ? (
+                            <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
+                              <AlertTriangle className="mr-1 h-3 w-3" />
+                              Analisar
                             </Badge>
                           ) : (
                             <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
