@@ -515,67 +515,67 @@ export function EntradaPecas() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="table-auto">
                 <TableHeader>
                   <TableRow className="bg-muted">
-                    <TableHead className="w-12">
+                    <TableHead className="w-10">
                       <Checkbox
                         checked={selectedRows.size > 0 && sortedPecas.every((p) => selectedRows.has(p.id))}
                         onCheckedChange={toggleSelectAll}
                       />
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Código <SortIcon columnKey="codigo" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="max-w-[200px]">
                       <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Descrição <SortIcon columnKey="descricao" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Qtd <SortIcon columnKey="quantidade" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Ordem Serviço <SortIcon columnKey="ordem_servico" />
+                        OS <SortIcon columnKey="ordem_servico" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("numero_serie")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Nº Série <SortIcon columnKey="numero_serie" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         NF <SortIcon columnKey="nota_fiscal" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("data_emissao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Data Emissão <SortIcon columnKey="data_emissao" />
+                        Data <SortIcon columnKey="data_emissao" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("valor_unitario")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Valor Unit. <SortIcon columnKey="valor_unitario" />
+                        V. Unit. <SortIcon columnKey="valor_unitario" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("valor_total")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Valor Total <SortIcon columnKey="valor_total" />
+                        V. Total <SortIcon columnKey="valor_total" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("origem")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
-                    <TableHead>Observação</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="max-w-[150px]">Obs.</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                     <TableHead className="w-10">
                       <button 
                         onClick={() => setShowUploadDate(!showUploadDate)}

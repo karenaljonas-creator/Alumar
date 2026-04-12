@@ -364,17 +364,17 @@ export function EstoqueEstrategico() {
             </div>
           ) : (
             <div className="max-h-[500px] overflow-auto">
-              <Table>
+              <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Código</TableHead>
-                    <TableHead>Equipamento</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-center">Qtde Mínima</TableHead>
-                    <TableHead className="text-center">Saldo Atual</TableHead>
-                    <TableHead className="text-center">Diferença</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="whitespace-nowrap">Código</TableHead>
+                    <TableHead className="whitespace-nowrap">Equipamento</TableHead>
+                    <TableHead className="max-w-[250px]">Descrição</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Qtde Mín.</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Saldo Atual</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Diferença</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Status</TableHead>
+                    <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
