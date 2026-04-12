@@ -60,6 +60,9 @@ export function EstoqueEstrategico() {
   const loadAllData = async () => {
     setLoading(true)
     try {
+      // Primeiro, sincronizar itens de entrada que são "estoque estratégico" mas ainda não existem
+      await syncEstoqueEstrategicoFromEntradas()
+      
       const [estrategicoRes, entradasRes, saidasRes] = await Promise.all([
         supabase.from("estoque_estrategico").select("*").order("equipamento").order("descricao"),
         supabase.from("estoque_pecas").select("codigo, quantidade"),
@@ -73,6 +76,48 @@ export function EstoqueEstrategico() {
       console.error("Erro ao carregar dados:", error)
     }
     setLoading(false)
+  }
+
+  // Sincronizar itens de entrada com origem "estoque estratégico" para a tabela estoque_estrategico
+  const syncEstoqueEstrategicoFromEntradas = async () => {
+    try {
+      // Buscar itens de entrada com origem "estoque estratégico"
+      const { data: entradasEstrategicas } = await supabase
+        .from("estoque_pecas")
+        .select("codigo, descricao, origem")
+        .ilike("origem", "%estoque estratégico%")
+
+      if (!entradasEstrategicas || entradasEstrategicas.length === 0) return
+
+      // Buscar códigos já existentes no estoque estratégico
+      const { data: existingItems } = await supabase
+        .from("estoque_estrategico")
+        .select("codigo")
+
+      const existingCodes = new Set(existingItems?.map(item => item.codigo) || [])
+
+      // Filtrar itens que ainda não existem e remover duplicados
+      const uniqueNewItems = new Map<string, { codigo: string; descricao: string }>()
+      entradasEstrategicas.forEach(item => {
+        if (!existingCodes.has(item.codigo) && !uniqueNewItems.has(item.codigo)) {
+          uniqueNewItems.set(item.codigo, { codigo: item.codigo, descricao: item.descricao })
+        }
+      })
+
+      // Inserir novos itens
+      if (uniqueNewItems.size > 0) {
+        const newItems = Array.from(uniqueNewItems.values()).map(item => ({
+          codigo: item.codigo,
+          descricao: item.descricao,
+          equipamento: "GERAL",
+          quantidade_minima: 0,
+        }))
+
+        await supabase.from("estoque_estrategico").insert(newItems)
+      }
+    } catch (error) {
+      console.error("Erro ao sincronizar estoque estratégico:", error)
+    }
   }
 
   // Calcular saldo atual por código
@@ -202,6 +247,7 @@ export function EstoqueEstrategico() {
   const totalItens = itensComSaldo.length
   const itensOk = itensComSaldo.filter((item) => item.status === "ok").length
   const itensAbaixo = itensComSaldo.filter((item) => item.status === "abaixo").length
+  const itensAnalisar = itensComSaldo.filter((item) => item.status === "analisar").length
   const percentualOk = totalItens > 0 ? Math.round((itensOk / totalItens) * 100) : 0
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -276,7 +322,7 @@ export function EstoqueEstrategico() {
   return (
     <div className="flex flex-col gap-6">
       {/* Cards de resumo */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Itens</CardTitle>
@@ -304,6 +350,17 @@ export function EstoqueEstrategico() {
             <div className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
               <span className="text-2xl font-bold text-red-600">{itensAbaixo}</span>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens a Analisar</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-600" />
+              <span className="text-2xl font-bold text-yellow-600">{itensAnalisar}</span>
             </div>
           </CardContent>
         </Card>
