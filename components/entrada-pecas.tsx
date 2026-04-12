@@ -183,18 +183,23 @@ export function EntradaPecas() {
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
       } else {
-        // Se a origem for "Estoque estratégico - corretivos", criar automaticamente um item no estoque estratégico
-        if (formData.origem === "Estoque estratégico - corretivos") {
+        // Se a origem contiver "Estoque estratégico", criar automaticamente um item no estoque estratégico
+        if (formData.origem && formData.origem.toLowerCase().includes("estoque estratégico")) {
+          console.log("[v0] Origem é estoque estratégico, verificando se já existe:", formData.codigo)
+          
           // Verificar se já existe no estoque estratégico
-          const { data: existingItem } = await supabase
+          const { data: existingItem, error: checkError } = await supabase
             .from("estoque_estrategico")
             .select("id")
             .eq("codigo", formData.codigo)
-            .single()
+            .maybeSingle()
 
-          if (!existingItem) {
+          console.log("[v0] Item existente:", existingItem, "Erro:", checkError)
+
+          if (!existingItem && !checkError) {
+            console.log("[v0] Criando novo item no estoque estratégico")
             // Criar novo item no estoque estratégico com quantidade mínima 0
-            await supabase
+            const { error: insertError } = await supabase
               .from("estoque_estrategico")
               .insert({
                 codigo: formData.codigo,
@@ -202,6 +207,12 @@ export function EntradaPecas() {
                 equipamento: "GERAL",
                 quantidade_minima: 0,
               })
+            
+            if (insertError) {
+              console.log("[v0] Erro ao criar item estratégico:", insertError)
+            } else {
+              console.log("[v0] Item estratégico criado com sucesso!")
+            }
           }
         }
         
