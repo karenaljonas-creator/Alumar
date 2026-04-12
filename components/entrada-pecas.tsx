@@ -133,16 +133,16 @@ export function EntradaPecas() {
       let valB: string | number = ""
 
       switch (sortKey) {
-        case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
-        case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
-        case "quantidade": valA = a.quantidade; valB = b.quantidade; break
-        case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
-        case "numero_serie": valA = a.numero_serie.toLowerCase(); valB = b.numero_serie.toLowerCase(); break
-        case "nota_fiscal": valA = a.nota_fiscal.toLowerCase(); valB = b.nota_fiscal.toLowerCase(); break
-        case "data_emissao": valA = a.data_emissao; valB = b.data_emissao; break
-        case "valor_unitario": valA = a.valor_unitario; valB = b.valor_unitario; break
-        case "valor_total": valA = a.valor_total; valB = b.valor_total; break
-        case "origem": valA = a.origem.toLowerCase(); valB = b.origem.toLowerCase(); break
+        case "codigo": valA = (a.codigo || "").toLowerCase(); valB = (b.codigo || "").toLowerCase(); break
+        case "descricao": valA = (a.descricao || "").toLowerCase(); valB = (b.descricao || "").toLowerCase(); break
+        case "quantidade": valA = a.quantidade || 0; valB = b.quantidade || 0; break
+        case "ordem_servico": valA = (a.ordem_servico || "").toLowerCase(); valB = (b.ordem_servico || "").toLowerCase(); break
+        case "numero_serie": valA = (a.numero_serie || "").toLowerCase(); valB = (b.numero_serie || "").toLowerCase(); break
+        case "nota_fiscal": valA = (a.nota_fiscal || "").toLowerCase(); valB = (b.nota_fiscal || "").toLowerCase(); break
+        case "data_emissao": valA = a.data_emissao || ""; valB = b.data_emissao || ""; break
+        case "valor_unitario": valA = a.valor_unitario || 0; valB = b.valor_unitario || 0; break
+        case "valor_total": valA = a.valor_total || 0; valB = b.valor_total || 0; break
+        case "origem": valA = (a.origem || "").toLowerCase(); valB = (b.origem || "").toLowerCase(); break
       }
 
       if (valA < valB) return sortDirection === "asc" ? -1 : 1
