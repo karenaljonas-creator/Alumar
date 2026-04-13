@@ -286,11 +286,109 @@ export default function Home() {
       link.click()
       
       toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
-    } else if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
+    } else if (activeSection === "estoque") {
+      // Exportar dados consolidados do estoque (igual ao que aparece na tela)
+      const supabase = (await import("@/lib/supabase/client")).createClient()
+      
+      // Buscar entradas e saídas
+      const [entradasRes, saidasRes] = await Promise.all([
+        supabase.from("estoque_pecas").select("codigo, descricao, quantidade, valor_unitario, valor_total"),
+        supabase.from("saida_pecas").select("codigo, quantidade"),
+      ])
+      
+      if (entradasRes.error) {
+        toast({ title: "Erro ao exportar", description: entradasRes.error.message, variant: "destructive" })
+        return
+      }
+      
+      // Consolidar por código
+      const stockMap: Record<string, {
+        codigo: string
+        descricao: string
+        totalEntrada: number
+        totalSaida: number
+        somaValorTotal: number
+        somaQuantidadeEntrada: number
+      }> = {}
+      
+      entradasRes.data?.forEach(e => {
+        if (!stockMap[e.codigo]) {
+          stockMap[e.codigo] = {
+            codigo: e.codigo,
+            descricao: e.descricao,
+            totalEntrada: 0,
+            totalSaida: 0,
+            somaValorTotal: 0,
+            somaQuantidadeEntrada: 0,
+          }
+        }
+        stockMap[e.codigo].totalEntrada += e.quantidade
+        stockMap[e.codigo].somaQuantidadeEntrada += e.quantidade
+        stockMap[e.codigo].somaValorTotal += (e.valor_total || 0)
+      })
+      
+      saidasRes.data?.forEach(s => {
+        if (stockMap[s.codigo]) {
+          stockMap[s.codigo].totalSaida += s.quantidade
+        }
+      })
+      
+      // Calcular saldo e valor médio
+      const consolidatedData = Object.values(stockMap).map(item => {
+        const saldo = item.totalEntrada - item.totalSaida
+        const valorMedioUnit = item.somaQuantidadeEntrada > 0 
+          ? item.somaValorTotal / item.somaQuantidadeEntrada 
+          : 0
+        const valorTotal = saldo * valorMedioUnit
+        
+        return {
+          Codigo: item.codigo,
+          Descricao: item.descricao,
+          Entrada: item.totalEntrada,
+          Saida: item.totalSaida,
+          Saldo: saldo,
+          Valor_Medio_Unit: valorMedioUnit.toFixed(2).replace(".", ","),
+          Valor_Total: valorTotal.toFixed(2).replace(".", ","),
+        }
+      }).sort((a, b) => a.Codigo.localeCompare(b.Codigo))
+      
+      if (consolidatedData.length === 0) {
+        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
+        return
+      }
+      
+      // Criar CSV com ponto-e-vírgula para Excel PT-BR
+      const headers = ["Código (PN)", "Descrição", "Entrada", "Saída", "Saldo", "Valor Médio Unit.", "Valor Total"].join(";")
+      const rows = consolidatedData.map(row => [
+        row.Codigo,
+        row.Descricao,
+        row.Entrada,
+        row.Saida,
+        row.Saldo,
+        row.Valor_Medio_Unit,
+        row.Valor_Total,
+      ].map(v => {
+        const value = v ?? ""
+        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
+          return `"${String(value).replace(/"/g, '""')}"`
+        }
+        return String(value)
+      }).join(";"))
+      const csv = [headers, ...rows].join("\n")
+      
+      const BOM = "\uFEFF"
+      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = `estoque-consolidado-${new Date().toISOString().split("T")[0]}.csv`
+      link.click()
+      
+      toast({ title: "Exportação concluída", description: "Estoque consolidado exportado com sucesso." })
+    } else if (activeSection === "entrada" || activeSection === "saida") {
       // Exportar dados de peças (entrada ou saída)
       const supabase = (await import("@/lib/supabase/client")).createClient()
       const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
-      const fileName = activeSection === "entrada" ? "entrada-pecas" : activeSection === "saida" ? "saida-pecas" : "estoque"
+      const fileName = activeSection === "entrada" ? "entrada-pecas" : "saida-pecas"
       
       const { data, error } = await supabase.from(tableName).select("*").order("created_at", { ascending: false })
       
