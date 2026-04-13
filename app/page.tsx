@@ -212,7 +212,81 @@ export default function Home() {
 
   const handleExport = async () => {
     // Exportar baseado na seção ativa
-    if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
+    if (activeSection === "estoque-estrategico") {
+      // Exportar dados do estoque estratégico com colunas calculadas
+      const supabase = (await import("@/lib/supabase/client")).createClient()
+      
+      // Buscar dados do estoque estratégico
+      const [estrategicoRes, entradasRes, saidasRes] = await Promise.all([
+        supabase.from("estoque_estrategico").select("*").order("equipamento").order("descricao"),
+        supabase.from("estoque_pecas").select("codigo, quantidade"),
+        supabase.from("saida_pecas").select("codigo, quantidade"),
+      ])
+      
+      if (estrategicoRes.error) {
+        toast({ title: "Erro ao exportar", description: estrategicoRes.error.message, variant: "destructive" })
+        return
+      }
+      
+      if (!estrategicoRes.data || estrategicoRes.data.length === 0) {
+        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
+        return
+      }
+      
+      // Calcular saldo por código
+      const saldoPorCodigo: Record<string, number> = {}
+      entradasRes.data?.forEach(e => {
+        saldoPorCodigo[e.codigo] = (saldoPorCodigo[e.codigo] || 0) + e.quantidade
+      })
+      saidasRes.data?.forEach(s => {
+        saldoPorCodigo[s.codigo] = (saldoPorCodigo[s.codigo] || 0) - s.quantidade
+      })
+      
+      // Criar dados com colunas calculadas
+      const dataWithCalculations = estrategicoRes.data.map(item => {
+        const saldoAtual = saldoPorCodigo[item.codigo] || 0
+        const diferenca = saldoAtual - item.quantidade_minima
+        const status = item.quantidade_minima === 0 ? "Analisar" : (diferenca >= 0 ? "OK" : "Repor")
+        
+        return {
+          Codigo: item.codigo,
+          Equipamento: item.equipamento,
+          Descricao: item.descricao,
+          Qtde_Minima: item.quantidade_minima,
+          Saldo_Atual: saldoAtual,
+          Diferenca: diferenca,
+          Status: status,
+        }
+      })
+      
+      // Criar CSV com ponto-e-vírgula para Excel PT-BR
+      const headers = ["Código", "Equipamento", "Descrição", "Qtde Mínima", "Saldo Atual", "Diferença", "Status"].join(";")
+      const rows = dataWithCalculations.map(row => [
+        row.Codigo,
+        row.Equipamento,
+        row.Descricao,
+        row.Qtde_Minima,
+        row.Saldo_Atual,
+        row.Diferenca,
+        row.Status,
+      ].map(v => {
+        const value = v ?? ""
+        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
+          return `"${String(value).replace(/"/g, '""')}"`
+        }
+        return String(value)
+      }).join(";"))
+      const csv = [headers, ...rows].join("\n")
+      
+      const BOM = "\uFEFF"
+      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      link.href = URL.createObjectURL(blob)
+      link.download = `estoque-estrategico-${new Date().toISOString().split("T")[0]}.csv`
+      link.click()
+      
+      toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
+    } else if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
       // Exportar dados de peças (entrada ou saída)
       const supabase = (await import("@/lib/supabase/client")).createClient()
       const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
