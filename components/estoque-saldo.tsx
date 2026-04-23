@@ -174,7 +174,7 @@ export function EstoqueSaldo() {
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
   // Calcular valores por origem baseado no SALDO ATUAL
-  // Lógica: Mesmo PN pode ter várias origens, então calculamos por entrada/saída
+  // Lógica: Saída tem NF → buscar NF na Entrada → pegar origem da entrada
   const valoresPorOrigem = useMemo(() => {
     const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
@@ -193,69 +193,61 @@ export function EstoqueSaldo() {
       return null
     }
 
-    // Para cada código, calcular: entrada por origem e total de saída
-    const dadosPorCodigo: Record<string, {
-      entradasPorCategoria: Record<string, { qtd: number; valor: number }>
-      totalEntradaQtd: number
-      totalSaidaQtd: number
-    }> = {}
-
-    // Processar entradas
+    // Mapear NF → origem e valor unitário (da entrada)
+    const nfParaOrigem: Record<string, { categoria: string; valorUnitario: number }> = {}
+    
     entradas.forEach((e) => {
-      const codigo = e.codigo
+      const nf = e.nota_fiscal
+      if (!nf) return
+      
       const categoria = classificarOrigem(e.origem || "")
       if (!categoria) return
-
-      if (!dadosPorCodigo[codigo]) {
-        dadosPorCodigo[codigo] = {
-          entradasPorCategoria: {},
-          totalEntradaQtd: 0,
-          totalSaidaQtd: 0,
-        }
-      }
-
-      if (!dadosPorCodigo[codigo].entradasPorCategoria[categoria]) {
-        dadosPorCodigo[codigo].entradasPorCategoria[categoria] = { qtd: 0, valor: 0 }
-      }
-
-      dadosPorCodigo[codigo].entradasPorCategoria[categoria].qtd += e.quantidade || 0
-      dadosPorCodigo[codigo].entradasPorCategoria[categoria].valor += e.valor_total || 0
-      dadosPorCodigo[codigo].totalEntradaQtd += e.quantidade || 0
-    })
-
-    // Processar saídas
-    saidas.forEach((s) => {
-      const codigo = s.codigo
-      if (dadosPorCodigo[codigo]) {
-        dadosPorCodigo[codigo].totalSaidaQtd += s.quantidade || 0
-      }
-    })
-
-    // Calcular valor em estoque por origem para cada código
-    Object.values(dadosPorCodigo).forEach((dados) => {
-      const { entradasPorCategoria, totalEntradaQtd, totalSaidaQtd } = dados
       
-      // Para cada categoria deste código
-      Object.entries(entradasPorCategoria).forEach(([categoria, { qtd, valor }]) => {
-        if (totalEntradaQtd === 0) return
-        
-        // Proporção desta categoria no total de entradas do código
-        const proporcao = qtd / totalEntradaQtd
-        
-        // Quantidade que saiu desta categoria (proporcional)
-        const saidaProporcional = totalSaidaQtd * proporcao
-        
-        // Saldo desta categoria = entrada - saída proporcional
-        const saldoQtd = Math.max(0, qtd - saidaProporcional)
-        
-        // Valor médio unitário desta categoria
-        const valorMedioUnit = qtd > 0 ? valor / qtd : 0
-        
-        // Valor em estoque desta categoria
-        const valorEmEstoque = saldoQtd * valorMedioUnit
-        
-        origens[categoria] += valorEmEstoque
-      })
+      const valorUnitario = e.quantidade > 0 ? (e.valor_total || 0) / e.quantidade : 0
+      
+      // Se já existe, mantém o primeiro (ou poderia somar, mas NF deveria ser única por entrada)
+      if (!nfParaOrigem[nf]) {
+        nfParaOrigem[nf] = { categoria, valorUnitario }
+      }
+    })
+
+    // Somar valor de entrada por categoria
+    const entradaPorCategoria: Record<string, number> = {
+      "Estoque Estratégico": 0,
+      "Corretiva Contrato": 0,
+      "Plano Manutenção": 0,
+      "Acordo inicial": 0,
+    }
+    
+    entradas.forEach((e) => {
+      const categoria = classificarOrigem(e.origem || "")
+      if (categoria) {
+        entradaPorCategoria[categoria] += e.valor_total || 0
+      }
+    })
+
+    // Somar valor de saída por categoria (usando NF para descobrir a origem)
+    const saidaPorCategoria: Record<string, number> = {
+      "Estoque Estratégico": 0,
+      "Corretiva Contrato": 0,
+      "Plano Manutenção": 0,
+      "Acordo inicial": 0,
+    }
+    
+    saidas.forEach((s) => {
+      const nf = s.nota_fiscal
+      if (!nf) return
+      
+      const dadosNF = nfParaOrigem[nf]
+      if (!dadosNF) return
+      
+      const valorSaida = (s.quantidade || 0) * dadosNF.valorUnitario
+      saidaPorCategoria[dadosNF.categoria] += valorSaida
+    })
+
+    // Estoque = Entrada - Saída (por categoria)
+    Object.keys(origens).forEach((categoria) => {
+      origens[categoria] = Math.max(0, entradaPorCategoria[categoria] - saidaPorCategoria[categoria])
     })
 
     return origens
