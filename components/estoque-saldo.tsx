@@ -173,8 +173,8 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem baseado no SALDO ATUAL
-  // Lógica: Valor em estoque por origem = Valor entrada por origem - (proporção das saídas)
+  // Calcular valores por origem baseado no SALDO ATUAL de cada ITEM
+  // Lógica: Para cada ITEM: Entrada - Saída = Saldo, valor do saldo vai para a origem do item
   const valoresPorOrigem = useMemo(() => {
     const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
@@ -183,56 +183,61 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Primeiro, somar todos os valores de ENTRADA por categoria
-    const entradasPorCategoria: Record<string, number> = {
-      "Estoque Estratégico": 0,
-      "Corretiva Contrato": 0,
-      "Plano Manutenção": 0,
-      "Acordo inicial": 0,
-    }
-    
-    let totalEntradaValor = 0
+    // Identificar a origem de cada código (baseado na maior quantidade de entrada)
+    const origemPorCodigo: Record<string, string> = {}
+    const qtdPorCodigoOrigem: Record<string, Record<string, number>> = {}
     
     entradas.forEach((entrada) => {
+      const codigo = entrada.codigo
       const origem = entrada.origem || ""
-      const valor = entrada.valor_total || 0
+      const quantidade = entrada.quantidade || 0
       
-      totalEntradaValor += valor
-      
+      // Determinar categoria
+      let categoria = ""
       if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        entradasPorCategoria["Estoque Estratégico"] += valor
+        categoria = "Estoque Estratégico"
       } else if (origem.toLowerCase().includes("corretiva")) {
-        entradasPorCategoria["Corretiva Contrato"] += valor
+        categoria = "Corretiva Contrato"
       } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        entradasPorCategoria["Plano Manutenção"] += valor
+        categoria = "Plano Manutenção"
       } else if (origem.toLowerCase().includes("acordo inicial")) {
-        entradasPorCategoria["Acordo inicial"] += valor
+        categoria = "Acordo inicial"
       }
-    })
-
-    // Calcular valor total das saídas (baseado no valor médio unitário de cada item)
-    let totalSaidaValor = 0
-    saidas.forEach((saida) => {
-      // Encontrar o item no estoque para pegar o valor médio
-      const item = estoqueCalculado.find(e => e.codigo === saida.codigo)
-      if (item) {
-        totalSaidaValor += (saida.quantidade || 0) * item.valorMedioUnitario
+      
+      if (!categoria) return
+      
+      if (!qtdPorCodigoOrigem[codigo]) {
+        qtdPorCodigoOrigem[codigo] = {}
       }
+      qtdPorCodigoOrigem[codigo][categoria] = (qtdPorCodigoOrigem[codigo][categoria] || 0) + quantidade
     })
-
-    // Para cada categoria, calcular: Entrada - (proporção da saída)
-    // A saída é distribuída proporcionalmente ao valor de entrada de cada categoria
-    if (totalEntradaValor > 0) {
-      Object.keys(origens).forEach((categoria) => {
-        const valorEntradaCategoria = entradasPorCategoria[categoria]
-        const proporcaoCategoria = valorEntradaCategoria / totalEntradaValor
-        const saidaProporcional = totalSaidaValor * proporcaoCategoria
-        origens[categoria] = Math.max(0, valorEntradaCategoria - saidaProporcional)
+    
+    // Para cada código, determinar a origem principal (a que tem mais quantidade)
+    Object.entries(qtdPorCodigoOrigem).forEach(([codigo, categorias]) => {
+      let maxQtd = 0
+      let origemPrincipal = ""
+      Object.entries(categorias).forEach(([cat, qtd]) => {
+        if (qtd > maxQtd) {
+          maxQtd = qtd
+          origemPrincipal = cat
+        }
       })
-    }
+      origemPorCodigo[codigo] = origemPrincipal
+    })
+
+    // Para cada item no estoque com saldo > 0, somar o valor na categoria correspondente
+    estoqueCalculado.forEach((item) => {
+      if (item.saldo <= 0) return // Se saldo é zero ou negativo, não há valor em estoque
+      
+      const categoria = origemPorCodigo[item.codigo]
+      if (categoria && origens[categoria] !== undefined) {
+        // Valor em estoque deste item = saldo * valor médio unitário
+        origens[categoria] += item.saldo * item.valorMedioUnitario
+      }
+    })
 
     return origens
-  }, [entradas, saidas, estoqueCalculado])
+  }, [entradas, estoqueCalculado])
 
   return (
     <div className="space-y-6">
