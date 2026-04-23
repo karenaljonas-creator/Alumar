@@ -173,7 +173,8 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem baseado no SALDO ATUAL, distribuindo proporcionalmente
+  // Calcular valores por origem baseado no SALDO ATUAL
+  // Lógica: Valor em estoque por origem = Valor entrada por origem - (proporção das saídas)
   const valoresPorOrigem = useMemo(() => {
     const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
@@ -182,61 +183,56 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Agrupar entradas por código e calcular totais por origem
-    const entradasPorCodigo: Record<string, Record<string, { quantidade: number; valorTotal: number }>> = {}
+    // Primeiro, somar todos os valores de ENTRADA por categoria
+    const entradasPorCategoria: Record<string, number> = {
+      "Estoque Estratégico": 0,
+      "Corretiva Contrato": 0,
+      "Plano Manutenção": 0,
+      "Acordo inicial": 0,
+    }
+    
+    let totalEntradaValor = 0
     
     entradas.forEach((entrada) => {
-      const codigo = entrada.codigo
       const origem = entrada.origem || ""
+      const valor = entrada.valor_total || 0
       
-      // Determinar categoria da origem
-      let categoria = ""
+      totalEntradaValor += valor
+      
       if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        categoria = "Estoque Estratégico"
+        entradasPorCategoria["Estoque Estratégico"] += valor
       } else if (origem.toLowerCase().includes("corretiva")) {
-        categoria = "Corretiva Contrato"
+        entradasPorCategoria["Corretiva Contrato"] += valor
       } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        categoria = "Plano Manutenção"
+        entradasPorCategoria["Plano Manutenção"] += valor
       } else if (origem.toLowerCase().includes("acordo inicial")) {
-        categoria = "Acordo inicial"
+        entradasPorCategoria["Acordo inicial"] += valor
       }
-      
-      if (!categoria) return
-      
-      if (!entradasPorCodigo[codigo]) {
-        entradasPorCodigo[codigo] = {}
-      }
-      if (!entradasPorCodigo[codigo][categoria]) {
-        entradasPorCodigo[codigo][categoria] = { quantidade: 0, valorTotal: 0 }
-      }
-      entradasPorCodigo[codigo][categoria].quantidade += entrada.quantidade || 0
-      entradasPorCodigo[codigo][categoria].valorTotal += entrada.valor_total || 0
     })
 
-    // Para cada item no estoque calculado, distribuir o valor do saldo proporcionalmente entre as origens
-    estoqueCalculado.forEach((item) => {
-      if (item.saldo <= 0) return // Se saldo é zero ou negativo, não há valor em estoque
+    // Calcular valor total das saídas (baseado no valor médio unitário de cada item)
+    let totalSaidaValor = 0
+    saidas.forEach((saida) => {
+      // Encontrar o item no estoque para pegar o valor médio
+      const item = estoqueCalculado.find(e => e.codigo === saida.codigo)
+      if (item) {
+        totalSaidaValor += (saida.quantidade || 0) * item.valorMedioUnitario
+      }
+    })
 
-      const categoriasDoCodigo = entradasPorCodigo[item.codigo] || {}
-      const totalEntradaQtd = Object.values(categoriasDoCodigo).reduce((acc, cat) => acc + cat.quantidade, 0)
-      
-      if (totalEntradaQtd === 0) return
-
-      // Valor do saldo atual para este item
-      const valorSaldoAtual = item.saldo * item.valorMedioUnitario
-
-      // Distribuir proporcionalmente entre as origens baseado na quantidade de cada uma
-      Object.entries(categoriasDoCodigo).forEach(([categoria, dados]) => {
-        const proporcao = dados.quantidade / totalEntradaQtd
-        const valorProporcional = valorSaldoAtual * proporcao
-        if (origens[categoria] !== undefined) {
-          origens[categoria] += valorProporcional
-        }
+    // Para cada categoria, calcular: Entrada - (proporção da saída)
+    // A saída é distribuída proporcionalmente ao valor de entrada de cada categoria
+    if (totalEntradaValor > 0) {
+      Object.keys(origens).forEach((categoria) => {
+        const valorEntradaCategoria = entradasPorCategoria[categoria]
+        const proporcaoCategoria = valorEntradaCategoria / totalEntradaValor
+        const saidaProporcional = totalSaidaValor * proporcaoCategoria
+        origens[categoria] = Math.max(0, valorEntradaCategoria - saidaProporcional)
       })
-    })
+    }
 
     return origens
-  }, [entradas, estoqueCalculado])
+  }, [entradas, saidas, estoqueCalculado])
 
   return (
     <div className="space-y-6">
