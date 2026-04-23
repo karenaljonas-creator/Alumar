@@ -77,6 +77,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const [nfDialogOpen, setNfDialogOpen] = useState(false)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showUploadDate, setShowUploadDate] = useState(false)
+  const [utilizacaoFilter, setUtilizacaoFilter] = useState<string>("all")
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [bulkEditData, setBulkEditData] = useState({
     data_saida: "",
@@ -105,6 +106,12 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
   // Get unique areas from machines
   const areas = [...new Set(machines.map((m) => m.localizacao))].filter(Boolean).sort()
+
+  // Lista de utilizações únicas para o filtro
+  const utilizacoesUnicas = useMemo(() => {
+    const utilizacoes = new Set(saidas.map(s => s.utilizacao).filter(Boolean))
+    return Array.from(utilizacoes).sort()
+  }, [saidas])
 
   const loadSaidas = useCallback(async () => {
     setLoading(true)
@@ -319,7 +326,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const filteredSaidas = saidas
     .filter((s) => {
       const term = searchTerm.toLowerCase()
-      return (
+      const matchesSearch = (
         s.codigo.toLowerCase().includes(term) ||
         s.descricao.toLowerCase().includes(term) ||
         s.ordem_servico.toLowerCase().includes(term) ||
@@ -328,6 +335,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         s.area.toLowerCase().includes(term) ||
         (s.observacao || "").toLowerCase().includes(term)
       )
+      const matchesUtilizacao = utilizacaoFilter === "all" || s.utilizacao === utilizacaoFilter
+      return matchesSearch && matchesUtilizacao
     })
     .sort((a, b) => {
       if (!sortKey) return 0
@@ -915,6 +924,19 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <PackageMinus className="h-5 w-5" />
               Registro de Saídas
             </CardTitle>
+            <Select value={utilizacaoFilter} onValueChange={setUtilizacaoFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por Utilização" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas Utilizações</SelectItem>
+                {utilizacoesUnicas.map((utilizacao) => (
+                  <SelectItem key={utilizacao} value={utilizacao}>
+                    {utilizacao}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input

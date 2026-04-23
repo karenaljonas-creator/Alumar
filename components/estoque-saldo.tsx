@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Search, Package, ArrowUp, ArrowDown, ArrowUpDown, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
@@ -27,6 +28,7 @@ export function EstoqueSaldo() {
   const [saidas, setSaidas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [origemFilter, setOrigemFilter] = useState<string>("all")
   const [sortKey, setSortKey] = useState<SortKey>("codigo")
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const { toast } = useToast()
@@ -138,12 +140,32 @@ export function EstoqueSaldo() {
     return <ArrowDown className="h-3 w-3 ml-1" />
   }
 
+  // Lista de origens únicas para o filtro
+  const origensUnicas = useMemo(() => {
+    const origens = new Set(entradas.map(e => e.origem).filter(Boolean))
+    return Array.from(origens).sort()
+  }, [entradas])
+
+  // Mapear código -> origem (da primeira entrada)
+  const origemPorCodigo = useMemo(() => {
+    const map: Record<string, string> = {}
+    entradas.forEach((e) => {
+      if (!map[e.codigo] && e.origem) {
+        map[e.codigo] = e.origem
+      }
+    })
+    return map
+  }, [entradas])
+
   const filteredEstoque = useMemo(() => {
     return estoqueCalculado
-      .filter((item) =>
-        item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      .filter((item) => {
+        const matchesSearch = item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
+        const itemOrigem = origemPorCodigo[item.codigo] || ""
+        const matchesOrigem = origemFilter === "all" || itemOrigem === origemFilter
+        return matchesSearch && matchesOrigem
+      })
       .sort((a, b) => {
         let valA: string | number = ""
         let valB: string | number = ""
@@ -162,7 +184,7 @@ export function EstoqueSaldo() {
         if (valA > valB) return sortDirection === "asc" ? 1 : -1
         return 0
       })
-  }, [estoqueCalculado, searchTerm, sortKey, sortDirection])
+  }, [estoqueCalculado, searchTerm, origemFilter, origemPorCodigo, sortKey, sortDirection])
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
@@ -333,6 +355,19 @@ export function EstoqueSaldo() {
               <Package className="h-5 w-5" />
               Saldo de Estoque por Código (PN)
             </CardTitle>
+            <Select value={origemFilter} onValueChange={setOrigemFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filtrar por Origem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas Origens</SelectItem>
+                {origensUnicas.map((origem) => (
+                  <SelectItem key={origem} value={origem}>
+                    {origem}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
