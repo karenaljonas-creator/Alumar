@@ -486,7 +486,7 @@ export function EstoqueEstrategico() {
               <span className="text-muted-foreground">Carregando...</span>
             </div>
           ) : (
-            <div className="max-h-[500px] overflow-auto">
+            <div className="overflow-x-auto">
               <Table className="table-auto">
                 <TableHeader>
                   <TableRow>
