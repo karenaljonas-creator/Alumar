@@ -173,32 +173,57 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem
+  // Calcular valores por origem baseado no SALDO ATUAL (não no valor de entrada)
   const valoresPorOrigem = useMemo(() => {
-    const origens = {
+    const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
       "Corretiva Contrato": 0,
       "Plano Manutenção": 0,
       "Acordo inicial": 0,
     }
 
+    // Agrupar entradas por código e origem
+    const entradasPorCodigo: Record<string, { origem: string; quantidade: number; valorTotal: number }[]> = {}
     entradas.forEach((entrada) => {
-      const origem = entrada.origem || ""
-      const valor = entrada.valor_total || 0
+      const codigo = entrada.codigo
+      if (!entradasPorCodigo[codigo]) {
+        entradasPorCodigo[codigo] = []
+      }
+      entradasPorCodigo[codigo].push({
+        origem: entrada.origem || "",
+        quantidade: entrada.quantidade || 0,
+        valorTotal: entrada.valor_total || 0,
+      })
+    })
 
-      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        origens["Estoque Estratégico"] += valor
-      } else if (origem.toLowerCase().includes("corretiva contrato")) {
-        origens["Corretiva Contrato"] += valor
-      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        origens["Plano Manutenção"] += valor
-      } else if (origem.toLowerCase().includes("acordo inicial")) {
-        origens["Acordo inicial"] += valor
+    // Para cada item no estoque calculado, distribuir o valor do saldo pela origem proporcional
+    estoqueCalculado.forEach((item) => {
+      if (item.saldo <= 0) return // Se saldo é zero ou negativo, não há valor em estoque
+
+      const entradasDoItem = entradasPorCodigo[item.codigo] || []
+      const totalEntradaQtd = entradasDoItem.reduce((acc, e) => acc + e.quantidade, 0)
+      
+      if (totalEntradaQtd === 0) return
+
+      // Valor do saldo atual para este item
+      const valorSaldoAtual = item.saldo * item.valorMedioUnitario
+
+      // Distribuir proporcionalmente pela origem da primeira entrada (origem principal do item)
+      const origemPrincipal = entradasDoItem[0]?.origem || ""
+      
+      if (origemPrincipal.toLowerCase().includes("estratégico") || origemPrincipal.toLowerCase().includes("estrategico")) {
+        origens["Estoque Estratégico"] += valorSaldoAtual
+      } else if (origemPrincipal.toLowerCase().includes("corretiva contrato")) {
+        origens["Corretiva Contrato"] += valorSaldoAtual
+      } else if (origemPrincipal.toLowerCase().includes("plano") || origemPrincipal.toLowerCase().includes("manutenção") || origemPrincipal.toLowerCase().includes("preventiva")) {
+        origens["Plano Manutenção"] += valorSaldoAtual
+      } else if (origemPrincipal.toLowerCase().includes("acordo inicial")) {
+        origens["Acordo inicial"] += valorSaldoAtual
       }
     })
 
     return origens
-  }, [entradas])
+  }, [entradas, estoqueCalculado])
 
   return (
     <div className="space-y-6">
