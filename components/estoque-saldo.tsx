@@ -174,7 +174,7 @@ export function EstoqueSaldo() {
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
   // Calcular valores por origem baseado no SALDO ATUAL de cada ITEM
-  // Lógica: Para cada ITEM: Entrada - Saída = Saldo, valor do saldo vai para a origem do item
+  // Lógica simples: Para cada ITEM, pegar a origem e calcular saldo * valor médio
   const valoresPorOrigem = useMemo(() => {
     const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
@@ -183,55 +183,33 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Identificar a origem de cada código (baseado na maior quantidade de entrada)
+    // Mapear código -> origem (pega a origem da primeira entrada do item)
     const origemPorCodigo: Record<string, string> = {}
-    const qtdPorCodigoOrigem: Record<string, Record<string, number>> = {}
     
     entradas.forEach((entrada) => {
       const codigo = entrada.codigo
+      if (origemPorCodigo[codigo]) return // Já tem origem definida
+      
       const origem = entrada.origem || ""
-      const quantidade = entrada.quantidade || 0
       
-      // Determinar categoria
-      let categoria = ""
+      // Classificar a origem
       if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        categoria = "Estoque Estratégico"
+        origemPorCodigo[codigo] = "Estoque Estratégico"
       } else if (origem.toLowerCase().includes("corretiva")) {
-        categoria = "Corretiva Contrato"
+        origemPorCodigo[codigo] = "Corretiva Contrato"
       } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        categoria = "Plano Manutenção"
+        origemPorCodigo[codigo] = "Plano Manutenção"
       } else if (origem.toLowerCase().includes("acordo inicial")) {
-        categoria = "Acordo inicial"
+        origemPorCodigo[codigo] = "Acordo inicial"
       }
-      
-      if (!categoria) return
-      
-      if (!qtdPorCodigoOrigem[codigo]) {
-        qtdPorCodigoOrigem[codigo] = {}
-      }
-      qtdPorCodigoOrigem[codigo][categoria] = (qtdPorCodigoOrigem[codigo][categoria] || 0) + quantidade
-    })
-    
-    // Para cada código, determinar a origem principal (a que tem mais quantidade)
-    Object.entries(qtdPorCodigoOrigem).forEach(([codigo, categorias]) => {
-      let maxQtd = 0
-      let origemPrincipal = ""
-      Object.entries(categorias).forEach(([cat, qtd]) => {
-        if (qtd > maxQtd) {
-          maxQtd = qtd
-          origemPrincipal = cat
-        }
-      })
-      origemPorCodigo[codigo] = origemPrincipal
     })
 
-    // Para cada item no estoque com saldo > 0, somar o valor na categoria correspondente
+    // Para cada item: saldo > 0 → valor vai para sua origem
     estoqueCalculado.forEach((item) => {
-      if (item.saldo <= 0) return // Se saldo é zero ou negativo, não há valor em estoque
+      if (item.saldo <= 0) return
       
       const categoria = origemPorCodigo[item.codigo]
       if (categoria && origens[categoria] !== undefined) {
-        // Valor em estoque deste item = saldo * valor médio unitário
         origens[categoria] += item.saldo * item.valorMedioUnitario
       }
     })
