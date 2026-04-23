@@ -272,8 +272,35 @@ export function EntradaPecas() {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
   }
 
-  const totalEstoque = filteredPecas.reduce((acc, p) => acc + p.valor_total, 0)
-  const totalItens = filteredPecas.reduce((acc, p) => acc + p.quantidade, 0)
+  const totalEntrada = pecas.reduce((acc, p) => acc + (p.valor_total || 0), 0)
+  const totalItens = pecas.reduce((acc, p) => acc + (p.quantidade || 0), 0)
+  
+  // Calcular valores por origem
+  const valoresPorOrigem = useMemo(() => {
+    const origens = {
+      "Estoque Estratégico": 0,
+      "Corretivos": 0,
+      "Preventivos": 0,
+      "Acordo Inicial": 0,
+    }
+
+    pecas.forEach((p) => {
+      const origem = p.origem || ""
+      const valor = p.valor_total || 0
+
+      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
+        origens["Estoque Estratégico"] += valor
+      } else if (origem.toLowerCase().includes("corretiva")) {
+        origens["Corretivos"] += valor
+      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
+        origens["Preventivos"] += valor
+      } else if (origem.toLowerCase().includes("acordo inicial")) {
+        origens["Acordo Inicial"] += valor
+      }
+    })
+
+    return origens
+  }, [pecas])
 
   // Toggle row selection
   const toggleRowSelection = (id: string) => {
@@ -507,15 +534,50 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Registros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{filteredPecas.length}</div>
+            <div className="text-2xl font-bold">{pecas.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total em Estoque</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total de Entrada</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalEstoque)}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalEntrada)}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigem["Estoque Estratégico"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigem["Corretivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigem["Preventivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigem["Acordo Inicial"])}</div>
           </CardContent>
         </Card>
       </div>
