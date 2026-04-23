@@ -173,8 +173,8 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem baseado no SALDO ATUAL de cada ITEM
-  // Lógica simples: Para cada ITEM, pegar a origem e calcular saldo * valor médio
+  // Calcular valores por origem baseado no SALDO ATUAL
+  // Lógica: Mesmo PN pode ter várias origens, então calculamos por entrada/saída
   const valoresPorOrigem = useMemo(() => {
     const origens: Record<string, number> = {
       "Estoque Estratégico": 0,
@@ -183,58 +183,83 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Mapear código -> origem (pega a origem da primeira entrada do item)
-    const origemPorCodigo: Record<string, string> = {}
-    const origensNaoClassificadas: string[] = []
-    
-    entradas.forEach((entrada) => {
-      const codigo = entrada.codigo
-      if (origemPorCodigo[codigo]) return // Já tem origem definida
-      
-      const origem = entrada.origem || ""
-      
-      // Classificar a origem
-      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        origemPorCodigo[codigo] = "Estoque Estratégico"
-      } else if (origem.toLowerCase().includes("corretiva")) {
-        origemPorCodigo[codigo] = "Corretiva Contrato"
-      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        origemPorCodigo[codigo] = "Plano Manutenção"
-      } else if (origem.toLowerCase().includes("acordo inicial")) {
-        origemPorCodigo[codigo] = "Acordo inicial"
-      } else {
-        // Debug: registrar origens não classificadas
-        if (origem && !origensNaoClassificadas.includes(origem)) {
-          origensNaoClassificadas.push(origem)
-        }
-      }
-    })
-
-    // Log das origens não classificadas
-    if (origensNaoClassificadas.length > 0) {
-      console.log("[v0] Origens não classificadas:", origensNaoClassificadas)
+    // Função para classificar origem
+    const classificarOrigem = (origem: string): string | null => {
+      const o = origem.toLowerCase()
+      if (o.includes("estratégico") || o.includes("estrategico")) return "Estoque Estratégico"
+      if (o.includes("corretiva")) return "Corretiva Contrato"
+      if (o.includes("plano") || o.includes("manutenção") || o.includes("preventiva")) return "Plano Manutenção"
+      if (o.includes("acordo inicial")) return "Acordo inicial"
+      return null
     }
 
-    // Para cada item: saldo > 0 → valor vai para sua origem
-    let semCategoria = 0
-    estoqueCalculado.forEach((item) => {
-      if (item.saldo <= 0) return
-      
-      const categoria = origemPorCodigo[item.codigo]
-      const valorItem = item.saldo * item.valorMedioUnitario
-      
-      if (categoria && origens[categoria] !== undefined) {
-        origens[categoria] += valorItem
-      } else {
-        semCategoria += valorItem
+    // Para cada código, calcular: entrada por origem e total de saída
+    const dadosPorCodigo: Record<string, {
+      entradasPorCategoria: Record<string, { qtd: number; valor: number }>
+      totalEntradaQtd: number
+      totalSaidaQtd: number
+    }> = {}
+
+    // Processar entradas
+    entradas.forEach((e) => {
+      const codigo = e.codigo
+      const categoria = classificarOrigem(e.origem || "")
+      if (!categoria) return
+
+      if (!dadosPorCodigo[codigo]) {
+        dadosPorCodigo[codigo] = {
+          entradasPorCategoria: {},
+          totalEntradaQtd: 0,
+          totalSaidaQtd: 0,
+        }
+      }
+
+      if (!dadosPorCodigo[codigo].entradasPorCategoria[categoria]) {
+        dadosPorCodigo[codigo].entradasPorCategoria[categoria] = { qtd: 0, valor: 0 }
+      }
+
+      dadosPorCodigo[codigo].entradasPorCategoria[categoria].qtd += e.quantidade || 0
+      dadosPorCodigo[codigo].entradasPorCategoria[categoria].valor += e.valor_total || 0
+      dadosPorCodigo[codigo].totalEntradaQtd += e.quantidade || 0
+    })
+
+    // Processar saídas
+    saidas.forEach((s) => {
+      const codigo = s.codigo
+      if (dadosPorCodigo[codigo]) {
+        dadosPorCodigo[codigo].totalSaidaQtd += s.quantidade || 0
       }
     })
-    
-    console.log("[v0] Valores por origem (Estoque):", origens)
-    console.log("[v0] Valor sem categoria:", semCategoria)
+
+    // Calcular valor em estoque por origem para cada código
+    Object.values(dadosPorCodigo).forEach((dados) => {
+      const { entradasPorCategoria, totalEntradaQtd, totalSaidaQtd } = dados
+      
+      // Para cada categoria deste código
+      Object.entries(entradasPorCategoria).forEach(([categoria, { qtd, valor }]) => {
+        if (totalEntradaQtd === 0) return
+        
+        // Proporção desta categoria no total de entradas do código
+        const proporcao = qtd / totalEntradaQtd
+        
+        // Quantidade que saiu desta categoria (proporcional)
+        const saidaProporcional = totalSaidaQtd * proporcao
+        
+        // Saldo desta categoria = entrada - saída proporcional
+        const saldoQtd = Math.max(0, qtd - saidaProporcional)
+        
+        // Valor médio unitário desta categoria
+        const valorMedioUnit = qtd > 0 ? valor / qtd : 0
+        
+        // Valor em estoque desta categoria
+        const valorEmEstoque = saldoQtd * valorMedioUnit
+        
+        origens[categoria] += valorEmEstoque
+      })
+    })
 
     return origens
-  }, [entradas, estoqueCalculado])
+  }, [entradas, saidas])
 
   return (
     <div className="space-y-6">
