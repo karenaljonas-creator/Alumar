@@ -488,7 +488,7 @@ export function EstoqueEstrategico() {
           ) : (
             <div className="overflow-x-auto">
               <Table className="table-auto">
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead className="whitespace-nowrap">
                       <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
