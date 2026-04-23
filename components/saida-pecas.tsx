@@ -989,6 +989,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </button>
                     </TableHead>
                     <TableHead>Observação</TableHead>
+                    <TableHead>Data Upload</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1021,6 +1022,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </TableCell>
                       <TableCell className="max-w-[150px] truncate" title={saida.observacao || ""}>
                         {saida.observacao || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {saida.created_at ? new Date(saida.created_at).toLocaleDateString("pt-BR") : "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
