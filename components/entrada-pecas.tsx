@@ -284,6 +284,8 @@ export function EntradaPecas() {
       "Acordo Inicial": 0,
     }
 
+    const origensNaoClassificadas: string[] = []
+    
     pecas.forEach((p) => {
       const origem = p.origem || ""
       const valor = p.valor_total || 0
@@ -296,8 +298,13 @@ export function EntradaPecas() {
         origens["Preventivos"] += valor
       } else if (origem.toLowerCase().includes("acordo inicial")) {
         origens["Acordo Inicial"] += valor
+      } else if (origem && !origensNaoClassificadas.includes(origem)) {
+        origensNaoClassificadas.push(origem)
       }
     })
+
+    console.log("[v0] Valores por origem (Entrada):", origens)
+    console.log("[v0] Origens não classificadas (Entrada):", origensNaoClassificadas)
 
     return origens
   }, [pecas])

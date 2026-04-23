@@ -185,6 +185,7 @@ export function EstoqueSaldo() {
 
     // Mapear código -> origem (pega a origem da primeira entrada do item)
     const origemPorCodigo: Record<string, string> = {}
+    const origensNaoClassificadas: string[] = []
     
     entradas.forEach((entrada) => {
       const codigo = entrada.codigo
@@ -201,18 +202,36 @@ export function EstoqueSaldo() {
         origemPorCodigo[codigo] = "Plano Manutenção"
       } else if (origem.toLowerCase().includes("acordo inicial")) {
         origemPorCodigo[codigo] = "Acordo inicial"
+      } else {
+        // Debug: registrar origens não classificadas
+        if (origem && !origensNaoClassificadas.includes(origem)) {
+          origensNaoClassificadas.push(origem)
+        }
       }
     })
 
+    // Log das origens não classificadas
+    if (origensNaoClassificadas.length > 0) {
+      console.log("[v0] Origens não classificadas:", origensNaoClassificadas)
+    }
+
     // Para cada item: saldo > 0 → valor vai para sua origem
+    let semCategoria = 0
     estoqueCalculado.forEach((item) => {
       if (item.saldo <= 0) return
       
       const categoria = origemPorCodigo[item.codigo]
+      const valorItem = item.saldo * item.valorMedioUnitario
+      
       if (categoria && origens[categoria] !== undefined) {
-        origens[categoria] += item.saldo * item.valorMedioUnitario
+        origens[categoria] += valorItem
+      } else {
+        semCategoria += valorItem
       }
     })
+    
+    console.log("[v0] Valores por origem (Estoque):", origens)
+    console.log("[v0] Valor sem categoria:", semCategoria)
 
     return origens
   }, [entradas, estoqueCalculado])
