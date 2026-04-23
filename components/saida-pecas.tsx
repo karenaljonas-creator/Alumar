@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2, Edit2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2, Edit2, ChevronRight, ChevronDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -76,6 +76,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const [buscandoNF, setBuscandoNF] = useState(false)
   const [nfDialogOpen, setNfDialogOpen] = useState(false)
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [showUploadDate, setShowUploadDate] = useState(false)
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [bulkEditData, setBulkEditData] = useState({
     data_saida: "",
@@ -989,8 +990,19 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </button>
                     </TableHead>
                     <TableHead>Observação</TableHead>
-                    <TableHead>Data Upload</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="w-[40px]">
+                      <button
+                        onClick={() => setShowUploadDate(!showUploadDate)}
+                        className="p-1 hover:bg-muted rounded"
+                        title={showUploadDate ? "Ocultar Data de Upload" : "Mostrar Data de Upload"}
+                      >
+                        {showUploadDate ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                      </button>
+                    </TableHead>
+                    {showUploadDate && (
+                      <TableHead>Data Upload</TableHead>
+                    )}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1023,9 +1035,6 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <TableCell className="max-w-[150px] truncate" title={saida.observacao || ""}>
                         {saida.observacao || "-"}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {saida.created_at ? new Date(saida.created_at).toLocaleDateString("pt-BR") : "-"}
-                      </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleEdit(saida)}>
@@ -1036,6 +1045,12 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                           </Button>
                         </div>
                       </TableCell>
+                      <TableCell></TableCell>
+                      {showUploadDate && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {saida.created_at ? new Date(saida.created_at).toLocaleDateString("pt-BR") : "-"}
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
