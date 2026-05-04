@@ -635,7 +635,7 @@ export default function Home() {
             })
           }
         }
-        reader.readAsText(file)
+        reader.readAsText(file, "UTF-8")
       }
     }
     input.click()
