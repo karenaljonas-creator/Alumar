@@ -38,6 +38,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [localizacaoFilter, setLocalizacaoFilter] = useState<string>("todas")
   const [tagFilter, setTagFilter] = useState<string>("todas")
+  const [preventivaFilter, setPreventivaFilter] = useState<string>("todos")
   const [selectedMachineIndex, setSelectedMachineIndex] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -48,6 +49,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
   const uniqueLocalizacoes = Array.from(new Set(machines.map((m) => m.localizacao))).sort()
   const uniqueTags = Array.from(new Set(machines.map((m) => m.nome))).sort()
+  const uniquePreventivas = Array.from(new Set(machines.map((m) => m.statusPreventiva || "OK").filter(Boolean))).sort()
 
   const clearFilters = () => {
     setSearchTerm("")
@@ -55,6 +57,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
     setStatusFilter("todos")
     setLocalizacaoFilter("todas")
     setTagFilter("todas")
+    setPreventivaFilter("todos")
   }
 
   const getSortedMachines = () => {
@@ -75,7 +78,9 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
       const matchesTag = tagFilter === "todas" || m.nome === tagFilter
 
-      return matchesSearch && matchesContrato && matchesStatus && matchesLocalizacao && matchesTag
+      const matchesPreventiva = preventivaFilter === "todos" || (m.statusPreventiva || "OK") === preventivaFilter
+
+      return matchesSearch && matchesContrato && matchesStatus && matchesLocalizacao && matchesTag && matchesPreventiva
     })
 
     if (!sortColumn || !sortDirection) {
@@ -133,6 +138,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
     statusFilter !== "todos" ||
     localizacaoFilter !== "todas" ||
     tagFilter !== "todas" ||
+    preventivaFilter !== "todos" ||
     searchTerm !== ""
 
   const handleSort = (column: SortColumn) => {
@@ -364,6 +370,22 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
               searchPlaceholder="Pesquisar TAG..."
             />
           </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Preventiva</label>
+            <Select value={preventivaFilter} onValueChange={setPreventivaFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos</SelectItem>
+                {uniquePreventivas.map((prev) => (
+                  <SelectItem key={prev} value={prev}>
+                    {prev}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {hasActiveFilters && (
@@ -392,6 +414,12 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
               <Badge variant="secondary" className="gap-1">
                 TAG: {tagFilter}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => setTagFilter("todas")} />
+              </Badge>
+            )}
+            {preventivaFilter !== "todos" && (
+              <Badge variant="secondary" className="gap-1">
+                Preventiva: {preventivaFilter}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => setPreventivaFilter("todos")} />
               </Badge>
             )}
             {searchTerm && (
