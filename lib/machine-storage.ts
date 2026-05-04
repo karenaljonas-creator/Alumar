@@ -104,7 +104,8 @@ export function exportToCSV(machines: Machine[]): string {
 
 export function downloadCSV(machines: Machine[]): void {
   const csv = exportToCSV(machines)
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  const BOM = "\uFEFF"
+  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
   const link = document.createElement("a")
   const url = URL.createObjectURL(blob)
 
@@ -117,7 +118,9 @@ export function downloadCSV(machines: Machine[]): void {
 }
 
 export function importFromCSV(csvContent: string): Machine[] {
-  const lines = csvContent.split("\n").filter((line) => line.trim())
+  // Remover BOM se existir
+  const cleanContent = csvContent.replace(/^\uFEFF/, "")
+  const lines = cleanContent.split("\n").filter((line) => line.trim())
   if (lines.length < 2) return []
 
   const machines: Machine[] = []

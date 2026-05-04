@@ -196,7 +196,8 @@ export function exportHistoryToCSV(history: WeeklySnapshot[]): string {
 
 export function downloadHistoryCSV(history: WeeklySnapshot[]): void {
   const csv = exportHistoryToCSV(history)
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
+  const BOM = "\uFEFF"
+  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
   const link = document.createElement("a")
   const url = URL.createObjectURL(blob)
 
