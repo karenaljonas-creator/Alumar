@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Input } from "@/components/ui/input"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, ChevronDown } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -24,6 +24,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [localizacaoFilter, setLocalizacaoFilter] = useState("todas")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [showDiasParada, setShowDiasParada] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -264,11 +265,22 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Data de Parada <SortIcon columnKey="dataParada" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Dias Parada <SortIcon columnKey="diasParada" />
+                  <TableHead className="w-[40px]">
+                    <button
+                      onClick={() => setShowDiasParada(!showDiasParada)}
+                      className="p-1 hover:bg-muted rounded"
+                      title={showDiasParada ? "Ocultar Dias Parada" : "Mostrar Dias Parada"}
+                    >
+                      {showDiasParada ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </button>
                   </TableHead>
+                  {showDiasParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Dias Parada <SortIcon columnKey="diasParada" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
@@ -325,9 +337,12 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="text-sm font-medium">
                         {formatDate(maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="text-sm text-center font-semibold">
-                        {calcularDiasParada(maquina.dataParada)}
-                      </TableCell>
+                      <TableCell></TableCell>
+                      {showDiasParada && (
+                        <TableCell className="text-sm text-center font-semibold">
+                          {calcularDiasParada(maquina.dataParada)}
+                        </TableCell>
+                      )}
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
@@ -337,7 +352,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={showDiasParada ? 12 : 11} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
