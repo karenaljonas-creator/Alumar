@@ -3,7 +3,7 @@
 // Sistema de Gestão de Máquinas - v1.0
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
-import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
+import { loadMachines, saveMachines, downloadCSV, importFromCSV, updateMachine } from "@/lib/supabase-machine-storage"
 import { loadContrato } from "@/lib/contrato-storage"
 import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } from "@/lib/supabase-history-storage"
 import {
@@ -182,6 +182,23 @@ export default function Home() {
     } catch (error) {
       toast({
         title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleUpdateMachine = async (machine: Machine) => {
+    try {
+      await updateMachine(machine.id, machine)
+      setMachines(machines.map((m) => (m.id === machine.id ? machine : m)))
+      toast({
+        title: "Máquina atualizada",
+        description: "As informações foram salvas com sucesso.",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
         description: "Não foi possível salvar as alterações. Tente novamente.",
         variant: "destructive",
       })
@@ -915,7 +932,7 @@ export default function Home() {
                   Acompanhe todas as máquinas paradas com dados do último registro semanal
                 </p>
               </div>
-              <GestaoParadas machines={machines} />
+              <GestaoParadas machines={machines} onUpdateMachine={handleUpdateMachine} />
             </div>
           )}
 

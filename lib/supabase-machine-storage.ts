@@ -109,6 +109,7 @@ export async function loadMachines(): Promise<Machine[]> {
         temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
         responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
         tempoParada: row.horas_operacao || 0,
+        prazo: row.prazo || undefined,
       }
     })
 
@@ -169,6 +170,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
 
   if (updates.acaoResponsavel !== undefined) record.acao_responsavel = updates.acaoResponsavel
   if (updates.tempoParada !== undefined) record.horas_operacao = updates.tempoParada
+  if (updates.prazo !== undefined) record.prazo = updates.prazo
   record.updated_at = new Date().toISOString()
 
   const { error } = await supabase.from("machines").update(record).eq("id", id)
