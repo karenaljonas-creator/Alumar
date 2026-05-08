@@ -64,9 +64,13 @@ export function RegistroSemanalModal({
     if (isSaving) return
     setIsSaving(true)
 
+    console.log("[v0] handleSave - editedMachine:", { id: editedMachine.id, acaoResponsavel: editedMachine.acaoResponsavel })
+
     try {
       const allMachines = await loadMachines()
       const updatedMachines = allMachines.map((m) => (m.id === editedMachine.id ? editedMachine : m))
+
+      console.log("[v0] updatedMachine before save:", updatedMachines.find(m => m.id === editedMachine.id)?.acaoResponsavel)
 
       await saveMachines(updatedMachines)
 

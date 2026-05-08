@@ -217,6 +217,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
     setIsModalOpen(false)
     try {
       const updatedMachines = await loadMachines()
+      console.log("[v0] handleSaveMachine - reloaded machines acaoResponsavel:", updatedMachines.map(m => ({ nome: m.nome, acaoResponsavel: m.acaoResponsavel })))
       onSaveAll(updatedMachines)
     } catch (error) {
       console.error("Erro ao recarregar máquinas:", error)
