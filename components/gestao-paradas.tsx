@@ -33,14 +33,8 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
   const [prazoValue, setPrazoValue] = useState("")
 
   const handleSavePrazo = async (maquina: Machine) => {
-    console.log("[v0] handleSavePrazo called", { machineId: maquina.id, prazoValue, onUpdateMachine: !!onUpdateMachine })
     if (onUpdateMachine && prazoValue.trim() !== "") {
-      try {
-        await onUpdateMachine({ ...maquina, prazo: prazoValue.trim() })
-        console.log("[v0] prazo saved successfully")
-      } catch (error) {
-        console.error("[v0] error saving prazo:", error)
-      }
+      await onUpdateMachine({ ...maquina, prazo: prazoValue.trim() })
     }
     setEditingPrazo(null)
     setPrazoValue("")
@@ -352,6 +346,9 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
+                  <TableHead>
+                    <span className="font-medium">Última Atualização</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -456,11 +453,14 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                       )}
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {maquina.updatedAt ? new Date(maquina.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={12 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={13 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>

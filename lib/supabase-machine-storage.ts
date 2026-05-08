@@ -110,6 +110,7 @@ export async function loadMachines(): Promise<Machine[]> {
         responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
         tempoParada: row.horas_operacao || 0,
         prazo: row.prazo || undefined,
+        updatedAt: row.updated_at || undefined,
       }
     })
 
