@@ -15,9 +15,10 @@ type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
+  onUpdateMachine?: (machine: Machine) => Promise<void>
 }
 
-export function GestaoParadas({ machines }: GestaoParadasProps) {
+export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
@@ -28,6 +29,16 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [showContrato, setShowContrato] = useState(false)
   const [showTipo, setShowTipo] = useState(false)
   const [showDataParada, setShowDataParada] = useState(false)
+  const [editingPrazo, setEditingPrazo] = useState<string | null>(null)
+  const [prazoValue, setPrazoValue] = useState("")
+
+  const handleSavePrazo = async (maquina: Machine) => {
+    if (onUpdateMachine) {
+      await onUpdateMachine({ ...maquina, prazo: prazoValue })
+    }
+    setEditingPrazo(null)
+    setPrazoValue("")
+  }
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -290,6 +301,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
+                  <TableHead className="min-w-[120px]">
+                    <span className="font-medium">Prazo</span>
+                  </TableHead>
                   <TableHead className="w-[40px]">
                     <button
                       onClick={() => setShowDataParada(!showDataParada)}
@@ -381,6 +395,37 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
                         {maquina.motivoParada || "-"}
                       </TableCell>
+                      <TableCell className="text-sm min-w-[120px]">
+                        {editingPrazo === maquina.id ? (
+                          <div className="flex items-center gap-1">
+                            <Input
+                              value={prazoValue}
+                              onChange={(e) => setPrazoValue(e.target.value)}
+                              className="h-7 text-sm"
+                              placeholder="Ex: 15/06/2026"
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSavePrazo(maquina)
+                                if (e.key === "Escape") {
+                                  setEditingPrazo(null)
+                                  setPrazoValue("")
+                                }
+                              }}
+                              autoFocus
+                            />
+                          </div>
+                        ) : (
+                          <span
+                            className="cursor-pointer hover:bg-muted px-2 py-1 rounded block"
+                            onClick={() => {
+                              setEditingPrazo(maquina.id)
+                              setPrazoValue(maquina.prazo || "")
+                            }}
+                            title="Clique para editar"
+                          >
+                            {maquina.prazo || "-"}
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell></TableCell>
                       {showDataParada && (
                         <TableCell className="text-sm font-medium">
@@ -399,7 +444,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
