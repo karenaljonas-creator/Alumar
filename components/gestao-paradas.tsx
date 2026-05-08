@@ -285,6 +285,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
+                  <TableHead className="min-w-[300px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
+                    </button>
+                  </TableHead>
                   <TableHead className="w-[40px]">
                     <button
                       onClick={() => setShowDataParada(!showDataParada)}
@@ -325,11 +330,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   <TableHead>
                     <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Responsavel <SortIcon columnKey="responsavel" />
-                    </button>
-                  </TableHead>
-                  <TableHead className="min-w-[300px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
                 </TableRow>
@@ -378,6 +378,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
+                        {maquina.motivoParada || "-"}
+                      </TableCell>
                       <TableCell></TableCell>
                       {showDataParada && (
                         <TableCell className="text-sm font-medium">
@@ -392,9 +395,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       )}
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
-                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {maquina.motivoParada || "-"}
-                      </TableCell>
                     </TableRow>
                   ))
                 ) : (
