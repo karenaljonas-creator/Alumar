@@ -22,6 +22,7 @@ export interface Machine {
   responsavel?: string // Adicionando responsável
   tempoParada?: number // Adicionando tempo de parada em dias
   prazo?: string // Prazo manual para máquinas paradas
+  updatedAt?: string // Data da última atualização
 }
 
 export interface MachineStats {
