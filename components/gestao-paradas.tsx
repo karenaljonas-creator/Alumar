@@ -454,7 +454,7 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {maquina.updatedAt ? new Date(maquina.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}
+                        {maquina.updatedAt ? new Date(maquina.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "-"}
                       </TableCell>
                     </TableRow>
                   ))
