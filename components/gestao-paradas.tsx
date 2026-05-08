@@ -340,7 +340,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                     <TableRow key={maquina.id}>
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
-                      <TableCell className="text-sm">{maquina.localizacao}</TableCell>
+                      <TableCell className="text-sm max-w-[120px]">
+                        <span className="block leading-tight">{maquina.localizacao}</span>
+                      </TableCell>
                       <TableCell></TableCell>
                       {showContrato && (
                         <TableCell className="text-sm">
