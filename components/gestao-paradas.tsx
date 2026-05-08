@@ -33,8 +33,14 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
   const [prazoValue, setPrazoValue] = useState("")
 
   const handleSavePrazo = async (maquina: Machine) => {
-    if (onUpdateMachine) {
-      await onUpdateMachine({ ...maquina, prazo: prazoValue })
+    console.log("[v0] handleSavePrazo called", { machineId: maquina.id, prazoValue, onUpdateMachine: !!onUpdateMachine })
+    if (onUpdateMachine && prazoValue.trim() !== "") {
+      try {
+        await onUpdateMachine({ ...maquina, prazo: prazoValue.trim() })
+        console.log("[v0] prazo saved successfully")
+      } catch (error) {
+        console.error("[v0] error saving prazo:", error)
+      }
     }
     setEditingPrazo(null)
     setPrazoValue("")
@@ -404,10 +410,20 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                               className="h-7 text-sm"
                               placeholder="Ex: 15/06/2026"
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") handleSavePrazo(maquina)
+                                if (e.key === "Enter") {
+                                  e.preventDefault()
+                                  handleSavePrazo(maquina)
+                                }
                                 if (e.key === "Escape") {
                                   setEditingPrazo(null)
                                   setPrazoValue("")
+                                }
+                              }}
+                              onBlur={() => {
+                                if (prazoValue.trim() !== "") {
+                                  handleSavePrazo(maquina)
+                                } else {
+                                  setEditingPrazo(null)
                                 }
                               }}
                               autoFocus

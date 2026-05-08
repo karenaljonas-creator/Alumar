@@ -189,14 +189,17 @@ export default function Home() {
   }
 
   const handleUpdateMachine = async (machine: Machine) => {
+    console.log("[v0] handleUpdateMachine called", { machineId: machine.id, prazo: machine.prazo })
     try {
       await updateMachine(machine.id, machine)
+      console.log("[v0] updateMachine completed successfully")
       setMachines(machines.map((m) => (m.id === machine.id ? machine : m)))
       toast({
         title: "Máquina atualizada",
         description: "As informações foram salvas com sucesso.",
       })
     } catch (error) {
+      console.error("[v0] updateMachine error:", error)
       toast({
         title: "Erro ao atualizar",
         description: "Não foi possível salvar as alterações. Tente novamente.",
