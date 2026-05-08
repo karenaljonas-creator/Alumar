@@ -25,6 +25,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [showDiasParada, setShowDiasParada] = useState(false)
+  const [showContrato, setShowContrato] = useState(false)
+  const [showTipo, setShowTipo] = useState(false)
+  const [showDataParada, setShowDataParada] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -245,26 +248,59 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Contrato <SortIcon columnKey="contrato" />
+                  <TableHead className="w-[40px]">
+                    <button
+                      onClick={() => setShowContrato(!showContrato)}
+                      className="p-1 hover:bg-muted rounded"
+                      title={showContrato ? "Ocultar Contrato" : "Mostrar Contrato"}
+                    >
+                      {showContrato ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Tipo <SortIcon columnKey="tipoEquip" />
+                  {showContrato && (
+                    <TableHead>
+                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Contrato <SortIcon columnKey="contrato" />
+                      </button>
+                    </TableHead>
+                  )}
+                  <TableHead className="w-[40px]">
+                    <button
+                      onClick={() => setShowTipo(!showTipo)}
+                      className="p-1 hover:bg-muted rounded"
+                      title={showTipo ? "Ocultar Tipo" : "Mostrar Tipo"}
+                    >
+                      {showTipo ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </button>
                   </TableHead>
+                  {showTipo && (
+                    <TableHead>
+                      <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Tipo <SortIcon columnKey="tipoEquip" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead>
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Data de Parada <SortIcon columnKey="dataParada" />
+                  <TableHead className="w-[40px]">
+                    <button
+                      onClick={() => setShowDataParada(!showDataParada)}
+                      className="p-1 hover:bg-muted rounded"
+                      title={showDataParada ? "Ocultar Data de Parada" : "Mostrar Data de Parada"}
+                    >
+                      {showDataParada ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                     </button>
                   </TableHead>
+                  {showDataParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Data de Parada <SortIcon columnKey="dataParada" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead className="w-[40px]">
                     <button
                       onClick={() => setShowDiasParada(!showDiasParada)}
@@ -305,23 +341,29 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
-                      <TableCell className="text-sm">
-                        <Badge
-                          variant={maquina.temContrato ? "default" : "secondary"}
-                          className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                        >
-                          {maquina.temContrato ? "Sim" : "Nao"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {maquina.tipo.includes("Compressor")
-                          ? "Compressor"
-                          : maquina.tipo.includes("Secador")
-                            ? "Secador"
-                            : maquina.tipo.includes("Soprador")
-                              ? "Soprador"
-                              : "Filtro"}
-                      </TableCell>
+                      <TableCell></TableCell>
+                      {showContrato && (
+                        <TableCell className="text-sm">
+                          <Badge
+                            variant={maquina.temContrato ? "default" : "secondary"}
+                            className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                          >
+                            {maquina.temContrato ? "Sim" : "Nao"}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      <TableCell></TableCell>
+                      {showTipo && (
+                        <TableCell className="text-sm">
+                          {maquina.tipo.includes("Compressor")
+                            ? "Compressor"
+                            : maquina.tipo.includes("Secador")
+                              ? "Secador"
+                              : maquina.tipo.includes("Soprador")
+                                ? "Soprador"
+                                : "Filtro"}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
@@ -334,9 +376,12 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {formatDate(maquina.dataParada)}
-                      </TableCell>
+                      <TableCell></TableCell>
+                      {showDataParada && (
+                        <TableCell className="text-sm font-medium">
+                          {formatDate(maquina.dataParada)}
+                        </TableCell>
+                      )}
                       <TableCell></TableCell>
                       {showDiasParada && (
                         <TableCell className="text-sm text-center font-semibold">
@@ -352,7 +397,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={showDiasParada ? 12 : 11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
