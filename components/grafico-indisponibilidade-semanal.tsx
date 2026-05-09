@@ -8,9 +8,10 @@ import { useMemo, useEffect, useState } from "react"
 
 interface GraficoIndisponibilidadeSemanalProps {
   contratoFilter: string
+  currentParadas?: number // Número atual de máquinas paradas para sobrescrever semana atual
 }
 
-export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndisponibilidadeSemanalProps) {
+export function GraficoIndisponibilidadeSemanal({ contratoFilter, currentParadas }: GraficoIndisponibilidadeSemanalProps) {
   const [history, setHistory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -57,10 +58,22 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
     
     const last7Weeks = uniqueHistory.slice(-7)
 
+    // Calcular a semana atual
+    const now = new Date()
+    const startOfYear = new Date(now.getFullYear(), 0, 1)
+    const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000))
+    const currentWeekNumber = Math.ceil((days + startOfYear.getDay() + 1) / 7)
+    const currentWeekKey = `${now.getFullYear()}-W${currentWeekNumber.toString().padStart(2, '0')}`
+
     return last7Weeks.map((snapshot) => {
       let paradas: number
 
-      if (contratoFilter === "todos") {
+      // Se for a semana atual e temos dados atuais, usar os dados atuais
+      const isCurrentWeek = snapshot.semana === currentWeekKey
+      
+      if (isCurrentWeek && currentParadas !== undefined) {
+        paradas = currentParadas
+      } else if (contratoFilter === "todos") {
         paradas = snapshot.stats.paradas
       } else {
         const machines = snapshot.machines || []

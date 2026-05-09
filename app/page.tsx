@@ -886,7 +886,7 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
+                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} currentParadas={maquinasParadasFiltradas.length} />
                   <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
                   <GraficoTipoEquipamento data={porTipo} />
                   <GraficoLocalizacao data={porLocalizacao} />
