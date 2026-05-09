@@ -48,13 +48,13 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
         paradas = snapshot.stats.paradas
       } else {
         const machines = snapshot.machines || []
-        const filteredMachines = machines.filter((m) => {
+        const filteredMachines = machines.filter((m: { temContrato?: boolean }) => {
           if (contratoFilter === "com-contrato") return m.temContrato === true
           if (contratoFilter === "sem-contrato") return m.temContrato === false
           return true
         })
 
-        paradas = filteredMachines.filter((m) => m.status === "parada").length
+        paradas = filteredMachines.filter((m: { status?: string }) => m.status === "parada").length
       }
 
       return {
