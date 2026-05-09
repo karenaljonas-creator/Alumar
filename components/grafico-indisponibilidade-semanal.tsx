@@ -38,8 +38,24 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
       return Number.parseInt(weekPartA) - Number.parseInt(weekPartB)
     })
     
-    // Pegar as últimas 7 semanas (as mais recentes)
-    const last7Weeks = sortedHistory.slice(-7)
+    // Remover semanas duplicadas, mantendo apenas o registro mais recente de cada semana
+    const uniqueWeeks = new Map<string, typeof sortedHistory[0]>()
+    for (const snapshot of sortedHistory) {
+      if (snapshot.semana) {
+        uniqueWeeks.set(snapshot.semana, snapshot) // Sobrescreve com o mais recente
+      }
+    }
+    
+    // Converter para array, ordenar e pegar as últimas 7 semanas
+    const uniqueHistory = Array.from(uniqueWeeks.values()).sort((a, b) => {
+      const [yearA, weekPartA] = a.semana?.split("-W") || ["0", "0"]
+      const [yearB, weekPartB] = b.semana?.split("-W") || ["0", "0"]
+      const yearCompare = Number.parseInt(yearA) - Number.parseInt(yearB)
+      if (yearCompare !== 0) return yearCompare
+      return Number.parseInt(weekPartA) - Number.parseInt(weekPartB)
+    })
+    
+    const last7Weeks = uniqueHistory.slice(-7)
 
     return last7Weeks.map((snapshot) => {
       let paradas: number
@@ -57,13 +73,10 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
         paradas = filteredMachines.filter((m: { status?: string }) => m.status === "parada").length
       }
 
-      // Incluir ano na label para suportar relatórios de longo prazo (contrato de 5 anos)
-      const [year, weekPart] = snapshot.semana?.split("-W") || ["?", "?"]
-      const shortYear = year.slice(-2) // Ex: "2026" -> "26"
+      const weekPart = snapshot.semana?.split("-W")[1] || "?"
       
       return {
-        semana: `S${weekPart}/${shortYear}`,
-        semanaCompleta: `Semana ${weekPart}/${year}`,
+        semana: `Semana ${weekPart}`,
         paradas,
       }
     })

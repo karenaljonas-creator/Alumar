@@ -51,13 +51,10 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
         disponibilidade = total > 0 ? (operacionais / total) * 100 : 0
       }
 
-      // Incluir ano na label para suportar relatórios de longo prazo (contrato de 5 anos)
-      const [year, weekPart] = snapshot.semana?.split("-W") || ["?", "?"]
-      const shortYear = year.slice(-2) // Ex: "2026" -> "26"
+      const weekPart = snapshot.semana?.split("-W")[1] || "?"
       
       return {
-        semana: `S${weekPart}/${shortYear}`,
-        semanaCompleta: `Semana ${weekPart}/${year}`,
+        semana: `Semana ${weekPart}`,
         disponibilidade: Number(disponibilidade.toFixed(1)),
       }
     })
