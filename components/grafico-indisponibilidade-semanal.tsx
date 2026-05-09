@@ -146,7 +146,7 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter, currentParadas
           className="h-[280px]"
         >
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ left: 10, right: 30, top: 10, bottom: 10 }} barGap={12}>
+            <BarChart data={chartData} margin={{ left: 10, right: 30, top: 25, bottom: 10 }} barGap={12}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
               <XAxis dataKey="semana" tick={{ fontSize: 13, fill: "#0f172a" }} />
               <YAxis tick={{ fontSize: 13, fill: "#0f172a" }} />

@@ -62,6 +62,17 @@ export function RegistroSemanalModal({
 
   const handleSave = async () => {
     if (isSaving) return
+    
+    // Validar: se status é "parada", data de parada é obrigatória
+    if (editedMachine.status === "parada" && !editedMachine.dataParada) {
+      toast({
+        title: "Data de Parada obrigatória",
+        description: "Informe a data de parada quando o equipamento estiver com status 'Parada'.",
+        variant: "destructive",
+      })
+      return
+    }
+    
     setIsSaving(true)
 
     try {
@@ -90,6 +101,17 @@ export function RegistroSemanalModal({
 
   const handleSaveAndNext = async () => {
     if (isSaving) return
+    
+    // Validar: se status é "parada", data de parada é obrigatória
+    if (editedMachine.status === "parada" && !editedMachine.dataParada) {
+      toast({
+        title: "Data de Parada obrigatória",
+        description: "Informe a data de parada quando o equipamento estiver com status 'Parada'.",
+        variant: "destructive",
+      })
+      return
+    }
+    
     setIsSaving(true)
 
     try {
