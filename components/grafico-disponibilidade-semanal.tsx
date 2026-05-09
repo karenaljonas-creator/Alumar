@@ -29,9 +29,30 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
       return { data: [] }
     }
 
-    const last5Weeks = history
-      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
-      .slice(-5)
+    // Ordenar por data de registro
+    const sortedHistory = [...history].sort((a, b) => 
+      new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime()
+    )
+    
+    // Remover semanas duplicadas, mantendo apenas o registro mais recente de cada semana
+    const uniqueWeeks = new Map<string, typeof sortedHistory[0]>()
+    for (const snapshot of sortedHistory) {
+      if (snapshot.semana) {
+        uniqueWeeks.set(snapshot.semana, snapshot) // Sobrescreve com o mais recente
+      }
+    }
+    
+    // Converter para array e ordenar por ano+semana
+    const uniqueHistory = Array.from(uniqueWeeks.values()).sort((a, b) => {
+      const [yearA, weekA] = (a.semana || "0-W0").split("-W")
+      const [yearB, weekB] = (b.semana || "0-W0").split("-W")
+      const yearCompare = Number.parseInt(yearA) - Number.parseInt(yearB)
+      if (yearCompare !== 0) return yearCompare
+      return Number.parseInt(weekA) - Number.parseInt(weekB)
+    })
+    
+    // Pegar as últimas 5 semanas únicas
+    const last5Weeks = uniqueHistory.slice(-5)
 
     const data = last5Weeks.map((snapshot) => {
       let disponibilidade: number
