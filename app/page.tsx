@@ -871,7 +871,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <StatsCards stats={stats} />
+              <StatsCards stats={stats} overrideParadas={maquinasParadasFiltradas.length} />
 
               <div className="grid gap-6 md:grid-cols-3">
                 <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
