@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LabelList } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { loadHistory } from "@/lib/supabase-history-storage"
 import { useMemo, useEffect, useState } from "react"
@@ -57,8 +57,13 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
         paradas = filteredMachines.filter((m: { status?: string }) => m.status === "parada").length
       }
 
+      // Incluir ano na label para suportar relatórios de longo prazo (contrato de 5 anos)
+      const [year, weekPart] = snapshot.semana?.split("-W") || ["?", "?"]
+      const shortYear = year.slice(-2) // Ex: "2026" -> "26"
+      
       return {
-        semana: `Semana ${snapshot.semana?.split("-W")[1] || "?"}`,
+        semana: `S${weekPart}/${shortYear}`,
+        semanaCompleta: `Semana ${weekPart}/${year}`,
         paradas,
       }
     })
@@ -120,7 +125,9 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
               <XAxis dataKey="semana" tick={{ fontSize: 13, fill: "#0f172a" }} />
               <YAxis tick={{ fontSize: 13, fill: "#0f172a" }} />
               <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(0, 0, 0, 0.05)" }} />
-              <Bar dataKey="paradas" fill="#94a3b8" radius={[6, 6, 0, 0]} maxBarSize={80} />
+              <Bar dataKey="paradas" fill="#94a3b8" radius={[6, 6, 0, 0]} maxBarSize={80}>
+                <LabelList dataKey="paradas" position="top" fill="#0f172a" fontSize={12} fontWeight={600} />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </ChartContainer>
