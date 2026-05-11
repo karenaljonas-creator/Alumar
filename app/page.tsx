@@ -482,6 +482,7 @@ export default function Home() {
             const columnMapping: Record<string, string> = {
               // Código
               "Código": "codigo", "codigo": "codigo", "CÓDIGO": "codigo", "CODIGO": "codigo",
+              "codigo ITEM": "codigo", "Codigo ITEM": "codigo", "CODIGO ITEM": "codigo", "Código ITEM": "codigo",
               "PN": "codigo", "pn": "codigo", "Part Number": "codigo", "Cod": "codigo", "COD": "codigo",
               // Descrição
               "Descrição": "descricao", "descricao": "descricao", "DESCRIÇÃO": "descricao", "DESCRICAO": "descricao",
@@ -527,15 +528,7 @@ export default function Home() {
               validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
             }
             
-            const excelHeaders = Object.keys(jsonData[0] || {})
-            console.log("[v0] Excel headers (exact names):", JSON.stringify(excelHeaders))
-            console.log("[v0] Active section:", activeSection)
-            console.log("[v0] Table name:", tableName)
-            console.log("[v0] Valid fields:", JSON.stringify(validFields))
-            console.log("[v0] Total rows from Excel:", jsonData.length)
-            console.log("[v0] First row data:", JSON.stringify(jsonData[0]))
-            
-            rows = jsonData.map((row, index) => {
+            rows = jsonData.map((row) => {
               const mappedRow: Record<string, string | number | null> = {}
               Object.entries(row).forEach(([key, value]) => {
                 const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
@@ -574,12 +567,6 @@ export default function Home() {
                 }
               })
               
-              // Log para debug - primeira linha apenas
-              if (index === 0) {
-                console.log("[v0] First mapped row:", JSON.stringify(mappedRow))
-                console.log("[v0] Has codigo?", !!mappedRow.codigo)
-              }
-              
               // Garantir campos obrigatórios
               if (!mappedRow.codigo) return null
               
@@ -592,14 +579,7 @@ export default function Home() {
               }
               
               return mappedRow
-            })
-            
-            const beforeFilter = rows.length
-            const nullCount = rows.filter(r => r === null).length
-            console.log("[v0] Rows before filter:", beforeFilter, "null rows:", nullCount)
-            
-            rows = rows.filter(Boolean) as Record<string, string | number | null>[]
-            console.log("[v0] Rows after filter:", rows.length)
+            }).filter(Boolean) as Record<string, string | number | null>[]
           } else {
             // Importar CSV (suporta vírgula e ponto-e-vírgula como separador)
             const reader = new FileReader()
