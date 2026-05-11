@@ -616,8 +616,17 @@ export default function Home() {
           console.error("[v0] Erro na importação:", error)
           let errorMsg = "Não foi possível importar os dados."
           if (error && typeof error === "object") {
-            const err = error as { message?: string; details?: string; hint?: string }
-            errorMsg = err.message || err.details || err.hint || errorMsg
+            const err = error as { message?: string; details?: string; hint?: string; code?: string }
+            if (err.code === "23505") {
+              errorMsg = "Alguns registros já existem no banco de dados (duplicados)."
+            } else if (err.code === "23502") {
+              errorMsg = "Campos obrigatórios estão faltando. Verifique se a planilha possui as colunas: Código, Descrição."
+            } else if (err.code === "22001") {
+              errorMsg = "Algum campo tem texto muito longo. Verifique os dados da planilha."
+            } else {
+              errorMsg = err.message || err.details || err.hint || errorMsg
+            }
+            console.error("[v0] Error details:", { code: err.code, message: err.message, details: err.details, hint: err.hint })
           }
           toast({
             title: "Erro na importação",
