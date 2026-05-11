@@ -53,6 +53,8 @@ export function EntradaPecas() {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
   const [showUploadDate, setShowUploadDate] = useState(false)
   const [origemFilter, setOrigemFilter] = useState<string>("all")
+  const [dataInicio, setDataInicio] = useState<string>("")
+  const [dataFim, setDataFim] = useState<string>("")
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [bulkEditData, setBulkEditData] = useState({
     ordem_servico: "",
@@ -134,7 +136,27 @@ export function EntradaPecas() {
         (p.numero_serie || "").toLowerCase().includes(term)
       )
       const matchesOrigem = origemFilter === "all" || p.origem === origemFilter
-      return matchesSearch && matchesOrigem
+      
+      // Filtro de data
+      let matchesData = true
+      if (dataInicio || dataFim) {
+        const dataRegistro = p.data_emissao ? new Date(p.data_emissao) : null
+        if (dataRegistro) {
+          if (dataInicio) {
+            const inicio = new Date(dataInicio)
+            matchesData = matchesData && dataRegistro >= inicio
+          }
+          if (dataFim) {
+            const fim = new Date(dataFim)
+            fim.setHours(23, 59, 59, 999) // Incluir o dia inteiro
+            matchesData = matchesData && dataRegistro <= fim
+          }
+        } else {
+          matchesData = false // Se não tem data, não aparece no filtro de data
+        }
+      }
+      
+      return matchesSearch && matchesOrigem && matchesData
     })
     .sort((a, b) => {
       if (!sortKey) return 0
@@ -589,28 +611,60 @@ export function EntradaPecas() {
               <Package className="h-5 w-5" />
               Registro de Entradas
             </CardTitle>
-<Select value={origemFilter} onValueChange={setOrigemFilter}>
-    <SelectTrigger className="w-[200px]">
-      <SelectValue placeholder="Filtrar por Origem" />
-    </SelectTrigger>
-    <SelectContent>
-      <SelectItem value="all">Todas Origens</SelectItem>
-      {origensUnicas.map((origem) => (
-        <SelectItem key={origem} value={origem}>
-          {origem}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-  <div className="relative w-80">
-  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-  <Input
-    placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
-    value={searchTerm}
-    onChange={(e) => setSearchTerm(e.target.value)}
-    className="pl-10"
-  />
-  </div>
+<div className="flex items-center gap-4 flex-wrap">
+              <Select value={origemFilter} onValueChange={setOrigemFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filtrar por Origem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas Origens</SelectItem>
+                  {origensUnicas.map((origem) => (
+                    <SelectItem key={origem} value={origem}>
+                      {origem}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              
+              <div className="flex items-center gap-2">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">Data:</Label>
+                <Input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                  className="w-[140px]"
+                  placeholder="Início"
+                />
+                <span className="text-muted-foreground">a</span>
+                <Input
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                  className="w-[140px]"
+                  placeholder="Fim"
+                />
+                {(dataInicio || dataFim) && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setDataInicio(""); setDataFim("") }}
+                    className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    Limpar
+                  </Button>
+                )}
+              </div>
+              
+              <div className="relative w-72">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
