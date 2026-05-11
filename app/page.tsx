@@ -593,8 +593,10 @@ export default function Home() {
           
           if (rows.length > 0) {
             console.log("[v0] Inserting rows:", rows.length, "into table:", tableName)
-            console.log("[v0] First row sample:", rows[0])
-            const { error } = await supabase.from(tableName).insert(rows)
+            console.log("[v0] First row sample:", JSON.stringify(rows[0], null, 2))
+            console.log("[v0] All row keys:", Object.keys(rows[0]))
+            
+            const { data, error } = await supabase.from(tableName).insert(rows).select()
             if (error) {
               console.error("[v0] Supabase error:", error)
               throw error
