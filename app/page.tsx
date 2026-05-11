@@ -516,13 +516,15 @@ export default function Home() {
               validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
             }
             
-            console.log("[v0] Excel headers found:", Object.keys(jsonData[0] || {}))
+            const excelHeaders = Object.keys(jsonData[0] || {})
+            console.log("[v0] Excel headers (exact names):", JSON.stringify(excelHeaders))
             console.log("[v0] Active section:", activeSection)
             console.log("[v0] Table name:", tableName)
-            console.log("[v0] Valid fields:", validFields)
+            console.log("[v0] Valid fields:", JSON.stringify(validFields))
             console.log("[v0] Total rows from Excel:", jsonData.length)
+            console.log("[v0] First row data:", JSON.stringify(jsonData[0]))
             
-            rows = jsonData.map(row => {
+            rows = jsonData.map((row, index) => {
               const mappedRow: Record<string, string | number | null> = {}
               Object.entries(row).forEach(([key, value]) => {
                 const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
@@ -560,6 +562,12 @@ export default function Home() {
                   mappedRow[mappedKey] = String(value ?? "")
                 }
               })
+              
+              // Log para debug - primeira linha apenas
+              if (index === 0) {
+                console.log("[v0] First mapped row:", JSON.stringify(mappedRow))
+                console.log("[v0] Has codigo?", !!mappedRow.codigo)
+              }
               
               // Garantir campos obrigatórios
               if (!mappedRow.codigo) return null
