@@ -505,10 +505,22 @@ export default function Home() {
               "observacao": "observacao",
             }
             
-            // Campos válidos da tabela estoque_pecas
-            const validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
+            // Campos válidos por tabela
+            let validFields: string[]
+            if (activeSection === "estoque-estrategico") {
+              validFields = ["codigo", "descricao", "equipamento", "quantidade_minima"]
+            } else if (activeSection === "saida") {
+              validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_saida", "area", "compressor", "utilizacao", "observacao"]
+            } else {
+              // entrada e estoque usam estoque_pecas
+              validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
+            }
             
             console.log("[v0] Excel headers found:", Object.keys(jsonData[0] || {}))
+            console.log("[v0] Active section:", activeSection)
+            console.log("[v0] Table name:", tableName)
+            console.log("[v0] Valid fields:", validFields)
+            console.log("[v0] Total rows from Excel:", jsonData.length)
             
             rows = jsonData.map(row => {
               const mappedRow: Record<string, string | number | null> = {}
