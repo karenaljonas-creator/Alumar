@@ -478,31 +478,42 @@ export default function Home() {
             const worksheet = workbook.Sheets[sheetName]
             const jsonData = XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet)
             
-            // Mapear colunas do Excel para colunas do banco
+            // Mapear colunas do Excel para colunas do banco (várias variações)
             const columnMapping: Record<string, string> = {
-              "Código": "codigo",
-              "codigo": "codigo",
-              "Descrição": "descricao",
-              "descricao": "descricao",
-              "QTD": "quantidade",
-              "quantidade": "quantidade",
-              "Pedido / O.S": "ordem_servico",
-              "ordem_servico": "ordem_servico",
-              "SERIE": "numero_serie",
-              "numero_serie": "numero_serie",
-              "numero_serie_equipamento": "numero_serie",
-              "NF": "nota_fiscal",
-              "nota_fiscal": "nota_fiscal",
-              "Data envio": "data_emissao",
-              "data_emissao": "data_emissao",
-              "Valor": "valor_unitario",
-              "valor_unitario": "valor_unitario",
-              "Valor total": "valor_total",
-              "valor_total": "valor_total",
-              "Origem": "origem",
-              "origem": "origem",
-              "obs": "observacao",
-              "observacao": "observacao",
+              // Código
+              "Código": "codigo", "codigo": "codigo", "CÓDIGO": "codigo", "CODIGO": "codigo",
+              "PN": "codigo", "pn": "codigo", "Part Number": "codigo", "Cod": "codigo", "COD": "codigo",
+              // Descrição
+              "Descrição": "descricao", "descricao": "descricao", "DESCRIÇÃO": "descricao", "DESCRICAO": "descricao",
+              "Desc": "descricao", "DESC": "descricao", "Description": "descricao",
+              // Quantidade
+              "QTD": "quantidade", "Qtd": "quantidade", "qtd": "quantidade", "quantidade": "quantidade",
+              "QUANTIDADE": "quantidade", "Qty": "quantidade", "QTY": "quantidade", "Quant": "quantidade",
+              // Ordem de serviço
+              "Pedido / O.S": "ordem_servico", "OS": "ordem_servico", "O.S": "ordem_servico", "O.S.": "ordem_servico",
+              "ordem_servico": "ordem_servico", "Ordem Serviço": "ordem_servico", "OrdemServico": "ordem_servico",
+              // Número de série
+              "SERIE": "numero_serie", "Serie": "numero_serie", "serie": "numero_serie",
+              "Nº Série": "numero_serie", "N Serie": "numero_serie", "N° Serie": "numero_serie",
+              "numero_serie": "numero_serie", "numero_serie_equipamento": "numero_serie",
+              // Nota fiscal
+              "NF": "nota_fiscal", "nf": "nota_fiscal", "Nota Fiscal": "nota_fiscal", "NotaFiscal": "nota_fiscal",
+              "nota_fiscal": "nota_fiscal", "N.F.": "nota_fiscal", "N.F": "nota_fiscal",
+              // Data
+              "Data envio": "data_emissao", "Data": "data_emissao", "DATA": "data_emissao",
+              "data_emissao": "data_emissao", "DataEmissao": "data_emissao", "Data Emissão": "data_emissao",
+              // Valor unitário
+              "Valor": "valor_unitario", "valor": "valor_unitario", "VALOR": "valor_unitario",
+              "V. Unit.": "valor_unitario", "V.Unit": "valor_unitario", "Valor Unit": "valor_unitario",
+              "valor_unitario": "valor_unitario", "ValorUnitario": "valor_unitario", "Valor Unitário": "valor_unitario",
+              // Valor total
+              "Valor total": "valor_total", "Valor Total": "valor_total", "VALOR TOTAL": "valor_total",
+              "V. Total": "valor_total", "V.Total": "valor_total", "valor_total": "valor_total",
+              // Origem
+              "Origem": "origem", "origem": "origem", "ORIGEM": "origem", "Origin": "origem",
+              // Observação
+              "obs": "observacao", "Obs": "observacao", "OBS": "observacao",
+              "observacao": "observacao", "Observação": "observacao", "Observacao": "observacao",
             }
             
             // Campos válidos por tabela
@@ -581,7 +592,14 @@ export default function Home() {
               }
               
               return mappedRow
-            }).filter(Boolean) as Record<string, string | number | null>[]
+            })
+            
+            const beforeFilter = rows.length
+            const nullCount = rows.filter(r => r === null).length
+            console.log("[v0] Rows before filter:", beforeFilter, "null rows:", nullCount)
+            
+            rows = rows.filter(Boolean) as Record<string, string | number | null>[]
+            console.log("[v0] Rows after filter:", rows.length)
           } else {
             // Importar CSV (suporta vírgula e ponto-e-vírgula como separador)
             const reader = new FileReader()
