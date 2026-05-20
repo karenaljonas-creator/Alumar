@@ -339,19 +339,16 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       )
       const matchesUtilizacao = utilizacaoFilter === "all" || s.utilizacao === utilizacaoFilter
       
-      // Filtro de data
+      // Filtro de data (comparação por string YYYY-MM-DD para evitar problemas de timezone)
       let matchesData = true
       if (dataInicio || dataFim) {
-        const dataSaida = s.data_saida ? new Date(s.data_saida) : null
-        if (dataSaida) {
-          if (dataInicio) {
-            const inicio = new Date(dataInicio)
-            matchesData = matchesData && dataSaida >= inicio
+        const dataSaidaStr = s.data_saida ? s.data_saida.substring(0, 10) : null
+        if (dataSaidaStr) {
+          if (dataInicio && dataSaidaStr < dataInicio) {
+            matchesData = false
           }
-          if (dataFim) {
-            const fim = new Date(dataFim)
-            fim.setHours(23, 59, 59, 999)
-            matchesData = matchesData && dataSaida <= fim
+          if (dataFim && dataSaidaStr > dataFim) {
+            matchesData = false
           }
         } else {
           matchesData = false

@@ -137,19 +137,17 @@ export function EntradaPecas() {
       )
       const matchesOrigem = origemFilter === "all" || p.origem === origemFilter
       
-      // Filtro de data
+      // Filtro de data (comparação por string YYYY-MM-DD para evitar problemas de timezone)
       let matchesData = true
       if (dataInicio || dataFim) {
-        const dataRegistro = p.data_emissao ? new Date(p.data_emissao) : null
-        if (dataRegistro) {
-          if (dataInicio) {
-            const inicio = new Date(dataInicio)
-            matchesData = matchesData && dataRegistro >= inicio
+        // Extrair apenas a parte da data (YYYY-MM-DD) do registro
+        const dataRegistroStr = p.data_emissao ? p.data_emissao.substring(0, 10) : null
+        if (dataRegistroStr) {
+          if (dataInicio && dataRegistroStr < dataInicio) {
+            matchesData = false
           }
-          if (dataFim) {
-            const fim = new Date(dataFim)
-            fim.setHours(23, 59, 59, 999) // Incluir o dia inteiro
-            matchesData = matchesData && dataRegistro <= fim
+          if (dataFim && dataRegistroStr > dataFim) {
+            matchesData = false
           }
         } else {
           matchesData = false // Se não tem data, não aparece no filtro de data
