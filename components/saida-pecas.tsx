@@ -270,7 +270,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingSaida ? "Editar Saída" : "Registrar Saída de Peça"}</DialogTitle>
+              <DialogTitle>{editingSaida ? "Editar Saída de Peça" : "Registrar Saída de Peça"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
