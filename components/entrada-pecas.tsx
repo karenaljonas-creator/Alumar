@@ -532,12 +532,12 @@ export function EntradaPecas() {
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
+                    <TableHead>Observação</TableHead>
                     <TableHead>
                       <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Atualizado em <SortIcon columnKey="data_atualizacao" />
                       </button>
                     </TableHead>
-                    <TableHead>Observação</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -560,11 +560,11 @@ export function EntradaPecas() {
                           {peca.origem || "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {peca.updated_at ? new Date(peca.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(peca.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
-                      </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={peca.observacao || ""}>
                         {peca.observacao || "-"}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {peca.updated_at ? new Date(peca.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(peca.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
