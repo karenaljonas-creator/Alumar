@@ -29,7 +29,7 @@ interface EstoquePeca {
   created_at: string
 }
 
-type SortKey = "codigo" | "descricao" | "quantidade" | "ordem_servico" | "numero_serie" | "nota_fiscal" | "data_emissao" | "valor_unitario" | "valor_total" | "origem"
+type SortKey = "codigo" | "descricao" | "quantidade" | "ordem_servico" | "numero_serie" | "nota_fiscal" | "data_emissao" | "valor_unitario" | "valor_total" | "origem" | "data_atualizacao"
 type SortDirection = "asc" | "desc"
 
 const ORIGENS = [
@@ -124,6 +124,7 @@ export function EntradaPecas() {
         case "valor_unitario": valA = a.valor_unitario; valB = b.valor_unitario; break
         case "valor_total": valA = a.valor_total; valB = b.valor_total; break
         case "origem": valA = a.origem.toLowerCase(); valB = b.origem.toLowerCase(); break
+        case "data_atualizacao": valA = a.updated_at || a.created_at; valB = b.updated_at || b.created_at; break
       }
 
       if (valA < valB) return sortDirection === "asc" ? -1 : 1
@@ -531,6 +532,11 @@ export function EntradaPecas() {
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Atualizado em <SortIcon columnKey="data_atualizacao" />
+                      </button>
+                    </TableHead>
                     <TableHead>Observação</TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
@@ -553,6 +559,9 @@ export function EntradaPecas() {
                         <Badge variant="outline" className="text-xs whitespace-nowrap">
                           {peca.origem || "-"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {peca.updated_at ? new Date(peca.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(peca.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground" title={peca.observacao || ""}>
                         {peca.observacao || "-"}
