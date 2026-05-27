@@ -192,20 +192,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     return editingState?.machineId === machineId && editingState?.field === field
   }
 
-  const toggleRowSelection = (machineId: string) => {
-    const newSelected = new Set(selectedRows)
-    if (newSelected.has(machineId)) {
-      newSelected.delete(machineId)
-    } else {
-      newSelected.add(machineId)
-    }
-    setSelectedRows(newSelected)
-  }
-
-  const visibleMachines = useMemo(() => {
-    return filteredMachines.filter((m) => !selectedRows.has(m.id) || showHidden)
-  }, [filteredMachines, selectedRows, showHidden])
-
   return (
     <div className="space-y-6">
       <Card className="border-border shadow-sm">
@@ -239,17 +225,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                 className="pl-10"
               />
             </div>
-            {selectedRows.size > 0 && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowHidden(!showHidden)}
-                className="flex items-center gap-2"
-              >
-                <ChevronDown className={`h-4 w-4 transition-transform ${showHidden ? "rotate-180" : ""}`} />
-                {selectedRows.size} ocult{selectedRows.size === 1 ? "o" : "os"}
-              </Button>
-            )}
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Contrato</label>
               <Select value={contratoFilter} onValueChange={setContratoFilter}>
