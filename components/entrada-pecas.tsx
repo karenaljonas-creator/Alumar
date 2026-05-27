@@ -389,6 +389,41 @@ export function EntradaPecas() {
         </Dialog>
       </div>
 
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -542,40 +577,6 @@ export function EntradaPecas() {
       </Card>
 
       {/* Valores por Origem */}
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   )
 }
