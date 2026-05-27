@@ -197,6 +197,7 @@ export function EstoqueSaldo() {
       } else if (origem.includes("corretiva") || origem.includes("contrato")) {
         origens["Corretiva Contrato"] += valor
       } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
+        console.log("[v0] Preventiva encontrada:", entrada.origem, "Valor:", valor)
         origens["Plano Manutenção"] += valor
       } else if (origem.includes("acordo") && origem.includes("inicial")) {
         origens["Acordo inicial"] += valor
