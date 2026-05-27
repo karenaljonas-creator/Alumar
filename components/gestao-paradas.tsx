@@ -462,6 +462,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={maquina.acaoResponsavel === "Manutenção" ? "bg-blue-100 text-blue-800" : ""}
+                        >
+                          {maquina.acaoResponsavel || "-"}
+                        </Badge>
+                      </TableCell>
                       <TableCell className="text-sm">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <div className="flex gap-2 items-center">
@@ -540,18 +548,16 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           </div>
                         ) : (
                           <div
-                            className="flex items-center justify-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
                             onClick={() =>
                               handleEditStart(
                                 maquina.id,
                                 "responsavel",
-                                maquina.acaoResponsavel || ""
+                                maquina.responsavel || ""
                               )
                             }
                           >
-                            <span className="text-sm">
-                              {getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}
-                            </span>
+                            <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
