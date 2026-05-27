@@ -322,26 +322,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Data de Parada <SortIcon columnKey="dataParada" />
+                  <TableHead className="min-w-[300px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
-                  {showHiddenColumns && (
-                    <TableHead>
-                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Dias Parada <SortIcon columnKey="diasParada" />
-                      </button>
-                    </TableHead>
-                  )}
                   <TableHead>
                     <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Prazo <SortIcon columnKey="prazo" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
                   <TableHead>
@@ -354,9 +342,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
-                  <TableHead className="min-w-[300px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Observacoes <SortIcon columnKey="observacoes" />
+                  <TableHead>
+                    <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
                   <TableHead className="w-[80px] text-center">
@@ -404,6 +392,165 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
+                        {isEditing(maquina.id, "motivoParada") ? (
+                          <div className="flex gap-2 items-start">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                              placeholder="Digite a observação"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "motivoParada",
+                                maquina.motivoParada || ""
+                              )
+                            }
+                          >
+                            <span className="text-xs">{getDisplayValue(maquina.id, "motivoParada", maquina.motivoParada || "-")}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {isEditing(maquina.id, "prazo") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              type="date"
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2 items-center">
+                            <span>
+                              {formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")}
+                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={maquina.acaoResponsavel === "Manutenção" ? "bg-blue-100 text-blue-800" : ""}
+                        >
+                          {maquina.acaoResponsavel || "-"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {isEditing(maquina.id, "responsavel") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                              placeholder="Digite o responsável"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "responsavel",
+                                maquina.responsavel || ""
+                              )
+                            }
+                          >
+                            <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(maquina.updated_at || maquina.dataParada)}
+                      </TableCell>
+                      <TableCell className="w-[80px] text-center">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEditStart(maquina.id, "edit", "")}
+                          className="h-8 w-8 p-0"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
                         {formatDate(maquina.dataParada)}
