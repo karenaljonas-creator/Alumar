@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
 
-type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "acao" | "responsavel" | "observacoes"
+type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
@@ -118,6 +118,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
           valA = getDiasParadaNum(a.dataParada); valB = getDiasParadaNum(b.dataParada); break
         case "prazo":
           valA = a.contratoConfig?.dataFim || ""; valB = b.contratoConfig?.dataFim || ""; break
+        case "dataAtualizacao":
+          valA = a.updated_at || a.dataParada || ""; valB = b.updated_at || b.dataParada || ""; break
         case "acao":
           valA = (a.acaoResponsavel || "").toLowerCase(); valB = (b.acaoResponsavel || "").toLowerCase(); break
         case "responsavel":
@@ -338,6 +340,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead>
+                    <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Atualizado em <SortIcon columnKey="dataAtualizacao" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
                     </button>
@@ -437,20 +444,31 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                             </Button>
                           </div>
                         ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "prazo",
-                                maquina.contratoConfig?.dataFim || ""
-                              )
-                            }
-                          >
-                            <span>{formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          <div className="flex gap-2 items-center">
+                            <span>
+                              {formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}
+                            </span>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")}
+                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
                           </div>
                         )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {formatDate(maquina.updated_at || maquina.dataParada)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="secondary"
+                          className={maquina.acaoResponsavel === "Manutenção" ? "bg-blue-100 text-blue-800" : ""}
+                        >
+                          {maquina.acaoResponsavel || "-"}
+                        </Badge>
                       </TableCell>
                       <TableCell className="text-sm">
                         {isEditing(maquina.id, "acaoResponsavel") ? (

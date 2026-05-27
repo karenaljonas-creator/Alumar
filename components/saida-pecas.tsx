@@ -32,7 +32,7 @@ interface EstoquePeca {
   descricao: string
 }
 
-type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao"
+type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao" | "data_atualizacao"
 type SortDirection = "asc" | "desc"
 
 const UTILIZACOES = ["Corretiva", "Preventiva"]
@@ -166,6 +166,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
         case "area": valA = a.area.toLowerCase(); valB = b.area.toLowerCase(); break
         case "compressor": valA = a.compressor.toLowerCase(); valB = b.compressor.toLowerCase(); break
         case "utilizacao": valA = a.utilizacao.toLowerCase(); valB = b.utilizacao.toLowerCase(); break
+        case "data_atualizacao": valA = a.updated_at || a.created_at; valB = b.updated_at || b.created_at; break
       }
 
       if (valA < valB) return sortDirection === "asc" ? -1 : 1
@@ -503,6 +504,11 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         Utilização <SortIcon columnKey="utilizacao" />
                       </button>
                     </TableHead>
+                    <TableHead>
+                      <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
+                        Atualizado em <SortIcon columnKey="data_atualizacao" />
+                      </button>
+                    </TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -525,6 +531,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         >
                           {saida.utilizacao}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                        {saida.updated_at ? new Date(saida.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(saida.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-center gap-1">
