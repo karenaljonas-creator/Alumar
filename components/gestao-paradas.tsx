@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -32,7 +32,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
-  const [showHiddenColumns, setShowHiddenColumns] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -277,22 +276,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
 
           <div className="rounded-lg border border-border overflow-x-auto">
             <Table>
-              <TableHeader>
+                <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead className="w-[50px]">
-                    <button 
-                      onClick={() => setShowHiddenColumns(!showHiddenColumns)}
-                      className="flex items-center justify-center w-full h-full p-0 hover:text-foreground transition-colors cursor-pointer"
-                      title={showHiddenColumns ? "Ocultar colunas" : "Mostrar colunas"}
-                    >
-                      <ChevronRight className={`h-4 w-4 transition-transform ${showHiddenColumns ? "rotate-90" : ""}`} />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      TAG <SortIcon columnKey="nome" />
-                    </button>
-                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
@@ -303,20 +288,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  {showHiddenColumns && (
-                    <TableHead>
-                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Contrato <SortIcon columnKey="contrato" />
-                      </button>
-                    </TableHead>
-                  )}
-                  {showHiddenColumns && (
-                    <TableHead>
-                      <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Tipo <SortIcon columnKey="tipoEquip" />
-                      </button>
-                    </TableHead>
-                  )}
                   <TableHead>
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
@@ -356,31 +327,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
                     <TableRow key={maquina.id}>
-                      <TableCell></TableCell>
-                      <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
-                      {showHiddenColumns && (
-                        <TableCell className="text-sm">
-                          <Badge
-                            variant={maquina.temContrato ? "default" : "secondary"}
-                            className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                          >
-                            {maquina.temContrato ? "Sim" : "Nao"}
-                          </Badge>
-                        </TableCell>
-                      )}
-                      {showHiddenColumns && (
-                        <TableCell className="text-sm">
-                          {maquina.tipo.includes("Compressor")
-                            ? "Compressor"
-                            : maquina.tipo.includes("Secador")
-                              ? "Secador"
-                              : maquina.tipo.includes("Soprador")
-                                ? "Soprador"
-                                : "Filtro"}
-                        </TableCell>
-                      )}
                       <TableCell>
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
