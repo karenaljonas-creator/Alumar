@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -273,21 +273,19 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowHiddenColumns(!showHiddenColumns)}
-              className="gap-2"
-            >
-              {showHiddenColumns ? "Ocultar" : "Mostrar"} Colunas Adicionais
-            </Button>
-          </div>
-
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="rounded-lg border border-border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted">
+                  <TableHead className="w-[50px]">
+                    <button 
+                      onClick={() => setShowHiddenColumns(!showHiddenColumns)}
+                      className="flex items-center justify-center w-full h-full p-0 hover:text-foreground transition-colors cursor-pointer"
+                      title={showHiddenColumns ? "Ocultar colunas" : "Mostrar colunas"}
+                    >
+                      <ChevronRight className={`h-4 w-4 transition-transform ${showHiddenColumns ? "rotate-90" : ""}`} />
+                    </button>
+                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       TAG <SortIcon columnKey="nome" />
@@ -334,13 +332,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       </button>
                     </TableHead>
                   )}
-                  {showHiddenColumns && (
-                    <TableHead>
-                      <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Prazo <SortIcon columnKey="prazo" />
-                      </button>
-                    </TableHead>
-                  )}
+                  <TableHead>
+                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Prazo <SortIcon columnKey="prazo" />
+                    </button>
+                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
@@ -356,12 +352,16 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
+                  <TableHead className="w-[80px] text-center">
+                    <span className="font-medium">Editar</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
                     <TableRow key={maquina.id}>
+                      <TableCell></TableCell>
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
@@ -406,54 +406,52 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           {calcularDiasParada(maquina.dataParada)}
                         </TableCell>
                       )}
-                      {showHiddenColumns && (
-                        <TableCell className="text-sm font-medium">
-                          {isEditing(maquina.id, "dataFim") ? (
-                            <div className="flex gap-2 items-center">
-                              <Input
-                                type="date"
-                                value={editingState?.value || ""}
-                                onChange={(e) =>
-                                  setEditingState((prev) =>
-                                    prev ? { ...prev, value: e.target.value } : null
-                                  )
-                                }
-                                className="h-8 text-xs"
-                              />
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditSave(maquina.id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Check className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={handleEditCancel}
-                                className="h-8 w-8 p-0"
-                              >
-                                <X className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div
-                              className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                              onClick={() =>
-                                handleEditStart(
-                                  maquina.id,
-                                  "dataFim",
-                                  maquina.contratoConfig?.dataFim || ""
+                      <TableCell className="text-sm font-medium">
+                        {isEditing(maquina.id, "prazo") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              type="date"
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
+                              className="h-8 text-xs"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
                             >
-                              <span>{formatDate(getDisplayValue(maquina.id, "dataFim", maquina.contratoConfig?.dataFim || "-"))}</span>
-                              <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                            </div>
-                          )}
-                        </TableCell>
-                      )}
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "prazo",
+                                maquina.contratoConfig?.dataFim || ""
+                              )
+                            }
+                          >
+                            <span>{formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <div className="flex gap-2 items-center">
@@ -591,6 +589,19 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted"
+                          onClick={() => {
+                            // Abre modo de edição para a primeira célula editável
+                            handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 text-blue-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
