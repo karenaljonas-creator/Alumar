@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback, useMemo } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,10 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown, Edit2, ChevronRight, ChevronDown } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -39,7 +37,6 @@ const ORIGENS = [
   "Corretiva Contrato",
   "Plano - Manutenção Preventiva",
   "Acordo inicial",
-  "Vendas",
 ]
 
 export function EntradaPecas() {
@@ -50,20 +47,6 @@ export function EntradaPecas() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
-  const [showUploadDate, setShowUploadDate] = useState(false)
-  const [origemFilter, setOrigemFilter] = useState<string>("all")
-  const [dataInicio, setDataInicio] = useState<string>("")
-  const [dataFim, setDataFim] = useState<string>("")
-  const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
-  const [bulkEditData, setBulkEditData] = useState({
-    ordem_servico: "",
-    numero_serie: "",
-    nota_fiscal: "",
-    data_emissao: "",
-    origem: "",
-    observacao: "",
-  })
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -119,68 +102,34 @@ export function EntradaPecas() {
     return <ArrowDown className="h-3 w-3 ml-1" />
   }
 
-  // Lista de origens únicas para o filtro
-  const origensUnicas = useMemo(() => {
-    const origens = new Set(pecas.map(p => p.origem).filter(Boolean))
-    return Array.from(origens).sort()
-  }, [pecas])
-
   const filteredPecas = pecas
-    .filter((p) => {
-      const term = searchTerm.toLowerCase()
-      const matchesSearch = (
-        (p.codigo || "").toLowerCase().includes(term) ||
-        (p.descricao || "").toLowerCase().includes(term) ||
-        (p.ordem_servico || "").toLowerCase().includes(term) ||
-        (p.nota_fiscal || "").toLowerCase().includes(term) ||
-        (p.numero_serie || "").toLowerCase().includes(term)
-      )
-      const matchesOrigem = origemFilter === "all" || p.origem === origemFilter
-      
-      // Filtro de data (comparação por string YYYY-MM-DD para evitar problemas de timezone)
-      let matchesData = true
-      if (dataInicio || dataFim) {
-        // Extrair apenas a parte da data (YYYY-MM-DD) do registro
-        const dataRegistroStr = p.data_emissao ? p.data_emissao.substring(0, 10) : null
-        if (dataRegistroStr) {
-          if (dataInicio && dataRegistroStr < dataInicio) {
-            matchesData = false
-          }
-          if (dataFim && dataRegistroStr > dataFim) {
-            matchesData = false
-          }
-        } else {
-          matchesData = false // Se não tem data, não aparece no filtro de data
-        }
-      }
-      
-      return matchesSearch && matchesOrigem && matchesData
-    })
+    .filter((p) =>
+      p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase())
+    )
     .sort((a, b) => {
       if (!sortKey) return 0
       let valA: string | number = ""
       let valB: string | number = ""
 
       switch (sortKey) {
-        case "codigo": valA = (a.codigo || "").toLowerCase(); valB = (b.codigo || "").toLowerCase(); break
-        case "descricao": valA = (a.descricao || "").toLowerCase(); valB = (b.descricao || "").toLowerCase(); break
-        case "quantidade": valA = a.quantidade || 0; valB = b.quantidade || 0; break
-        case "ordem_servico": valA = (a.ordem_servico || "").toLowerCase(); valB = (b.ordem_servico || "").toLowerCase(); break
-        case "numero_serie": valA = (a.numero_serie || "").toLowerCase(); valB = (b.numero_serie || "").toLowerCase(); break
-        case "nota_fiscal": valA = (a.nota_fiscal || "").toLowerCase(); valB = (b.nota_fiscal || "").toLowerCase(); break
-        case "data_emissao": valA = a.data_emissao || ""; valB = b.data_emissao || ""; break
-        case "valor_unitario": valA = a.valor_unitario || 0; valB = b.valor_unitario || 0; break
-        case "valor_total": valA = a.valor_total || 0; valB = b.valor_total || 0; break
-        case "origem": valA = (a.origem || "").toLowerCase(); valB = (b.origem || "").toLowerCase(); break
+        case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
+        case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
+        case "quantidade": valA = a.quantidade; valB = b.quantidade; break
+        case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
+        case "numero_serie": valA = a.numero_serie.toLowerCase(); valB = b.numero_serie.toLowerCase(); break
+        case "nota_fiscal": valA = a.nota_fiscal.toLowerCase(); valB = b.nota_fiscal.toLowerCase(); break
+        case "data_emissao": valA = a.data_emissao; valB = b.data_emissao; break
+        case "valor_unitario": valA = a.valor_unitario; valB = b.valor_unitario; break
+        case "valor_total": valA = a.valor_total; valB = b.valor_total; break
+        case "origem": valA = a.origem.toLowerCase(); valB = b.origem.toLowerCase(); break
       }
 
       if (valA < valB) return sortDirection === "asc" ? -1 : 1
       if (valA > valB) return sortDirection === "asc" ? 1 : -1
       return 0
     })
-
-  // Alias for sorted list
-  const sortedPecas = filteredPecas
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -213,28 +162,6 @@ export function EntradaPecas() {
       if (error) {
         toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
       } else {
-        // Se a origem contiver "Estoque estratégico", criar automaticamente um item no estoque estratégico
-        if (formData.origem && formData.origem.toLowerCase().includes("estoque estratégico")) {
-          // Verificar se já existe no estoque estratégico
-          const { data: existingItem, error: checkError } = await supabase
-            .from("estoque_estrategico")
-            .select("id")
-            .eq("codigo", formData.codigo)
-            .maybeSingle()
-
-          if (!existingItem && !checkError) {
-            // Criar novo item no estoque estratégico com quantidade mínima 0
-            await supabase
-              .from("estoque_estrategico")
-              .insert({
-                codigo: formData.codigo,
-                descricao: formData.descricao,
-                equipamento: "GERAL",
-                quantidade_minima: 0,
-              })
-          }
-        }
-        
         toast({ title: "Peça cadastrada com sucesso!" })
         loadPecas()
         resetForm()
@@ -292,106 +219,8 @@ export function EntradaPecas() {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
   }
 
-  const totalEntrada = pecas.reduce((acc, p) => acc + (p.valor_total || 0), 0)
-  const totalItens = pecas.reduce((acc, p) => acc + (p.quantidade || 0), 0)
-  
-  // Calcular valores por origem
-  const valoresPorOrigem = useMemo(() => {
-    const origens = {
-      "Estoque Estratégico": 0,
-      "Corretivos": 0,
-      "Preventivos": 0,
-      "Acordo Inicial": 0,
-    }
-
-    pecas.forEach((p) => {
-      const origem = p.origem || ""
-      const valor = p.valor_total || 0
-
-      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
-        origens["Estoque Estratégico"] += valor
-      } else if (origem.toLowerCase().includes("corretiva")) {
-        origens["Corretivos"] += valor
-      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
-        origens["Preventivos"] += valor
-      } else if (origem.toLowerCase().includes("acordo inicial")) {
-        origens["Acordo Inicial"] += valor
-      }
-    })
-
-    return origens
-  }, [pecas])
-
-  // Toggle row selection
-  const toggleRowSelection = (id: string) => {
-    setSelectedRows((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(id)) {
-        newSet.delete(id)
-      } else {
-        newSet.add(id)
-      }
-      return newSet
-    })
-  }
-
-  // Select/deselect all visible rows
-  const toggleSelectAll = () => {
-    const visibleIds = sortedPecas.map((p) => p.id)
-    if (selectedRows.size === visibleIds.length && visibleIds.every((id) => selectedRows.has(id))) {
-      setSelectedRows(new Set())
-    } else {
-      setSelectedRows(new Set(visibleIds))
-    }
-  }
-
-  // Open bulk edit dialog
-  const openBulkEdit = () => {
-    setBulkEditData({
-      ordem_servico: "",
-      numero_serie: "",
-      nota_fiscal: "",
-      data_emissao: "",
-      origem: "",
-      observacao: "",
-    })
-    setBulkEditDialogOpen(true)
-  }
-
-  // Process bulk edit
-  const handleBulkEdit = async () => {
-    if (selectedRows.size === 0) {
-      toast({ title: "Selecione pelo menos um item", variant: "destructive" })
-      return
-    }
-
-    const updates: Record<string, string | number> = {}
-    if (bulkEditData.ordem_servico) updates.ordem_servico = bulkEditData.ordem_servico
-    if (bulkEditData.numero_serie) updates.numero_serie = bulkEditData.numero_serie
-    if (bulkEditData.nota_fiscal) updates.nota_fiscal = bulkEditData.nota_fiscal
-    if (bulkEditData.data_emissao) updates.data_emissao = bulkEditData.data_emissao
-    if (bulkEditData.origem) updates.origem = bulkEditData.origem
-    if (bulkEditData.observacao) updates.observacao = bulkEditData.observacao
-
-    if (Object.keys(updates).length === 0) {
-      toast({ title: "Preencha ao menos um campo para alterar", variant: "destructive" })
-      return
-    }
-
-    const { error } = await supabase
-      .from("estoque_pecas")
-      .update(updates)
-      .in("id", Array.from(selectedRows))
-
-    if (error) {
-      toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
-    } else {
-      toast({ title: `${selectedRows.size} registros atualizados com sucesso!` })
-      loadPecas()
-      setSelectedRows(new Set())
-      setBulkEditDialogOpen(false)
-    }
-  }
+  const totalEstoque = filteredPecas.reduce((acc, p) => acc + p.valor_total, 0)
+  const totalItens = filteredPecas.reduce((acc, p) => acc + p.quantidade, 0)
 
   return (
     <div className="space-y-6">
@@ -400,20 +229,13 @@ export function EntradaPecas() {
           <h2 className="text-2xl font-semibold">Entrada de Peças</h2>
           <p className="text-sm text-muted-foreground">Registro de entrada de peças no estoque</p>
         </div>
-        <div className="flex items-center gap-2">
-          {selectedRows.size > 0 && (
-            <Button variant="outline" className="gap-2" onClick={openBulkEdit}>
-              <Edit2 className="h-4 w-4" />
-              Editar {selectedRows.size} selecionados
+        <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nova Entrada
             </Button>
-          )}
-          <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Nova Entrada
-              </Button>
-            </DialogTrigger>
+          </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingPeca ? "Editar Peça" : "Registrar Entrada de Peça"}</DialogTitle>
@@ -511,13 +333,16 @@ export function EntradaPecas() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="origem">Origem</Label>
-                  <SearchableSelect
-                    options={ORIGENS.map((o) => ({ value: o, label: o }))}
-                    value={formData.origem}
-                    onValueChange={(v) => setFormData({ ...formData, origem: v })}
-                    placeholder="Selecione a origem"
-                    searchPlaceholder="Pesquisar origem..."
-                  />
+                  <Select value={formData.origem} onValueChange={(v) => setFormData({ ...formData, origem: v })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a origem" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ORIGENS.map((o) => (
+                        <SelectItem key={o} value={o}>{o}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="observacao">Observação</Label>
@@ -534,10 +359,9 @@ export function EntradaPecas() {
                 <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
                 <Button type="submit">{editingPeca ? "Salvar Alterações" : "Cadastrar"}</Button>
               </div>
-</form>
+            </form>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -554,50 +378,15 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Registros</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{pecas.length}</div>
+            <div className="text-2xl font-bold">{filteredPecas.length}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total de Entrada</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total em Estoque</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalEntrada)}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigem["Estoque Estratégico"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigem["Corretivos"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigem["Preventivos"])}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigem["Acordo Inicial"])}</div>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalEstoque)}</div>
           </CardContent>
         </Card>
       </div>
@@ -609,59 +398,14 @@ export function EntradaPecas() {
               <Package className="h-5 w-5" />
               Registro de Entradas
             </CardTitle>
-<div className="flex items-center gap-4 flex-wrap">
-              <Select value={origemFilter} onValueChange={setOrigemFilter}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filtrar por Origem" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas Origens</SelectItem>
-                  {origensUnicas.map((origem) => (
-                    <SelectItem key={origem} value={origem}>
-                      {origem}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">Data:</Label>
-                <Input
-                  type="date"
-                  value={dataInicio}
-                  onChange={(e) => setDataInicio(e.target.value)}
-                  className="w-[140px]"
-                  placeholder="Início"
-                />
-                <span className="text-muted-foreground">a</span>
-                <Input
-                  type="date"
-                  value={dataFim}
-                  onChange={(e) => setDataFim(e.target.value)}
-                  className="w-[140px]"
-                  placeholder="Fim"
-                />
-                {(dataInicio || dataFim) && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setDataInicio(""); setDataFim("") }}
-                    className="h-8 px-2 text-muted-foreground hover:text-foreground"
-                  >
-                    Limpar
-                  </Button>
-                )}
-              </div>
-              
-              <div className="relative w-72">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por código, descrição, OS, NF ou Nº Série..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+            <div className="relative w-80">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por código, descrição ou OS..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
           </div>
         </CardHeader>
@@ -674,96 +418,68 @@ export function EntradaPecas() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="w-full">
+              <Table>
                 <TableHeader>
                   <TableRow className="bg-muted">
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={selectedRows.size > 0 && sortedPecas.every((p) => selectedRows.has(p.id))}
-                        onCheckedChange={toggleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Código <SortIcon columnKey="codigo" />
                       </button>
                     </TableHead>
-                    <TableHead className="w-[180px] max-w-[180px]">
+                    <TableHead>
                       <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Descrição <SortIcon columnKey="descricao" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Qtd <SortIcon columnKey="quantidade" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        OS <SortIcon columnKey="ordem_servico" />
+                        Ordem Serviço <SortIcon columnKey="ordem_servico" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("numero_serie")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Nº Série <SortIcon columnKey="numero_serie" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         NF <SortIcon columnKey="nota_fiscal" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("data_emissao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Data <SortIcon columnKey="data_emissao" />
+                        Data Emissão <SortIcon columnKey="data_emissao" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("valor_unitario")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        V. Unit. <SortIcon columnKey="valor_unitario" />
+                        Valor Unit. <SortIcon columnKey="valor_unitario" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("valor_total")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        V. Total <SortIcon columnKey="valor_total" />
+                        Valor Total <SortIcon columnKey="valor_total" />
                       </button>
                     </TableHead>
-                    <TableHead className="whitespace-nowrap">
+                    <TableHead>
                       <button onClick={() => handleSort("origem")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
-                    <TableHead className="max-w-[150px]">Obs.</TableHead>
-                    <TableHead className="text-center whitespace-nowrap">Ações</TableHead>
-                    <TableHead className="w-10">
-                      <button 
-                        onClick={() => setShowUploadDate(!showUploadDate)}
-                        className="flex items-center gap-1 font-medium hover:text-foreground cursor-pointer"
-                        title={showUploadDate ? "Ocultar Data de Upload" : "Mostrar Data de Upload"}
-                      >
-                        {showUploadDate ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                      </button>
-                    </TableHead>
-                    {showUploadDate && (
-                      <TableHead>
-                        <button onClick={() => handleSort("created_at")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                          Data Upload <SortIcon columnKey="created_at" />
-                        </button>
-                      </TableHead>
-                    )}
+                    <TableHead>Observação</TableHead>
+                    <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sortedPecas.map((peca) => (
-                    <TableRow key={peca.id} className={selectedRows.has(peca.id) ? "bg-primary/10" : ""}>
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedRows.has(peca.id)}
-                          onCheckedChange={() => toggleRowSelection(peca.id)}
-                        />
-                      </TableCell>
+                  {filteredPecas.map((peca) => (
+                    <TableRow key={peca.id}>
                       <TableCell className="font-mono font-medium">{peca.codigo}</TableCell>
-                      <TableCell className="w-[180px] max-w-[180px] truncate" title={peca.descricao}>{peca.descricao}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{peca.descricao}</TableCell>
                       <TableCell className="text-center">{peca.quantidade}</TableCell>
                       <TableCell>{peca.ordem_servico}</TableCell>
                       <TableCell>{peca.numero_serie}</TableCell>
@@ -791,20 +507,6 @@ export function EntradaPecas() {
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        {/* Espaço para o botão de expansão */}
-                      </TableCell>
-                      {showUploadDate && (
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {peca.created_at ? new Date(peca.created_at).toLocaleString("pt-BR", { 
-                            day: "2-digit", 
-                            month: "2-digit", 
-                            year: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit"
-                          }) : "-"}
-                        </TableCell>
-                      )}
                     </TableRow>
                   ))}
                 </TableBody>
@@ -813,82 +515,6 @@ export function EntradaPecas() {
           )}
         </CardContent>
       </Card>
-
-      {/* Dialog de Edição em Massa */}
-      <Dialog open={bulkEditDialogOpen} onOpenChange={setBulkEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Editar {selectedRows.size} Registros em Massa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Preencha apenas os campos que deseja alterar. Campos vazios não serão modificados.
-            </p>
-
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Ordem de Serviço</Label>
-                <Input
-                  value={bulkEditData.ordem_servico}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, ordem_servico: e.target.value })}
-                  placeholder="Ex: 409522732"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nº Série</Label>
-                <Input
-                  value={bulkEditData.numero_serie}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, numero_serie: e.target.value })}
-                  placeholder="Ex: APF220302"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nota Fiscal</Label>
-                <Input
-                  value={bulkEditData.nota_fiscal}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, nota_fiscal: e.target.value })}
-                  placeholder="Ex: 276521-15"
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Data Emissão</Label>
-                <Input
-                  type="date"
-                  value={bulkEditData.data_emissao}
-                  onChange={(e) => setBulkEditData({ ...bulkEditData, data_emissao: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Origem</Label>
-                <SearchableSelect
-                  options={[{ value: "", label: "Não alterar" }, ...ORIGENS.map((o) => ({ value: o, label: o }))]}
-                  value={bulkEditData.origem}
-                  onValueChange={(v) => setBulkEditData({ ...bulkEditData, origem: v })}
-                  placeholder="Não alterar"
-                  searchPlaceholder="Pesquisar origem..."
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Observação</Label>
-              <Input
-                value={bulkEditData.observacao}
-                onChange={(e) => setBulkEditData({ ...bulkEditData, observacao: e.target.value })}
-                placeholder="Nova observação para todos os selecionados..."
-              />
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setBulkEditDialogOpen(false)}>Cancelar</Button>
-              <Button onClick={handleBulkEdit}>Salvar Alterações</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

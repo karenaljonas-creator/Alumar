@@ -4,11 +4,9 @@ import { Settings, AlertTriangle, Activity } from "lucide-react"
 
 interface StatsCardsProps {
   stats: MachineStats
-  overrideParadas?: number // Para sobrescrever o número de máquinas paradas (considera todos os tipos)
 }
 
-export function StatsCards({ stats, overrideParadas }: StatsCardsProps) {
-  const paradasToShow = overrideParadas !== undefined ? overrideParadas : stats.paradas
+export function StatsCards({ stats }: StatsCardsProps) {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       <Card className="border-border shadow-sm">
@@ -33,7 +31,7 @@ export function StatsCards({ stats, overrideParadas }: StatsCardsProps) {
             </div>
             <div className="flex flex-col justify-center">
               <p className="text-base font-medium text-muted-foreground">Máquinas Paradas</p>
-              <p className="text-4xl font-bold text-foreground mt-1">{paradasToShow}</p>
+              <p className="text-4xl font-bold text-foreground mt-1">{stats.paradas}</p>
             </div>
           </div>
         </CardContent>

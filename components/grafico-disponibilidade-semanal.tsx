@@ -29,29 +29,9 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
       return { data: [] }
     }
 
-    // Ordenar por data de registro para garantir que o último registro seja considerado
-    const sortedByDate = [...history].sort((a, b) => 
-      new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime()
-    )
-    
-    // Remover semanas duplicadas, mantendo apenas o ÚLTIMO registro enviado de cada semana
-    const uniqueWeeks = new Map<string, typeof sortedByDate[0]>()
-    for (const snapshot of sortedByDate) {
-      if (snapshot.semana) {
-        uniqueWeeks.set(snapshot.semana, snapshot) // Sobrescreve com o mais recente por data
-      }
-    }
-    
-    // Converter para array e ordenar por ano+semana para exibição
-    const uniqueHistory = Array.from(uniqueWeeks.values()).sort((a, b) => {
-      const [yearA, weekPartA] = a.semana?.split("-W") || ["0", "0"]
-      const [yearB, weekPartB] = b.semana?.split("-W") || ["0", "0"]
-      const yearCompare = Number.parseInt(yearA) - Number.parseInt(yearB)
-      if (yearCompare !== 0) return yearCompare
-      return Number.parseInt(weekPartA) - Number.parseInt(weekPartB)
-    })
-    
-    const last5Weeks = uniqueHistory.slice(-5)
+    const last5Weeks = history
+      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
+      .slice(-5)
 
     const data = last5Weeks.map((snapshot) => {
       let disponibilidade: number
@@ -60,21 +40,19 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
         disponibilidade = snapshot.stats.disponibilidade
       } else {
         const machines = snapshot.machines || []
-        const filteredMachines = machines.filter((m: { temContrato?: boolean }) => {
+        const filteredMachines = machines.filter((m) => {
           if (contratoFilter === "com-contrato") return m.temContrato === true
           if (contratoFilter === "sem-contrato") return m.temContrato === false
           return true
         })
 
-        const operacionais = filteredMachines.filter((m: { status?: string }) => m.status === "operacional").length
+        const operacionais = filteredMachines.filter((m) => m.status === "operacional").length
         const total = filteredMachines.length
         disponibilidade = total > 0 ? (operacionais / total) * 100 : 0
       }
 
-      const weekPart = snapshot.semana?.split("-W")[1] || "?"
-      
       return {
-        semana: `Semana ${weekPart}`,
+        semana: `Semana ${snapshot.semana?.split("-W")[1] || "?"}`,
         disponibilidade: Number(disponibilidade.toFixed(1)),
       }
     })

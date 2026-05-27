@@ -109,8 +109,6 @@ export async function loadMachines(): Promise<Machine[]> {
         temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
         responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
         tempoParada: row.horas_operacao || 0,
-        prazo: row.prazo || undefined,
-        updatedAt: row.updated_at || undefined,
       }
     })
 
@@ -171,7 +169,6 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
 
   if (updates.acaoResponsavel !== undefined) record.acao_responsavel = updates.acaoResponsavel
   if (updates.tempoParada !== undefined) record.horas_operacao = updates.tempoParada
-  if (updates.prazo !== undefined) record.prazo = updates.prazo
   record.updated_at = new Date().toISOString()
 
   const { error } = await supabase.from("machines").update(record).eq("id", id)
@@ -225,8 +222,7 @@ export function exportToCSV(machines: Machine[]): string {
 
 export function downloadCSV(machines: Machine[]): void {
   const csv = exportToCSV(machines)
-  const BOM = "\uFEFF"
-  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
   const link = document.createElement("a")
   const url = URL.createObjectURL(blob)
 
@@ -239,9 +235,7 @@ export function downloadCSV(machines: Machine[]): void {
 }
 
 export async function importFromCSV(csvContent: string): Promise<Machine[]> {
-  // Remover BOM se existir
-  const cleanContent = csvContent.replace(/^\uFEFF/, "")
-  const lines = cleanContent.split("\n").filter((line) => line.trim())
+  const lines = csvContent.split("\n").filter((line) => line.trim())
   if (lines.length < 2) return []
 
   const machines: Machine[] = []
