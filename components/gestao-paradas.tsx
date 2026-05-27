@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Edit2, Check, X } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Edit2, Check, X, ChevronDown } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -32,6 +32,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set())
+  const [showHidden, setShowHidden] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -192,6 +194,20 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     return editingState?.machineId === machineId && editingState?.field === field
   }
 
+  const toggleRowSelection = (machineId: string) => {
+    const newSelected = new Set(selectedRows)
+    if (newSelected.has(machineId)) {
+      newSelected.delete(machineId)
+    } else {
+      newSelected.add(machineId)
+    }
+    setSelectedRows(newSelected)
+  }
+
+  const visibleMachines = useMemo(() => {
+    return filteredMachines.filter((m) => !selectedRows.has(m.id) || showHidden)
+  }, [filteredMachines, selectedRows, showHidden])
+
   return (
     <div className="space-y-6">
       <Card className="border-border shadow-sm">
@@ -225,6 +241,17 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                 className="pl-10"
               />
             </div>
+            {selectedRows.size > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHidden(!showHidden)}
+                className="flex items-center gap-2"
+              >
+                <ChevronDown className={`h-4 w-4 transition-transform ${showHidden ? "rotate-180" : ""}`} />
+                {selectedRows.size} ocult{selectedRows.size === 1 ? "o" : "os"}
+              </Button>
+            )}
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Contrato</label>
               <Select value={contratoFilter} onValueChange={setContratoFilter}>
@@ -276,6 +303,25 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted">
+                  <TableHead className="w-12">
+                    <input
+                      type="checkbox"
+                      checked={visibleMachines.length > 0 && visibleMachines.every((m) => selectedRows.has(m.id))}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const newSelected = new Set(selectedRows)
+                          visibleMachines.forEach((m) => newSelected.add(m.id))
+                          setSelectedRows(newSelected)
+                        } else {
+                          const newSelected = new Set(selectedRows)
+                          visibleMachines.forEach((m) => newSelected.delete(m.id))
+                          setSelectedRows(newSelected)
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </TableHead>
+                  <TableHead className="w-12">Editar</TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       TAG <SortIcon columnKey="nome" />
@@ -339,9 +385,27 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredMachines.length > 0 ? (
-                  filteredMachines.map((maquina) => (
-                    <TableRow key={maquina.id}>
+                {visibleMachines.length > 0 ? (
+                  visibleMachines.map((maquina) => (
+                    <TableRow key={maquina.id} className={selectedRows.has(maquina.id) && !showHidden ? "opacity-50" : ""}>
+                      <TableCell className="w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedRows.has(maquina.id)}
+                          onChange={() => toggleRowSelection(maquina.id)}
+                          className="cursor-pointer"
+                        />
+                      </TableCell>
+                      <TableCell className="w-12">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => handleEditStart(maquina.id, "edit", maquina.id)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
@@ -568,8 +632,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
-                      Nenhuma maquina parada encontrada com os filtros aplicados
+                    <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
+                      Nenhuma máquina parada encontrada
                     </TableCell>
                   </TableRow>
                 )}
