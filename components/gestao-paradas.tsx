@@ -7,13 +7,20 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Edit2, Check, X } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
+}
+
+interface EditingState {
+  machineId: string
+  field: string
+  value: string
 }
 
 export function GestaoParadas({ machines }: GestaoParadasProps) {
@@ -23,6 +30,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [localizacaoFilter, setLocalizacaoFilter] = useState("todas")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [editingState, setEditingState] = useState<EditingState | null>(null)
+  const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -149,6 +158,38 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     } catch {
       return "-"
     }
+  }
+
+  const handleEditStart = (machineId: string, field: string, value: string) => {
+    setEditingState({ machineId, field, value })
+  }
+
+  const handleEditSave = (machineId: string) => {
+    if (editingState && editingState.machineId === machineId) {
+      setEditedMachines((prev) => ({
+        ...prev,
+        [machineId]: {
+          ...(prev[machineId] || {}),
+          [editingState.field]: editingState.value,
+        },
+      }))
+      setEditingState(null)
+    }
+  }
+
+  const handleEditCancel = () => {
+    setEditingState(null)
+  }
+
+  const getDisplayValue = (machineId: string, field: string, defaultValue: string) => {
+    if (editedMachines[machineId] && editedMachines[machineId][field as keyof Machine]) {
+      return String(editedMachines[machineId][field as keyof Machine])
+    }
+    return defaultValue
+  }
+
+  const isEditing = (machineId: string, field: string) => {
+    return editingState?.machineId === machineId && editingState?.field === field
   }
 
   return (
@@ -340,12 +381,188 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                         {calcularDiasParada(maquina.dataParada)}
                       </TableCell>
                       <TableCell className="text-sm font-medium">
-                        {formatDate(maquina.contratoConfig?.dataFim)}
+                        {isEditing(maquina.id, "dataFim") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              type="date"
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "dataFim",
+                                maquina.contratoConfig?.dataFim || ""
+                              )
+                            }
+                          >
+                            <span>{formatDate(getDisplayValue(maquina.id, "dataFim", maquina.contratoConfig?.dataFim || "-"))}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
                       </TableCell>
-                      <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
-                      <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
+                      <TableCell className="text-sm">
+                        {isEditing(maquina.id, "acaoResponsavel") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                              placeholder="Digite a ação"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "acaoResponsavel",
+                                maquina.acaoResponsavel || ""
+                              )
+                            }
+                          >
+                            <span>{getDisplayValue(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "-")}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-center">
+                        {isEditing(maquina.id, "responsavel") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs"
+                              placeholder="Digite o responsável"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "responsavel",
+                                maquina.responsavel || ""
+                              )
+                            }
+                          >
+                            <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {maquina.motivoParada || "-"}
+                        {isEditing(maquina.id, "motivoParada") ? (
+                          <div className="flex gap-2 items-start">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs flex-1"
+                              placeholder="Digite a observação"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0 flex-shrink-0"
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0 flex-shrink-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "motivoParada",
+                                maquina.motivoParada || ""
+                              )
+                            }
+                          >
+                            <span>{getDisplayValue(maquina.id, "motivoParada", maquina.motivoParada || "-")}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))
