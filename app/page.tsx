@@ -57,7 +57,6 @@ export default function Home() {
   const [editingMachine, setEditingMachine] = useState<Machine | undefined>()
   const [latestSnapshot, setLatestSnapshot] = useState<WeeklySnapshot | null>(null)
   const [activeSection, setActiveSection] = useState<MenuSection>("painel")
-  const [materiaisExpanded, setMateriaisExpanded] = useState(false)
   const { toast } = useToast()
   const contrato = loadContrato()
 
@@ -550,36 +549,26 @@ export default function Home() {
 
           {/* Gestão de Materiais Section */}
           <div className="mt-6">
-            <button
-              onClick={() => setMateriaisExpanded(!materiaisExpanded)}
-              className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider hover:text-foreground transition-colors"
-            >
-              <span>Gestão de Materiais</span>
-              {materiaisExpanded ? (
-                <ChevronDown className="h-4 w-4" />
-              ) : (
-                <ChevronRight className="h-4 w-4" />
-              )}
-            </button>
-            {materiaisExpanded && (
-              <div className="mt-1 space-y-1 pl-2">
-                {materiaisItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveSection(item.id)}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
-                      activeSection === item.id
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Gestão de Materiais
+            </div>
+            <div className="mt-1 space-y-1 pl-2">
+              {materiaisItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    activeSection === item.id
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Divider */}

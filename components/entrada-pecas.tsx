@@ -222,6 +222,31 @@ export function EntradaPecas() {
   const totalEstoque = filteredPecas.reduce((acc, p) => acc + p.valor_total, 0)
   const totalItens = filteredPecas.reduce((acc, p) => acc + p.quantidade, 0)
 
+  // Calcular valores por origem na entrada
+  const valoresPorOrigemEntrada = {
+    "Estoque Estratégico": 0,
+    "Itens Corretivos": 0,
+    "Itens Preventivos": 0,
+    "Acordo Inicial": 0,
+  }
+
+  filteredPecas.forEach((peca) => {
+    const origem = (peca.origem || "").toLowerCase().trim()
+    const valor = peca.valor_total || 0
+
+    if (!origem) return
+
+    if (origem.includes("estratégico") || origem.includes("estrategico")) {
+      valoresPorOrigemEntrada["Estoque Estratégico"] += valor
+    } else if (origem.includes("corretiva") || origem.includes("contrato")) {
+      valoresPorOrigemEntrada["Itens Corretivos"] += valor
+    } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
+      valoresPorOrigemEntrada["Itens Preventivos"] += valor
+    } else if (origem.includes("acordo") && origem.includes("inicial")) {
+      valoresPorOrigemEntrada["Acordo Inicial"] += valor
+    }
+  })
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -505,7 +530,43 @@ export function EntradaPecas() {
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(peca.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
-                        </div>
+      </div>
+
+      {/* Valores por Origem */}
+      <div className="grid grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
+          </CardContent>
+        </Card>
+      </div>
                       </TableCell>
                     </TableRow>
                   ))}
