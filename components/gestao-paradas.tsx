@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 
-type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "acao" | "responsavel" | "observacoes"
+type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
@@ -106,6 +106,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
           valA = a.dataParada || ""; valB = b.dataParada || ""; break
         case "diasParada":
           valA = getDiasParadaNum(a.dataParada); valB = getDiasParadaNum(b.dataParada); break
+        case "prazo":
+          valA = a.contratoConfig?.dataFim || ""; valB = b.contratoConfig?.dataFim || ""; break
         case "acao":
           valA = (a.acaoResponsavel || "").toLowerCase(); valB = (b.acaoResponsavel || "").toLowerCase(); break
         case "responsavel":
@@ -274,6 +276,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead>
+                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Prazo <SortIcon columnKey="prazo" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
                     </button>
@@ -332,6 +339,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="text-sm text-center font-semibold">
                         {calcularDiasParada(maquina.dataParada)}
                       </TableCell>
+                      <TableCell className="text-sm font-medium">
+                        {formatDate(maquina.contratoConfig?.dataFim)}
+                      </TableCell>
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
@@ -341,7 +351,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
