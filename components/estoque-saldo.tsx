@@ -173,7 +173,7 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem
+  // Calcular valores por origem - SALDO ATUAL (não total de entrada)
   const valoresPorOrigem = useMemo(() => {
     const origens = {
       "Estoque Estratégico": 0,
@@ -182,30 +182,30 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    entradas.forEach((entrada) => {
-      const origem = (entrada.origem || "").toLowerCase().trim()
-      const valor = entrada.valor_total || 0
+    // Calcular saldo atual por origem usando os itens calculados
+    estoqueCalculado.forEach((item) => {
+      const entrada = entradas.find((e) => e.codigo === item.codigo)
+      if (!entrada) return
 
-      // Se a origem estiver vazia, tenta usar outros campos como fallback
-      if (!origem) {
-        // Sem origem preenchida - não categorizar
-        return
-      }
+      const origem = (entrada.origem || "").toLowerCase().trim()
+      if (!origem) return
+
+      // Usar o valorTotalEstoque que já é (entrada - saída) * valor médio
+      const saldoValor = item.valorTotalEstoque || 0
 
       if (origem.includes("estratégico") || origem.includes("estrategico")) {
-        origens["Estoque Estratégico"] += valor
+        origens["Estoque Estratégico"] += saldoValor
       } else if (origem.includes("corretiva") || origem.includes("contrato")) {
-        origens["Corretiva Contrato"] += valor
+        origens["Corretiva Contrato"] += saldoValor
       } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
-        console.log("[v0] Preventiva encontrada:", entrada.origem, "Valor:", valor)
-        origens["Plano Manutenção"] += valor
+        origens["Plano Manutenção"] += saldoValor
       } else if (origem.includes("acordo") && origem.includes("inicial")) {
-        origens["Acordo inicial"] += valor
+        origens["Acordo inicial"] += saldoValor
       }
     })
 
     return origens
-  }, [entradas])
+  }, [estoqueCalculado, entradas])
 
   return (
     <div className="space-y-6">
