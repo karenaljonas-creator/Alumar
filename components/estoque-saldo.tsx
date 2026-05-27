@@ -183,16 +183,22 @@ export function EstoqueSaldo() {
     }
 
     entradas.forEach((entrada) => {
-      const origem = entrada.origem || ""
+      const origem = (entrada.origem || "").toLowerCase().trim()
       const valor = entrada.valor_total || 0
 
-      if (origem.toLowerCase().includes("estratégico") || origem.toLowerCase().includes("estrategico")) {
+      // Se a origem estiver vazia, tenta usar outros campos como fallback
+      if (!origem) {
+        // Sem origem preenchida - não categorizar
+        return
+      }
+
+      if (origem.includes("estratégico") || origem.includes("estrategico")) {
         origens["Estoque Estratégico"] += valor
-      } else if (origem.toLowerCase().includes("corretiva contrato")) {
+      } else if (origem.includes("corretiva") || origem.includes("contrato")) {
         origens["Corretiva Contrato"] += valor
-      } else if (origem.toLowerCase().includes("plano") || origem.toLowerCase().includes("manutenção") || origem.toLowerCase().includes("preventiva")) {
+      } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
         origens["Plano Manutenção"] += valor
-      } else if (origem.toLowerCase().includes("acordo inicial")) {
+      } else if (origem.includes("acordo") && origem.includes("inicial")) {
         origens["Acordo inicial"] += valor
       }
     })
