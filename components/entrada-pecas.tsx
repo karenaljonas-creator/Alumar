@@ -576,14 +576,6 @@ export function EntradaPecas() {
           </CardContent>
         </Card>
       </div>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
     </div>
   )
 }
