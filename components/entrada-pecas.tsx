@@ -530,7 +530,16 @@ export function EntradaPecas() {
                           <Button variant="ghost" size="icon" onClick={() => handleDelete(peca.id)}>
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
-      </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Valores por Origem */}
       <div className="grid grid-cols-4 gap-4">
@@ -567,7 +576,6 @@ export function EntradaPecas() {
           </CardContent>
         </Card>
       </div>
-                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
