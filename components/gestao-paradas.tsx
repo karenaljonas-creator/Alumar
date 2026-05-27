@@ -32,6 +32,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
+  const [showHiddenColumns, setShowHiddenColumns] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -272,6 +273,17 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </div>
           </div>
 
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowHiddenColumns(!showHiddenColumns)}
+              className="gap-2"
+            >
+              {showHiddenColumns ? "Ocultar" : "Mostrar"} Colunas Adicionais
+            </Button>
+          </div>
+
           <div className="rounded-lg border border-border overflow-hidden">
             <Table>
               <TableHeader>
@@ -291,16 +303,20 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Contrato <SortIcon columnKey="contrato" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Tipo <SortIcon columnKey="tipoEquip" />
-                    </button>
-                  </TableHead>
+                  {showHiddenColumns && (
+                    <TableHead>
+                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Contrato <SortIcon columnKey="contrato" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {showHiddenColumns && (
+                    <TableHead>
+                      <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Tipo <SortIcon columnKey="tipoEquip" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead>
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
@@ -311,16 +327,20 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       Data de Parada <SortIcon columnKey="dataParada" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Dias Parada <SortIcon columnKey="diasParada" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Prazo <SortIcon columnKey="prazo" />
-                    </button>
-                  </TableHead>
+                  {showHiddenColumns && (
+                    <TableHead>
+                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Dias Parada <SortIcon columnKey="diasParada" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {showHiddenColumns && (
+                    <TableHead>
+                      <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Prazo <SortIcon columnKey="prazo" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
@@ -345,23 +365,27 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
-                      <TableCell className="text-sm">
-                        <Badge
-                          variant={maquina.temContrato ? "default" : "secondary"}
-                          className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                        >
-                          {maquina.temContrato ? "Sim" : "Nao"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {maquina.tipo.includes("Compressor")
-                          ? "Compressor"
-                          : maquina.tipo.includes("Secador")
-                            ? "Secador"
-                            : maquina.tipo.includes("Soprador")
-                              ? "Soprador"
-                              : "Filtro"}
-                      </TableCell>
+                      {showHiddenColumns && (
+                        <TableCell className="text-sm">
+                          <Badge
+                            variant={maquina.temContrato ? "default" : "secondary"}
+                            className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                          >
+                            {maquina.temContrato ? "Sim" : "Nao"}
+                          </Badge>
+                        </TableCell>
+                      )}
+                      {showHiddenColumns && (
+                        <TableCell className="text-sm">
+                          {maquina.tipo.includes("Compressor")
+                            ? "Compressor"
+                            : maquina.tipo.includes("Secador")
+                              ? "Secador"
+                              : maquina.tipo.includes("Soprador")
+                                ? "Soprador"
+                                : "Filtro"}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
@@ -377,55 +401,59 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       <TableCell className="text-sm font-medium">
                         {formatDate(maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="text-sm text-center font-semibold">
-                        {calcularDiasParada(maquina.dataParada)}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {isEditing(maquina.id, "dataFim") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              type="date"
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
+                      {showHiddenColumns && (
+                        <TableCell className="text-sm text-center font-semibold">
+                          {calcularDiasParada(maquina.dataParada)}
+                        </TableCell>
+                      )}
+                      {showHiddenColumns && (
+                        <TableCell className="text-sm font-medium">
+                          {isEditing(maquina.id, "dataFim") ? (
+                            <div className="flex gap-2 items-center">
+                              <Input
+                                type="date"
+                                value={editingState?.value || ""}
+                                onChange={(e) =>
+                                  setEditingState((prev) =>
+                                    prev ? { ...prev, value: e.target.value } : null
+                                  )
+                                }
+                                className="h-8 text-xs"
+                              />
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleEditSave(maquina.id)}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Check className="h-4 w-4 text-green-600" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={handleEditCancel}
+                                className="h-8 w-8 p-0"
+                              >
+                                <X className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div
+                              className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                              onClick={() =>
+                                handleEditStart(
+                                  maquina.id,
+                                  "dataFim",
+                                  maquina.contratoConfig?.dataFim || ""
                                 )
                               }
-                              className="h-8 text-xs"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
                             >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "dataFim",
-                                maquina.contratoConfig?.dataFim || ""
-                              )
-                            }
-                          >
-                            <span>{formatDate(getDisplayValue(maquina.id, "dataFim", maquina.contratoConfig?.dataFim || "-"))}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                          </div>
-                        )}
-                      </TableCell>
+                              <span>{formatDate(getDisplayValue(maquina.id, "dataFim", maquina.contratoConfig?.dataFim || "-"))}</span>
+                              <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                            </div>
+                          )}
+                        </TableCell>
+                      )}
                       <TableCell className="text-sm">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <div className="flex gap-2 items-center">
