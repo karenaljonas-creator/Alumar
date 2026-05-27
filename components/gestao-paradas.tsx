@@ -284,7 +284,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </Button>
           </div>
 
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="rounded-lg border border-border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted">
@@ -334,13 +334,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                       </button>
                     </TableHead>
                   )}
-                  {showHiddenColumns && (
-                    <TableHead>
-                      <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Prazo <SortIcon columnKey="prazo" />
-                      </button>
-                    </TableHead>
-                  )}
+                  <TableHead>
+                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Prazo <SortIcon columnKey="prazo" />
+                    </button>
+                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
@@ -355,6 +353,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
+                  </TableHead>
+                  <TableHead className="w-[80px] text-center">
+                    <span className="font-medium">Editar</span>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -406,54 +407,52 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           {calcularDiasParada(maquina.dataParada)}
                         </TableCell>
                       )}
-                      {showHiddenColumns && (
-                        <TableCell className="text-sm font-medium">
-                          {isEditing(maquina.id, "dataFim") ? (
-                            <div className="flex gap-2 items-center">
-                              <Input
-                                type="date"
-                                value={editingState?.value || ""}
-                                onChange={(e) =>
-                                  setEditingState((prev) =>
-                                    prev ? { ...prev, value: e.target.value } : null
-                                  )
-                                }
-                                className="h-8 text-xs"
-                              />
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleEditSave(maquina.id)}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Check className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={handleEditCancel}
-                                className="h-8 w-8 p-0"
-                              >
-                                <X className="h-4 w-4 text-red-600" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <div
-                              className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                              onClick={() =>
-                                handleEditStart(
-                                  maquina.id,
-                                  "dataFim",
-                                  maquina.contratoConfig?.dataFim || ""
+                      <TableCell className="text-sm font-medium">
+                        {isEditing(maquina.id, "prazo") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              type="date"
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
+                              className="h-8 text-xs"
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0"
                             >
-                              <span>{formatDate(getDisplayValue(maquina.id, "dataFim", maquina.contratoConfig?.dataFim || "-"))}</span>
-                              <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                            </div>
-                          )}
-                        </TableCell>
-                      )}
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0"
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            onClick={() =>
+                              handleEditStart(
+                                maquina.id,
+                                "prazo",
+                                maquina.contratoConfig?.dataFim || ""
+                              )
+                            }
+                          >
+                            <span>{formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <div className="flex gap-2 items-center">
@@ -591,6 +590,19 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted"
+                          onClick={() => {
+                            // Abre modo de edição para a primeira célula editável
+                            handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 text-blue-600" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
