@@ -3,7 +3,7 @@
 // Sistema de Gestão de Máquinas - v1.0
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
-import { loadMachines, saveMachines, downloadCSV, importFromCSV, updateMachine } from "@/lib/supabase-machine-storage"
+import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
 import { loadContrato } from "@/lib/contrato-storage"
 import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } from "@/lib/supabase-history-storage"
 import {
@@ -57,7 +57,7 @@ export default function Home() {
   const [editingMachine, setEditingMachine] = useState<Machine | undefined>()
   const [latestSnapshot, setLatestSnapshot] = useState<WeeklySnapshot | null>(null)
   const [activeSection, setActiveSection] = useState<MenuSection>("painel")
-  const [materiaisExpanded, setMateriaisExpanded] = useState(true)
+  const [materiaisExpanded, setMateriaisExpanded] = useState(false)
   const { toast } = useToast()
   const contrato = loadContrato()
 
@@ -161,7 +161,7 @@ export default function Home() {
       updatedMachines = machines.map((m) => (m.id === machineData.id ? (machineData as Machine) : m))
       toast({
         title: "Máquina atualizada",
-        description: "As alteraç��es foram salvas com sucesso.",
+        description: "As alterações foram salvas com sucesso.",
       })
     } else {
       const newMachine: Machine = {
@@ -182,24 +182,6 @@ export default function Home() {
     } catch (error) {
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações. Tente novamente.",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleUpdateMachine = async (machine: Machine) => {
-    try {
-      await updateMachine(machine.id, machine)
-      const now = new Date().toISOString()
-      setMachines(machines.map((m) => (m.id === machine.id ? { ...machine, updatedAt: now } : m)))
-      toast({
-        title: "Máquina atualizada",
-        description: "As informações foram salvas com sucesso.",
-      })
-    } catch (error) {
-      toast({
-        title: "Erro ao atualizar",
         description: "Não foi possível salvar as alterações. Tente novamente.",
         variant: "destructive",
       })
@@ -230,183 +212,11 @@ export default function Home() {
 
   const handleExport = async () => {
     // Exportar baseado na seção ativa
-    if (activeSection === "estoque-estrategico") {
-      // Exportar dados do estoque estratégico com colunas calculadas
-      const supabase = (await import("@/lib/supabase/client")).createClient()
-      
-      // Buscar dados do estoque estratégico
-      const [estrategicoRes, entradasRes, saidasRes] = await Promise.all([
-        supabase.from("estoque_estrategico").select("*").order("equipamento").order("descricao"),
-        supabase.from("estoque_pecas").select("codigo, quantidade"),
-        supabase.from("saida_pecas").select("codigo, quantidade"),
-      ])
-      
-      if (estrategicoRes.error) {
-        toast({ title: "Erro ao exportar", description: estrategicoRes.error.message, variant: "destructive" })
-        return
-      }
-      
-      if (!estrategicoRes.data || estrategicoRes.data.length === 0) {
-        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
-        return
-      }
-      
-      // Calcular saldo por código
-      const saldoPorCodigo: Record<string, number> = {}
-      entradasRes.data?.forEach(e => {
-        saldoPorCodigo[e.codigo] = (saldoPorCodigo[e.codigo] || 0) + e.quantidade
-      })
-      saidasRes.data?.forEach(s => {
-        saldoPorCodigo[s.codigo] = (saldoPorCodigo[s.codigo] || 0) - s.quantidade
-      })
-      
-      // Criar dados com colunas calculadas
-      const dataWithCalculations = estrategicoRes.data.map(item => {
-        const saldoAtual = saldoPorCodigo[item.codigo] || 0
-        const diferenca = saldoAtual - item.quantidade_minima
-        const status = item.quantidade_minima === 0 ? "Analisar" : (diferenca >= 0 ? "OK" : "Repor")
-        
-        return {
-          Codigo: item.codigo,
-          Equipamento: item.equipamento,
-          Descricao: item.descricao,
-          Qtde_Minima: item.quantidade_minima,
-          Saldo_Atual: saldoAtual,
-          Diferenca: diferenca,
-          Status: status,
-        }
-      })
-      
-      // Criar CSV com ponto-e-vírgula para Excel PT-BR
-      const headers = ["Código", "Equipamento", "Descrição", "Qtde Mínima", "Saldo Atual", "Diferença", "Status"].join(";")
-      const rows = dataWithCalculations.map(row => [
-        row.Codigo,
-        row.Equipamento,
-        row.Descricao,
-        row.Qtde_Minima,
-        row.Saldo_Atual,
-        row.Diferenca,
-        row.Status,
-      ].map(v => {
-        const value = v ?? ""
-        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
-          return `"${String(value).replace(/"/g, '""')}"`
-        }
-        return String(value)
-      }).join(";"))
-      const csv = [headers, ...rows].join("\n")
-      
-      const BOM = "\uFEFF"
-      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = `estoque-estrategico-${new Date().toISOString().split("T")[0]}.csv`
-      link.click()
-      
-      toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
-    } else if (activeSection === "estoque") {
-      // Exportar dados consolidados do estoque (igual ao que aparece na tela)
-      const supabase = (await import("@/lib/supabase/client")).createClient()
-      
-      // Buscar entradas e saídas
-      const [entradasRes, saidasRes] = await Promise.all([
-        supabase.from("estoque_pecas").select("codigo, descricao, quantidade, valor_unitario, valor_total"),
-        supabase.from("saida_pecas").select("codigo, quantidade"),
-      ])
-      
-      if (entradasRes.error) {
-        toast({ title: "Erro ao exportar", description: entradasRes.error.message, variant: "destructive" })
-        return
-      }
-      
-      // Consolidar por código
-      const stockMap: Record<string, {
-        codigo: string
-        descricao: string
-        totalEntrada: number
-        totalSaida: number
-        somaValorTotal: number
-        somaQuantidadeEntrada: number
-      }> = {}
-      
-      entradasRes.data?.forEach(e => {
-        if (!stockMap[e.codigo]) {
-          stockMap[e.codigo] = {
-            codigo: e.codigo,
-            descricao: e.descricao,
-            totalEntrada: 0,
-            totalSaida: 0,
-            somaValorTotal: 0,
-            somaQuantidadeEntrada: 0,
-          }
-        }
-        stockMap[e.codigo].totalEntrada += e.quantidade
-        stockMap[e.codigo].somaQuantidadeEntrada += e.quantidade
-        stockMap[e.codigo].somaValorTotal += (e.valor_total || 0)
-      })
-      
-      saidasRes.data?.forEach(s => {
-        if (stockMap[s.codigo]) {
-          stockMap[s.codigo].totalSaida += s.quantidade
-        }
-      })
-      
-      // Calcular saldo e valor médio
-      const consolidatedData = Object.values(stockMap).map(item => {
-        const saldo = item.totalEntrada - item.totalSaida
-        const valorMedioUnit = item.somaQuantidadeEntrada > 0 
-          ? item.somaValorTotal / item.somaQuantidadeEntrada 
-          : 0
-        const valorTotal = saldo * valorMedioUnit
-        
-        return {
-          Codigo: item.codigo,
-          Descricao: item.descricao,
-          Entrada: item.totalEntrada,
-          Saida: item.totalSaida,
-          Saldo: saldo,
-          Valor_Medio_Unit: valorMedioUnit.toFixed(2).replace(".", ","),
-          Valor_Total: valorTotal.toFixed(2).replace(".", ","),
-        }
-      }).sort((a, b) => a.Codigo.localeCompare(b.Codigo))
-      
-      if (consolidatedData.length === 0) {
-        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
-        return
-      }
-      
-      // Criar CSV com ponto-e-vírgula para Excel PT-BR
-      const headers = ["Código (PN)", "Descrição", "Entrada", "Saída", "Saldo", "Valor Médio Unit.", "Valor Total"].join(";")
-      const rows = consolidatedData.map(row => [
-        row.Codigo,
-        row.Descricao,
-        row.Entrada,
-        row.Saida,
-        row.Saldo,
-        row.Valor_Medio_Unit,
-        row.Valor_Total,
-      ].map(v => {
-        const value = v ?? ""
-        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
-          return `"${String(value).replace(/"/g, '""')}"`
-        }
-        return String(value)
-      }).join(";"))
-      const csv = [headers, ...rows].join("\n")
-      
-      const BOM = "\uFEFF"
-      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = `estoque-consolidado-${new Date().toISOString().split("T")[0]}.csv`
-      link.click()
-      
-      toast({ title: "Exportação concluída", description: "Estoque consolidado exportado com sucesso." })
-    } else if (activeSection === "entrada" || activeSection === "saida") {
+    if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
       // Exportar dados de peças (entrada ou saída)
       const supabase = (await import("@/lib/supabase/client")).createClient()
       const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
-      const fileName = activeSection === "entrada" ? "entrada-pecas" : "saida-pecas"
+      const fileName = activeSection === "entrada" ? "entrada-pecas" : activeSection === "saida" ? "saida-pecas" : "estoque"
       
       const { data, error } = await supabase.from(tableName).select("*").order("created_at", { ascending: false })
       
@@ -420,21 +230,12 @@ export default function Home() {
         return
       }
       
-      // Criar CSV com ponto-e-vírgula para Excel PT-BR
-      const headers = Object.keys(data[0]).join(";")
-      const rows = data.map(row => Object.values(row).map(v => {
-        const value = v ?? ""
-        // Escapar valores que contêm ponto-e-vírgula ou quebras de linha
-        if (String(value).includes(";") || String(value).includes("\n") || String(value).includes('"')) {
-          return `"${String(value).replace(/"/g, '""')}"`
-        }
-        return String(value)
-      }).join(";"))
+      // Criar CSV
+      const headers = Object.keys(data[0]).join(",")
+      const rows = data.map(row => Object.values(row).map(v => `"${v ?? ""}"`).join(","))
       const csv = [headers, ...rows].join("\n")
       
-      // Adicionar BOM UTF-8 para o Excel reconhecer a codificação
-      const BOM = "\uFEFF"
-      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
       const link = document.createElement("a")
       link.href = URL.createObjectURL(blob)
       link.download = `${fileName}-${new Date().toISOString().split("T")[0]}.csv`
@@ -478,57 +279,36 @@ export default function Home() {
             const worksheet = workbook.Sheets[sheetName]
             const jsonData = XLSX.utils.sheet_to_json<Record<string, string | number>>(worksheet)
             
-            // Mapear colunas do Excel para colunas do banco (várias variações)
+            // Mapear colunas do Excel para colunas do banco
             const columnMapping: Record<string, string> = {
-              // Código
-              "Código": "codigo", "codigo": "codigo", "CÓDIGO": "codigo", "CODIGO": "codigo",
-              "codigo ITEM": "codigo", "Codigo ITEM": "codigo", "CODIGO ITEM": "codigo", "Código ITEM": "codigo",
-              "PN": "codigo", "pn": "codigo", "Part Number": "codigo", "Cod": "codigo", "COD": "codigo",
-              // Descrição
-              "Descrição": "descricao", "descricao": "descricao", "DESCRIÇÃO": "descricao", "DESCRICAO": "descricao",
-              "Desc": "descricao", "DESC": "descricao", "Description": "descricao",
-              // Quantidade
-              "QTD": "quantidade", "Qtd": "quantidade", "qtd": "quantidade", "quantidade": "quantidade",
-              "QUANTIDADE": "quantidade", "Qty": "quantidade", "QTY": "quantidade", "Quant": "quantidade",
-              // Ordem de serviço
-              "Pedido / O.S": "ordem_servico", "OS": "ordem_servico", "O.S": "ordem_servico", "O.S.": "ordem_servico",
-              "ordem_servico": "ordem_servico", "Ordem Serviço": "ordem_servico", "OrdemServico": "ordem_servico",
-              // Número de série
-              "SERIE": "numero_serie", "Serie": "numero_serie", "serie": "numero_serie",
-              "Nº Série": "numero_serie", "N Serie": "numero_serie", "N° Serie": "numero_serie",
-              "numero_serie": "numero_serie", "numero_serie_equipamento": "numero_serie",
-              // Nota fiscal
-              "NF": "nota_fiscal", "nf": "nota_fiscal", "Nota Fiscal": "nota_fiscal", "NotaFiscal": "nota_fiscal",
-              "nota_fiscal": "nota_fiscal", "N.F.": "nota_fiscal", "N.F": "nota_fiscal",
-              // Data
-              "Data envio": "data_emissao", "Data": "data_emissao", "DATA": "data_emissao",
-              "data_emissao": "data_emissao", "DataEmissao": "data_emissao", "Data Emissão": "data_emissao",
-              // Valor unitário
-              "Valor": "valor_unitario", "valor": "valor_unitario", "VALOR": "valor_unitario",
-              "V. Unit.": "valor_unitario", "V.Unit": "valor_unitario", "Valor Unit": "valor_unitario",
-              "valor_unitario": "valor_unitario", "ValorUnitario": "valor_unitario", "Valor Unitário": "valor_unitario",
-              // Valor total
-              "Valor total": "valor_total", "Valor Total": "valor_total", "VALOR TOTAL": "valor_total",
-              "V. Total": "valor_total", "V.Total": "valor_total", "valor_total": "valor_total",
-              // Origem
-              "Origem": "origem", "origem": "origem", "ORIGEM": "origem", "Origin": "origem",
-              // Observação
-              "obs": "observacao", "Obs": "observacao", "OBS": "observacao",
-              "observacao": "observacao", "Observação": "observacao", "Observacao": "observacao",
+              "Código": "codigo",
+              "codigo": "codigo",
+              "Descrição": "descricao",
+              "descricao": "descricao",
+              "QTD": "quantidade",
+              "quantidade": "quantidade",
+              "Pedido / O.S": "ordem_servico",
+              "ordem_servico": "ordem_servico",
+              "SERIE": "numero_serie",
+              "numero_serie": "numero_serie",
+              "NF": "nota_fiscal",
+              "nota_fiscal": "nota_fiscal",
+              "Data envio": "data_emissao",
+              "data_emissao": "data_emissao",
+              "Valor": "valor_unitario",
+              "valor_unitario": "valor_unitario",
+              "Valor total": "valor_total",
+              "valor_total": "valor_total",
+              "Origem": "origem",
+              "origem": "origem",
+              "obs": "observacao",
+              "observacao": "observacao",
             }
             
-            // Campos válidos por tabela
-            let validFields: string[]
-            if (activeSection === "estoque-estrategico") {
-              validFields = ["codigo", "descricao", "equipamento", "quantidade_minima"]
-            } else if (activeSection === "saida") {
-              validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_saida", "area", "compressor", "utilizacao", "observacao"]
-            } else {
-              // entrada e estoque usam estoque_pecas
-              validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
-            }
+            // Campos válidos da tabela estoque_pecas
+            const validFields = ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
             
-            rows = jsonData.map((row) => {
+            rows = jsonData.map(row => {
               const mappedRow: Record<string, string | number | null> = {}
               Object.entries(row).forEach(([key, value]) => {
                 const mappedKey = columnMapping[key] || key.toLowerCase().replace(/\s+/g, "_")
@@ -581,27 +361,21 @@ export default function Home() {
               return mappedRow
             }).filter(Boolean) as Record<string, string | number | null>[]
           } else {
-            // Importar CSV (suporta vírgula e ponto-e-vírgula como separador)
+            // Importar CSV
             const reader = new FileReader()
             const csvContent = await new Promise<string>((resolve) => {
               reader.onload = (event) => resolve(event.target?.result as string)
-              reader.readAsText(file, "UTF-8")
+              reader.readAsText(file)
             })
             
-            const lines = csvContent.replace(/^\uFEFF/, "").split("\n").filter(line => line.trim())
-            // Detectar separador (ponto-e-vírgula ou vírgula)
-            const separator = lines[0].includes(";") ? ";" : ","
-            const headers = lines[0].split(separator).map(h => h.replace(/"/g, "").trim())
+            const lines = csvContent.split("\n").filter(line => line.trim())
+            const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
             
             rows = lines.slice(1).map(line => {
-              // Regex que suporta tanto vírgula quanto ponto-e-vírgula
-              const regex = separator === ";" 
-                ? /(".*?"|[^";]+)(?=\s*;|\s*$)/g 
-                : /(".*?"|[^",]+)(?=\s*,|\s*$)/g
-              const values = line.match(regex)?.map(v => v.replace(/"/g, "").trim()) || []
+              const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
               const obj: Record<string, string> = {}
               headers.forEach((h, i) => {
-                if (h !== "id" && h !== "created_at" && h !== "updated_at") {
+                if (h !== "id" && h !== "created_at") {
                   obj[h] = values[i] || ""
                 }
               })
@@ -611,10 +385,8 @@ export default function Home() {
           
           if (rows.length > 0) {
             console.log("[v0] Inserting rows:", rows.length, "into table:", tableName)
-            console.log("[v0] First row sample:", JSON.stringify(rows[0], null, 2))
-            console.log("[v0] All row keys:", Object.keys(rows[0]))
-            
-            const { data, error } = await supabase.from(tableName).insert(rows).select()
+            console.log("[v0] First row sample:", rows[0])
+            const { error } = await supabase.from(tableName).insert(rows)
             if (error) {
               console.error("[v0] Supabase error:", error)
               throw error
@@ -636,17 +408,8 @@ export default function Home() {
           console.error("[v0] Erro na importação:", error)
           let errorMsg = "Não foi possível importar os dados."
           if (error && typeof error === "object") {
-            const err = error as { message?: string; details?: string; hint?: string; code?: string }
-            if (err.code === "23505") {
-              errorMsg = "Alguns registros já existem no banco de dados (duplicados)."
-            } else if (err.code === "23502") {
-              errorMsg = "Campos obrigatórios estão faltando. Verifique se a planilha possui as colunas: Código, Descrição."
-            } else if (err.code === "22001") {
-              errorMsg = "Algum campo tem texto muito longo. Verifique os dados da planilha."
-            } else {
-              errorMsg = err.message || err.details || err.hint || errorMsg
-            }
-            console.error("[v0] Error details:", { code: err.code, message: err.message, details: err.details, hint: err.hint })
+            const err = error as { message?: string; details?: string; hint?: string }
+            errorMsg = err.message || err.details || err.hint || errorMsg
           }
           toast({
             title: "Erro na importação",
@@ -682,7 +445,7 @@ export default function Home() {
             })
           }
         }
-        reader.readAsText(file, "UTF-8")
+        reader.readAsText(file)
       }
     }
     input.click()
@@ -751,7 +514,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col fixed top-0 left-0 h-screen z-50 overflow-y-auto">
+      <aside className="w-64 border-r border-border bg-card flex flex-col fixed h-screen">
         {/* Logo/Header */}
         <div className="p-4 border-b border-border">
           <h1 className="text-lg font-bold text-foreground">Gestão de Máquinas</h1>
@@ -900,7 +663,7 @@ export default function Home() {
                 </div>
               </div>
 
-              <StatsCards stats={stats} overrideParadas={maquinasParadasFiltradas.length} />
+              <StatsCards stats={stats} />
 
               <div className="grid gap-6 md:grid-cols-3">
                 <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
@@ -915,7 +678,7 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} currentParadas={maquinasParadasFiltradas.length} />
+                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
                   <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
                   <GraficoTipoEquipamento data={porTipo} />
                   <GraficoLocalizacao data={porLocalizacao} />
@@ -962,7 +725,7 @@ export default function Home() {
                   Acompanhe todas as máquinas paradas com dados do último registro semanal
                 </p>
               </div>
-              <GestaoParadas machines={machines} onUpdateMachine={handleUpdateMachine} />
+              <GestaoParadas machines={machines} />
             </div>
           )}
 

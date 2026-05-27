@@ -255,8 +255,7 @@ export function exportHistoryToCSV(): string {
 
 export function downloadHistoryCSV(): void {
   const csv = exportHistoryToCSV()
-  const BOM = "\uFEFF"
-  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" })
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
   const link = document.createElement("a")
   const url = URL.createObjectURL(blob)
 

@@ -6,39 +6,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Input } from "@/components/ui/input"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, ChevronRight, ChevronDown } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
-  onUpdateMachine?: (machine: Machine) => Promise<void>
 }
 
-export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps) {
+export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
   const [localizacaoFilter, setLocalizacaoFilter] = useState("todas")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
-  const [showDiasParada, setShowDiasParada] = useState(false)
-  const [showContrato, setShowContrato] = useState(false)
-  const [showTipo, setShowTipo] = useState(false)
-  const [showDataParada, setShowDataParada] = useState(false)
-  const [editingPrazo, setEditingPrazo] = useState<string | null>(null)
-  const [prazoValue, setPrazoValue] = useState("")
-
-  const handleSavePrazo = async (maquina: Machine) => {
-    if (onUpdateMachine && prazoValue.trim() !== "") {
-      await onUpdateMachine({ ...maquina, prazo: prazoValue.trim() })
-    }
-    setEditingPrazo(null)
-    setPrazoValue("")
-  }
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -229,14 +213,19 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
             </div>
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Localizacao</label>
-              <SearchableSelect
-                options={[{ value: "todas", label: "Todas" }, ...localizacoes.map((loc) => ({ value: loc, label: loc }))]}
-                value={localizacaoFilter}
-                onValueChange={setLocalizacaoFilter}
-                placeholder="Todas"
-                searchPlaceholder="Pesquisar localização..."
-                className="w-[180px]"
-              />
+              <Select value={localizacaoFilter} onValueChange={setLocalizacaoFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="todas">Todas</SelectItem>
+                  {localizacoes.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -259,83 +248,31 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[40px]">
-                    <button
-                      onClick={() => setShowContrato(!showContrato)}
-                      className="p-1 hover:bg-muted rounded"
-                      title={showContrato ? "Ocultar Contrato" : "Mostrar Contrato"}
-                    >
-                      {showContrato ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <TableHead>
+                    <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Contrato <SortIcon columnKey="contrato" />
                     </button>
                   </TableHead>
-                  {showContrato && (
-                    <TableHead>
-                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Contrato <SortIcon columnKey="contrato" />
-                      </button>
-                    </TableHead>
-                  )}
-                  <TableHead className="w-[40px]">
-                    <button
-                      onClick={() => setShowTipo(!showTipo)}
-                      className="p-1 hover:bg-muted rounded"
-                      title={showTipo ? "Ocultar Tipo" : "Mostrar Tipo"}
-                    >
-                      {showTipo ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <TableHead>
+                    <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Tipo <SortIcon columnKey="tipoEquip" />
                     </button>
                   </TableHead>
-                  {showTipo && (
-                    <TableHead>
-                      <button onClick={() => handleSort("tipoEquip")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Tipo <SortIcon columnKey="tipoEquip" />
-                      </button>
-                    </TableHead>
-                  )}
                   <TableHead>
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
-                  <TableHead className="min-w-[300px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Observacoes <SortIcon columnKey="observacoes" />
+                  <TableHead>
+                    <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Data de Parada <SortIcon columnKey="dataParada" />
                     </button>
                   </TableHead>
-                  <TableHead className="min-w-[120px]">
-                    <span className="font-medium">Prazo</span>
-                  </TableHead>
-                  <TableHead className="w-[40px]">
-                    <button
-                      onClick={() => setShowDataParada(!showDataParada)}
-                      className="p-1 hover:bg-muted rounded"
-                      title={showDataParada ? "Ocultar Data de Parada" : "Mostrar Data de Parada"}
-                    >
-                      {showDataParada ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  <TableHead>
+                    <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Dias Parada <SortIcon columnKey="diasParada" />
                     </button>
                   </TableHead>
-                  {showDataParada && (
-                    <TableHead>
-                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Data de Parada <SortIcon columnKey="dataParada" />
-                      </button>
-                    </TableHead>
-                  )}
-                  <TableHead className="w-[40px]">
-                    <button
-                      onClick={() => setShowDiasParada(!showDiasParada)}
-                      className="p-1 hover:bg-muted rounded"
-                      title={showDiasParada ? "Ocultar Dias Parada" : "Mostrar Dias Parada"}
-                    >
-                      {showDiasParada ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                    </button>
-                  </TableHead>
-                  {showDiasParada && (
-                    <TableHead>
-                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Dias Parada <SortIcon columnKey="diasParada" />
-                      </button>
-                    </TableHead>
-                  )}
                   <TableHead>
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
@@ -346,8 +283,10 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <span className="font-medium">Última Atualização</span>
+                  <TableHead className="min-w-[300px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
+                    </button>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -357,32 +296,24 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                     <TableRow key={maquina.id}>
                       <TableCell className="font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm">{maquina.tipo}</TableCell>
-                      <TableCell className="text-sm max-w-[120px]">
-                        <span className="block leading-tight">{maquina.localizacao}</span>
+                      <TableCell className="text-sm">{maquina.localizacao}</TableCell>
+                      <TableCell className="text-sm">
+                        <Badge
+                          variant={maquina.temContrato ? "default" : "secondary"}
+                          className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                        >
+                          {maquina.temContrato ? "Sim" : "Nao"}
+                        </Badge>
                       </TableCell>
-                      <TableCell></TableCell>
-                      {showContrato && (
-                        <TableCell className="text-sm">
-                          <Badge
-                            variant={maquina.temContrato ? "default" : "secondary"}
-                            className={maquina.temContrato ? "bg-green-600 hover:bg-green-700 text-white" : ""}
-                          >
-                            {maquina.temContrato ? "Sim" : "Nao"}
-                          </Badge>
-                        </TableCell>
-                      )}
-                      <TableCell></TableCell>
-                      {showTipo && (
-                        <TableCell className="text-sm">
-                          {maquina.tipo.includes("Compressor")
-                            ? "Compressor"
-                            : maquina.tipo.includes("Secador")
-                              ? "Secador"
-                              : maquina.tipo.includes("Soprador")
-                                ? "Soprador"
-                                : "Filtro"}
-                        </TableCell>
-                      )}
+                      <TableCell className="text-sm">
+                        {maquina.tipo.includes("Compressor")
+                          ? "Compressor"
+                          : maquina.tipo.includes("Secador")
+                            ? "Secador"
+                            : maquina.tipo.includes("Soprador")
+                              ? "Soprador"
+                              : "Filtro"}
+                      </TableCell>
                       <TableCell>
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
@@ -395,72 +326,22 @@ export function GestaoParadas({ machines, onUpdateMachine }: GestaoParadasProps)
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {maquina.motivoParada || "-"}
+                      <TableCell className="text-sm font-medium">
+                        {formatDate(maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="text-sm min-w-[120px]">
-                        {editingPrazo === maquina.id ? (
-                          <div className="flex items-center gap-1">
-                            <Input
-                              value={prazoValue}
-                              onChange={(e) => setPrazoValue(e.target.value)}
-                              className="h-7 text-sm"
-                              placeholder="Ex: 15/06/2026"
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault()
-                                  handleSavePrazo(maquina)
-                                }
-                                if (e.key === "Escape") {
-                                  setEditingPrazo(null)
-                                  setPrazoValue("")
-                                }
-                              }}
-                              onBlur={() => {
-                                if (prazoValue.trim() !== "") {
-                                  handleSavePrazo(maquina)
-                                } else {
-                                  setEditingPrazo(null)
-                                }
-                              }}
-                              autoFocus
-                            />
-                          </div>
-                        ) : (
-                          <span
-                            className="cursor-pointer hover:bg-muted px-2 py-1 rounded block"
-                            onClick={() => {
-                              setEditingPrazo(maquina.id)
-                              setPrazoValue(maquina.prazo || "")
-                            }}
-                            title="Clique para editar"
-                          >
-                            {maquina.prazo || "-"}
-                          </span>
-                        )}
+                      <TableCell className="text-sm text-center font-semibold">
+                        {calcularDiasParada(maquina.dataParada)}
                       </TableCell>
-                      <TableCell></TableCell>
-                      {showDataParada && (
-                        <TableCell className="text-sm font-medium">
-                          {formatDate(maquina.dataParada)}
-                        </TableCell>
-                      )}
-                      <TableCell></TableCell>
-                      {showDiasParada && (
-                        <TableCell className="text-sm text-center font-semibold">
-                          {calcularDiasParada(maquina.dataParada)}
-                        </TableCell>
-                      )}
                       <TableCell className="text-sm">{maquina.acaoResponsavel || "-"}</TableCell>
                       <TableCell className="text-sm text-center">{maquina.responsavel || "-"}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {maquina.updatedAt ? new Date(maquina.updatedAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }) : "-"}
+                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
+                        {maquina.motivoParada || "-"}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={13 + (showContrato ? 1 : 0) + (showTipo ? 1 : 0) + (showDataParada ? 1 : 0) + (showDiasParada ? 1 : 0)} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                       Nenhuma maquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
