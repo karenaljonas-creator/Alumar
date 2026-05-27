@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle } from "lucide-react"
+import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 
@@ -21,9 +21,11 @@ interface SaidaPeca {
   quantidade: number
   data_saida: string
   ordem_servico: string
+  nota_fiscal: string
   area: string
   compressor: string
   utilizacao: string
+  observacao: string
   created_at: string
 }
 
@@ -60,10 +62,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     quantidade: 1,
     data_saida: new Date().toISOString().split("T")[0],
     ordem_servico: "",
+    nota_fiscal: "",
     area: "",
     compressor: "",
     utilizacao: "",
+    observacao: "",
   })
+
+  const [buscaNF, setBuscaNF] = useState("")
+  const [buscandoNF, setBuscandoNF] = useState(false)
 
   // Get unique areas from machines
   const areas = [...new Set(machines.map((m) => m.localizacao))].filter(Boolean).sort()
@@ -107,6 +114,38 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     loadSaidas()
     loadEstoquePecas()
   }, [loadSaidas, loadEstoquePecas])
+
+  // Buscar itens por Nota Fiscal da entrada
+  const handleBuscarNF = async () => {
+    if (!buscaNF.trim()) {
+      toast({ title: "Digite o número da Nota Fiscal", variant: "destructive" })
+      return
+    }
+
+    setBuscandoNF(true)
+    const { data, error } = await supabase
+      .from("estoque_pecas")
+      .select("codigo, descricao, nota_fiscal")
+      .eq("nota_fiscal", buscaNF.trim())
+      .limit(1)
+
+    if (error) {
+      toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
+    } else if (data && data.length > 0) {
+      const peca = data[0]
+      setFormData((prev) => ({
+        ...prev,
+        codigo: peca.codigo,
+        descricao: peca.descricao,
+        nota_fiscal: peca.nota_fiscal,
+      }))
+      setCodigoEncontrado(true)
+      toast({ title: "Item encontrado!", description: `${peca.codigo} - ${peca.descricao}` })
+    } else {
+      toast({ title: "Nota Fiscal não encontrada", description: "Nenhum item de entrada com essa NF foi encontrado.", variant: "destructive" })
+    }
+    setBuscandoNF(false)
+  }
 
   // Auto-fill description when code changes
   const handleCodigoChange = (codigo: string) => {
@@ -225,11 +264,14 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: saida.quantidade,
       data_saida: saida.data_saida,
       ordem_servico: saida.ordem_servico,
+      nota_fiscal: saida.nota_fiscal || "",
       area: saida.area,
       compressor: saida.compressor,
       utilizacao: saida.utilizacao,
+      observacao: saida.observacao || "",
     })
     setCodigoEncontrado(true)
+    setBuscaNF(saida.nota_fiscal || "")
     setDialogOpen(true)
   }
 
@@ -240,12 +282,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       quantidade: 1,
       data_saida: new Date().toISOString().split("T")[0],
       ordem_servico: "",
+      nota_fiscal: "",
       area: "",
       compressor: "",
       utilizacao: "",
+      observacao: "",
     })
     setEditingSaida(null)
     setCodigoEncontrado(null)
+    setBuscaNF("")
     setDialogOpen(false)
   }
 
@@ -270,9 +315,35 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           </DialogTrigger>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>{editingSaida ? "Editar Saída" : "Registrar Saída de Peça"}</DialogTitle>
+              <DialogTitle>{editingSaida ? "Editar Saída de Peça" : "Registrar Saída de Peça"}</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Buscar itens por Nota Fiscal */}
+              <div className="space-y-2 p-3 bg-muted/50 rounded-lg border">
+                <Label className="flex items-center gap-2 text-sm font-medium">
+                  <FileSearch className="h-4 w-4" />
+                  Buscar itens por Nota Fiscal
+                </Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={buscaNF}
+                    onChange={(e) => setBuscaNF(e.target.value)}
+                    placeholder="Digite o número da NF da Entrada"
+                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        handleBuscarNF()
+                      }
+                    }}
+                  />
+                  <Button type="button" variant="secondary" onClick={handleBuscarNF} disabled={buscandoNF}>
+                    {buscandoNF ? "Buscando..." : "Buscar"}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">Busque pela NF da Entrada para carregar os itens automaticamente</p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="codigo">Código (PN)</Label>
@@ -319,7 +390,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="quantidade">Quantidade</Label>
                   <Input
@@ -348,6 +419,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     value={formData.ordem_servico}
                     onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
                     placeholder="Ex: 408103074"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nota_fiscal">Nota Fiscal</Label>
+                  <Input
+                    id="nota_fiscal"
+                    value={formData.nota_fiscal}
+                    onChange={(e) => setFormData({ ...formData, nota_fiscal: e.target.value })}
+                    placeholder="Ex: 276521-15"
                   />
                 </div>
               </div>
@@ -392,6 +472,16 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="observacao">Observação</Label>
+                <Input
+                  id="observacao"
+                  value={formData.observacao}
+                  onChange={(e) => setFormData({ ...formData, observacao: e.target.value })}
+                  placeholder="Observações adicionais sobre a saída..."
+                />
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
