@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -32,7 +32,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
-  const [showHiddenColumns, setShowHiddenColumns] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -148,18 +147,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
       return new Date(dateStr).toLocaleDateString("pt-BR")
     } catch {
       return dateStr
-    }
-  }
-
-  const calcularDiasParada = (dataParada?: string) => {
-    if (!dataParada) return "-"
-    try {
-      const data = new Date(dataParada)
-      const hoje = new Date()
-      const diff = Math.floor((hoje.getTime() - data.getTime()) / (1000 * 60 * 60 * 24))
-      return diff >= 0 ? diff : 0
-    } catch {
-      return "-"
     }
   }
 
@@ -484,225 +471,11 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                             }
                           >
                             <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
-                      </TableCell>
-                      <TableCell className="w-[80px] text-center">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleEditStart(maquina.id, "edit", "")}
-                          className="h-8 w-8 p-0"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">
-                        {formatDate(maquina.dataParada)}
-                      </TableCell>
-                      {showHiddenColumns && (
-                        <TableCell className="text-sm text-center font-semibold">
-                          {calcularDiasParada(maquina.dataParada)}
-                        </TableCell>
-                      )}
-                      <TableCell className="text-sm font-medium">
-                        {isEditing(maquina.id, "prazo") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              type="date"
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
-                              }
-                              className="h-8 text-xs"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex gap-2 items-center">
-                            <span>
-                              {formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}
-                            </span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")}
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(maquina.updated_at || maquina.dataParada)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={maquina.acaoResponsavel === "Manutenção" ? "bg-blue-100 text-blue-800" : ""}
-                        >
-                          {maquina.acaoResponsavel || "-"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {isEditing(maquina.id, "acaoResponsavel") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
-                              }
-                              className="h-8 text-xs"
-                              placeholder="Digite a ação"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "acaoResponsavel",
-                                maquina.acaoResponsavel || ""
-                              )
-                            }
-                          >
-                            <span>{getDisplayValue(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "-")}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-center">
-                        {isEditing(maquina.id, "responsavel") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
-                              }
-                              className="h-8 text-xs"
-                              placeholder="Digite o responsável"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "responsavel",
-                                maquina.responsavel || ""
-                              )
-                            }
-                          >
-                            <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {isEditing(maquina.id, "motivoParada") ? (
-                          <div className="flex gap-2 items-start">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
-                              }
-                              className="h-8 text-xs flex-1"
-                              placeholder="Digite a observação"
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "motivoParada",
-                                maquina.motivoParada || ""
-                              )
-                            }
-                          >
-                            <span>{getDisplayValue(maquina.id, "motivoParada", maquina.motivoParada || "-")}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
-                          </div>
-                        )}
                       </TableCell>
                       <TableCell className="text-center">
                         <Button
@@ -710,7 +483,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-muted"
                           onClick={() => {
-                            // Abre modo de edição para a primeira célula editável
                             handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
                           }}
                         >
@@ -721,7 +493,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                       Nenhuma máquina parada encontrada com os filtros aplicados
                     </TableCell>
                   </TableRow>
