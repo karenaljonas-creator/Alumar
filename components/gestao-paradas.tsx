@@ -9,12 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
+import { saveMachines } from "@/lib/supabase-machine-storage"
+import { useToast } from "@/hooks/use-toast"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
+  onUpdate?: (updatedMachines: Machine[]) => void
 }
 
 interface EditingState {
@@ -23,7 +26,7 @@ interface EditingState {
   value: string
 }
 
-export function GestaoParadas({ machines }: GestaoParadasProps) {
+export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
@@ -31,7 +34,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
-  const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -154,16 +158,54 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     setEditingState({ machineId, field, value })
   }
 
-  const handleEditSave = (machineId: string) => {
-    if (editingState && editingState.machineId === machineId) {
-      setEditedMachines((prev) => ({
-        ...prev,
-        [machineId]: {
-          ...(prev[machineId] || {}),
-          [editingState.field]: editingState.value,
-        },
-      }))
+  const handleEditSave = async (machineId: string) => {
+    if (!editingState || editingState.machineId !== machineId) return
+
+    setIsSaving(true)
+    try {
+      // Atualizar a máquina com o novo valor
+      const updatedMachines = machines.map((m) => {
+        if (m.id === machineId) {
+          const updated = { ...m }
+          
+          if (editingState.field === "prazo") {
+            // Salvar a data exatamente como foi escolhida (sem conversão de timezone)
+            if (updated.contratoConfig) {
+              updated.contratoConfig.dataFim = editingState.value
+            }
+          } else if (editingState.field === "motivoParada") {
+            updated.motivoParada = editingState.value
+          } else if (editingState.field === "responsavel") {
+            updated.responsavel = editingState.value
+          } else if (editingState.field === "acaoResponsavel") {
+            updated.acaoResponsavel = editingState.value
+          }
+          
+          updated.updated_at = new Date().toISOString()
+          return updated
+        }
+        return m
+      })
+
+      // Salvar no Supabase
+      await saveMachines(updatedMachines)
+      
+      // Notificar componente pai para sincronizar
+      if (onUpdate) {
+        onUpdate(updatedMachines)
+      }
+      
       setEditingState(null)
+      toast({ title: "Sucesso!", description: "Alteração salva com sucesso" })
+    } catch (error) {
+      toast({ 
+        title: "Erro ao salvar", 
+        description: "Houve um erro ao salvar a alteração",
+        variant: "destructive"
+      })
+      console.error(error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
