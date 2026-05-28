@@ -9,12 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
+import { saveMachines } from "@/lib/supabase-machine-storage"
+import { useToast } from "@/hooks/use-toast"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
   machines: Machine[]
+  onUpdate?: (updatedMachines: Machine[]) => void
 }
 
 interface EditingState {
@@ -23,7 +26,7 @@ interface EditingState {
   value: string
 }
 
-export function GestaoParadas({ machines }: GestaoParadasProps) {
+export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
@@ -31,7 +34,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
-  const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -141,29 +145,58 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     return Array.from(new Set(maquinasParadas.map((m) => m.acaoResponsavel).filter(Boolean))).sort()
   }, [maquinasParadas])
 
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return "-"
-    try {
-      return new Date(dateStr).toLocaleDateString("pt-BR")
-    } catch {
-      return dateStr
-    }
-  }
-
   const handleEditStart = (machineId: string, field: string, value: string) => {
     setEditingState({ machineId, field, value })
   }
 
-  const handleEditSave = (machineId: string) => {
-    if (editingState && editingState.machineId === machineId) {
-      setEditedMachines((prev) => ({
-        ...prev,
-        [machineId]: {
-          ...(prev[machineId] || {}),
-          [editingState.field]: editingState.value,
-        },
-      }))
+  const handleEditSave = async (machineId: string) => {
+    if (!editingState || editingState.machineId !== machineId) return
+
+    setIsSaving(true)
+    try {
+      // Atualizar a máquina com o novo valor
+      const updatedMachines = machines.map((m) => {
+        if (m.id === machineId) {
+          const updated = { ...m }
+          
+          if (editingState.field === "prazo") {
+            // Salvar a data exatamente como foi escolhida (sem conversão de timezone)
+            if (updated.contratoConfig) {
+              updated.contratoConfig.dataFim = editingState.value
+            }
+          } else if (editingState.field === "motivoParada") {
+            updated.motivoParada = editingState.value
+          } else if (editingState.field === "responsavel") {
+            updated.responsavel = editingState.value
+          } else if (editingState.field === "acaoResponsavel") {
+            updated.acaoResponsavel = editingState.value
+          }
+          
+          updated.updated_at = new Date().toISOString()
+          return updated
+        }
+        return m
+      })
+
+      // Salvar no Supabase
+      await saveMachines(updatedMachines)
+      
+      // Notificar componente pai para sincronizar
+      if (onUpdate) {
+        onUpdate(updatedMachines)
+      }
+      
       setEditingState(null)
+      toast({ title: "Sucesso!", description: "Alteração salva com sucesso" })
+    } catch (error) {
+      toast({ 
+        title: "Erro ao salvar", 
+        description: "Houve um erro ao salvar a alteração",
+        variant: "destructive"
+      })
+      console.error(error)
+    } finally {
+      setIsSaving(false)
     }
   }
 
@@ -171,15 +204,20 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
     setEditingState(null)
   }
 
-  const getDisplayValue = (machineId: string, field: string, defaultValue: string) => {
-    if (editedMachines[machineId] && editedMachines[machineId][field as keyof Machine]) {
-      return String(editedMachines[machineId][field as keyof Machine])
-    }
-    return defaultValue
-  }
-
   const isEditing = (machineId: string, field: string) => {
     return editingState?.machineId === machineId && editingState?.field === field
+  }
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-"
+    try {
+      // Validar se é uma data válida
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return "-"
+      return date.toLocaleDateString("pt-BR")
+    } catch {
+      return "-"
+    }
   }
 
   return (
@@ -330,8 +368,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {isEditing(maquina.id, "motivoParada") ? (
-                          <div className="flex gap-2 items-start">
+                        {isEditing(maquina.id, "motivoParada"                          <div className="flex gap-2 items-start">
                             <Input
                               value={editingState?.value || ""}
                               onChange={(e) =>
@@ -341,12 +378,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               }
                               className="h-8 text-xs"
                               placeholder="Digite a observação"
+                              disabled={isSaving}
                             />
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
                             </Button>
@@ -355,6 +394,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               variant="ghost"
                               onClick={handleEditCancel}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
                             </Button>
@@ -370,7 +410,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span className="text-xs">{getDisplayValue(maquina.id, "motivoParada", maquina.motivoParada || "-")}</span>
+                            <span className="text-xs">{maquina.motivoParada || "-"}</span>
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
@@ -387,12 +427,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                                 )
                               }
                               className="h-8 text-xs"
+                              disabled={isSaving}
                             />
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
                             </Button>
@@ -401,6 +443,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               variant="ghost"
                               onClick={handleEditCancel}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
                             </Button>
@@ -408,7 +451,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                         ) : (
                           <div className="flex gap-2 items-center">
                             <span>
-                              {formatDate(getDisplayValue(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "-"))}
+                              {formatDate(maquina.contratoConfig?.dataFim)}
                             </span>
                             <Button
                               size="sm"
@@ -441,12 +484,14 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               }
                               className="h-8 text-xs"
                               placeholder="Digite o responsável"
+                              disabled={isSaving}
                             />
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
                             </Button>
@@ -455,6 +500,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               variant="ghost"
                               onClick={handleEditCancel}
                               className="h-8 w-8 p-0"
+                              disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
                             </Button>
@@ -470,7 +516,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span>{getDisplayValue(maquina.id, "responsavel", maquina.responsavel || "-")}</span>
+                            <span>{maquina.responsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>

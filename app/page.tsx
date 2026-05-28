@@ -714,7 +714,7 @@ export default function Home() {
                   Acompanhe todas as máquinas paradas com dados do último registro semanal
                 </p>
               </div>
-              <GestaoParadas machines={machines} />
+              <GestaoParadas machines={machines} onUpdate={handleSaveRegistroSemanal} />
             </div>
           )}
 
