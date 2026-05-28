@@ -204,7 +204,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 overflow-hidden">
           <div className="flex flex-wrap items-center gap-4">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -262,8 +262,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border overflow-x-auto">
-            <Table>
+          <div className="w-full overflow-x-auto rounded-lg border border-border">
+            <Table className="w-full">
                 <TableHeader>
                 <TableRow className="bg-muted">
                   <TableHead>
