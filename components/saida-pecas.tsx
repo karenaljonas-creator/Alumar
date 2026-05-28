@@ -521,34 +521,34 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     <div className="space-y-2">
                       <Label htmlFor="codigo">Código (PN)</Label>
                       <div className="relative">
-                    <Input
-                      id="codigo"
-                      value={formData.codigo}
-                      onChange={(e) => handleCodigoChange(e.target.value)}
-                      placeholder="Digite o código da peça"
-                      required
-                      list="codigos-list"
-                      className={codigoEncontrado === true ? "border-green-500 pr-10" : codigoEncontrado === false ? "border-amber-500 pr-10" : ""}
-                    />
-                    {codigoEncontrado === true && (
-                      <Check className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
-                    )}
-                    {codigoEncontrado === false && (
-                      <AlertCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-500" />
-                    )}
-                  </div>
-                  <datalist id="codigos-list">
-                    {estoquePecas.map((p) => (
-                      <option key={p.codigo} value={p.codigo}>{p.descricao}</option>
-                    ))}
-                  </datalist>
-                  {codigoEncontrado === true && (
-                    <p className="text-xs text-green-600">Código encontrado no estoque!</p>
-                  )}
-                  {codigoEncontrado === false && (
-                    <p className="text-xs text-amber-600">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
-                  )}
-                </div>
+                        <Input
+                          id="codigo"
+                          value={formData.codigo}
+                          onChange={(e) => handleCodigoChange(e.target.value)}
+                          placeholder="Digite o código da peça"
+                          required
+                          list="codigos-list"
+                          className={codigoEncontrado === true ? "border-green-500 pr-10" : codigoEncontrado === false ? "border-amber-500 pr-10" : ""}
+                        />
+                        {codigoEncontrado === true && (
+                          <Check className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                        )}
+                        {codigoEncontrado === false && (
+                          <AlertCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-500" />
+                        )}
+                      </div>
+                      <datalist id="codigos-list">
+                        {estoquePecas.map((p) => (
+                          <option key={p.codigo} value={p.codigo}>{p.descricao}</option>
+                        ))}
+                      </datalist>
+                      {codigoEncontrado === true && (
+                        <p className="text-xs text-green-600">Código encontrado no estoque!</p>
+                      )}
+                      {codigoEncontrado === false && (
+                        <p className="text-xs text-amber-600">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
+                      )}
+                    </div>
                 <div className="space-y-2">
                   <Label htmlFor="descricao">Descrição</Label>
                   <Input
