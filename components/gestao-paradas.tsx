@@ -368,7 +368,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm min-w-[300px] whitespace-normal">
-                        {isEditing(maquina.id, "motivoParada"                          <div className="flex gap-2 items-start">
+                        {isEditing(maquina.id, "motivoParada") ? (
+                          <div className="flex gap-2 items-start">
                             <Input
                               value={editingState?.value || ""}
                               onChange={(e) =>
