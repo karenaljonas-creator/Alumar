@@ -549,19 +549,19 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         <p className="text-xs text-amber-600">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
                       )}
                     </div>
-                <div className="space-y-2">
-                  <Label htmlFor="descricao">Descrição</Label>
-                  <Input
-                    id="descricao"
-                    value={formData.descricao}
-                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                    placeholder="Preenchido automaticamente"
-                    required
-                    readOnly={codigoEncontrado === true}
-                    className={codigoEncontrado === true ? "bg-muted" : ""}
-                  />
-                </div>
-              </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="descricao">Descrição</Label>
+                      <Input
+                        id="descricao"
+                        value={formData.descricao}
+                        onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                        placeholder="Preenchido automaticamente"
+                        required
+                        readOnly={codigoEncontrado === true}
+                        className={codigoEncontrado === true ? "bg-muted" : ""}
+                      />
+                    </div>
+                  </div>
 
               <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
