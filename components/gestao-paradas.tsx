@@ -32,7 +32,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -47,18 +46,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
       setSortDirection("asc")
     }
   }, [sortKey, sortDirection])
-
-  const toggleRowExpanded = (machineId: string) => {
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(machineId)) {
-        newSet.delete(machineId)
-      } else {
-        newSet.add(machineId)
-      }
-      return newSet
-    })
-  }
 
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
     if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
@@ -279,7 +266,6 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
             <Table className="w-full">
                 <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead className="w-[40px]"></TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
@@ -327,25 +313,9 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
               </TableHeader>
               <TableBody>
                 {filteredMachines.length > 0 ? (
-                  filteredMachines.flatMap((maquina) => {
-                    const isExpanded = expandedRows.has(maquina.id)
-                    return [
-                      <TableRow key={maquina.id} className="group">
-                        <TableCell className="w-[40px] p-2 text-center">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => toggleRowExpanded(maquina.id)}
-                          >
-                            {isExpanded ? (
-                              <ChevronDown className="h-4 w-4" />
-                            ) : (
-                              <ChevronRight className="h-4 w-4" />
-                            )}
-                          </Button>
-                        </TableCell>
-                        <TableCell className="text-sm">{maquina.tipo}</TableCell>
+                  filteredMachines.map((maquina) => (
+                    <TableRow key={maquina.id}>
+                      <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
                       <TableCell>
                         <Badge
@@ -519,29 +489,8 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
                           <Edit2 className="h-4 w-4 text-blue-600" />
                         </Button>
                       </TableCell>
-                    </TableRow>,
-                    isExpanded && (
-                      <TableRow key={`${maquina.id}-expanded`} className="bg-muted/50">
-                        <TableCell colSpan={10} className="p-4">
-                          <div className="grid grid-cols-3 gap-6">
-                            <div>
-                              <p className="text-xs text-muted-foreground mb-1">Contrato</p>
-                              <p className="text-sm font-medium">{maquina.contratoConfig?.contrato || "-"}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground mb-1">Data de Parada</p>
-                              <p className="text-sm font-medium">{formatDate(maquina.dataParada)}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground mb-1">Tempo de Parada</p>
-                              <p className="text-sm font-medium">{getDiasParadaNum(maquina.dataParada) >= 0 ? `${getDiasParadaNum(maquina.dataParada)} dias` : "-"}</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ),
-                    ]
-                  })
+                    </TableRow>
+                  ))
                 ) : (
                   <TableRow>
                     <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
