@@ -32,6 +32,7 @@ export function GestaoParadas({ machines }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [editedMachines, setEditedMachines] = useState<Record<string, Partial<Machine>>>({})
+  const [showHiddenColumns, setShowHiddenColumns] = useState(false)
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
