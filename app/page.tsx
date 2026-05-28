@@ -616,8 +616,8 @@ export default function Home() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64">
-        <div className="p-6">
+      <main className="flex-1 ml-64 overflow-hidden">
+        <div className="h-screen overflow-y-auto p-6 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (
             <div className="space-y-8">
