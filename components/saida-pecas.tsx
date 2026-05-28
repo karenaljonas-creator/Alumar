@@ -615,6 +615,18 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     required
                   />
                 </div>
+                <div className="space-y-2">
+                  <Label htmlFor="data_saida">Data</Label>
+                  <Input
+                    id="data_saida"
+                    type="date"
+                    value={formData.data_saida}
+                    onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="area">Área</Label>
