@@ -648,8 +648,6 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   </Select>
                 </div>
               </div>
-                </>
-              )}
 
               <div className="space-y-2">
                 <Label htmlFor="observacao">Observação</Label>
