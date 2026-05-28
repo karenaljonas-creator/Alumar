@@ -123,11 +123,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     }
 
     setBuscandoNF(true)
+    console.log("[v0] Buscando NF:", buscaNF.trim())
+    
     const { data, error } = await supabase
       .from("estoque_pecas")
       .select("codigo, descricao, nota_fiscal")
-      .eq("nota_fiscal", buscaNF.trim())
+      .ilike("nota_fiscal", `%${buscaNF.trim()}%`)
       .limit(1)
+
+    console.log("[v0] Resultado da busca:", { data, error })
 
     if (error) {
       toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
