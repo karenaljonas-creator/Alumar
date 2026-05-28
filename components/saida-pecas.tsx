@@ -30,8 +30,20 @@ interface SaidaPeca {
 }
 
 interface EstoquePeca {
+  id: string
   codigo: string
   descricao: string
+  quantidade: number
+  nota_fiscal: string
+}
+
+interface ItensNF {
+  id: string
+  codigo: string
+  descricao: string
+  quantidade_disponivel: number
+  quantidade_saida: number
+  selecionado: boolean
 }
 
 type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao" | "data_atualizacao"
@@ -71,6 +83,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
   const [buscaNF, setBuscaNF] = useState("")
   const [buscandoNF, setBuscandoNF] = useState(false)
+  const [itensNF, setItensNF] = useState<ItensNF[]>([])
+  const [nfCarregada, setNfCarregada] = useState(false)
 
   // Get unique areas from machines
   const areas = [...new Set(machines.map((m) => m.localizacao))].filter(Boolean).sort()
@@ -115,7 +129,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     loadEstoquePecas()
   }, [loadSaidas, loadEstoquePecas])
 
-  // Buscar itens por Nota Fiscal da entrada
+  // Buscar TODOS os itens por Nota Fiscal da entrada
   const handleBuscarNF = async () => {
     if (!buscaNF.trim()) {
       toast({ title: "Digite o número da Nota Fiscal", variant: "destructive" })
@@ -123,35 +137,113 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     }
 
     setBuscandoNF(true)
-    console.log("[v0] Buscando NF:", buscaNF.trim())
     
     const { data, error } = await supabase
       .from("estoque_pecas")
-      .select("codigo, descricao, nota_fiscal")
+      .select("*")
       .ilike("nota_fiscal", `%${buscaNF.trim()}%`)
-      .limit(1)
-
-    console.log("[v0] Resultado da busca:", { data, error })
+      .order("codigo")
 
     if (error) {
       toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
+      setItensNF([])
+      setNfCarregada(false)
     } else if (data && data.length > 0) {
-      const peca = data[0]
-      setFormData((prev) => ({
-        ...prev,
-        codigo: peca.codigo,
-        descricao: peca.descricao,
-        nota_fiscal: peca.nota_fiscal,
-      }))
-      setCodigoEncontrado(true)
-      toast({ title: "Item encontrado!", description: `${peca.codigo} - ${peca.descricao}` })
+      // Agrupar itens por código, somando quantidades
+      const itensAgrupados = new Map<string, ItensNF>()
+      
+      data.forEach((item) => {
+        const key = item.codigo
+        if (itensAgrupados.has(key)) {
+          const existing = itensAgrupados.get(key)!
+          existing.quantidade_disponivel += item.quantidade || 0
+        } else {
+          itensAgrupados.set(key, {
+            id: item.id,
+            codigo: item.codigo,
+            descricao: item.descricao,
+            quantidade_disponivel: item.quantidade || 0,
+            quantidade_saida: 0,
+            selecionado: false,
+          })
+        }
+      })
+
+      const itens = Array.from(itensAgrupados.values())
+      setItensNF(itens)
+      setNfCarregada(true)
+      setFormData((prev) => ({ ...prev, nota_fiscal: buscaNF.trim() }))
+      toast({ title: "Sucesso!", description: `${itens.length} item(ns) carregado(s) da NF` })
     } else {
-      toast({ title: "Nota Fiscal não encontrada", description: "Nenhum item de entrada com essa NF foi encontrado.", variant: "destructive" })
+      toast({ title: "Nota Fiscal não encontrada", description: "Nenhum item com essa NF foi encontrado.", variant: "destructive" })
+      setItensNF([])
+      setNfCarregada(false)
     }
     setBuscandoNF(false)
   }
 
-  // Auto-fill description when code changes
+  // Atualizar quantidade de saída de um item
+  const handleAtualizarQuantidade = (codigo: string, quantidade: number) => {
+    setItensNF((prev) =>
+      prev.map((item) =>
+        item.codigo === codigo
+          ? {
+              ...item,
+              quantidade_saida: Math.min(Math.max(0, quantidade), item.quantidade_disponivel),
+            }
+          : item
+      )
+    )
+  }
+
+  // Toggle seleção de item
+  const handleToggleSelecionado = (codigo: string) => {
+    setItensNF((prev) =>
+      prev.map((item) =>
+        item.codigo === codigo ? { ...item, selecionado: !item.selecionado } : item
+      )
+    )
+  }
+
+  // Confirmar saída dos itens selecionados
+  const handleConfirmarSaida = async () => {
+    const itensSelecionados = itensNF.filter((item) => item.selecionado && item.quantidade_saida > 0)
+
+    if (itensSelecionados.length === 0) {
+      toast({ title: "Selecione pelo menos um item com quantidade", variant: "destructive" })
+      return
+    }
+
+    try {
+      // Registrar cada item selecionado como uma saída separada
+      for (const item of itensSelecionados) {
+        await supabase.from("saida_pecas").insert({
+          codigo: item.codigo,
+          descricao: item.descricao,
+          quantidade: item.quantidade_saida,
+          data_saida: formData.data_saida,
+          ordem_servico: formData.ordem_servico,
+          nota_fiscal: formData.nota_fiscal,
+          area: formData.area,
+          compressor: formData.compressor,
+          utilizacao: formData.utilizacao,
+          observacao: formData.observacao,
+        })
+      }
+
+      toast({
+        title: "Saída registrada com sucesso!",
+        description: `${itensSelecionados.length} item(ns) retirado(s) do estoque`,
+      })
+      
+      loadSaidas()
+      resetForm()
+      setItensNF([])
+      setNfCarregada(false)
+    } catch (error) {
+      toast({ title: "Erro ao registrar saída", variant: "destructive" })
+    }
+  }
   const handleCodigoChange = (codigo: string) => {
     setFormData((prev) => ({ ...prev, codigo }))
     
@@ -295,6 +387,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     setEditingSaida(null)
     setCodigoEncontrado(null)
     setBuscaNF("")
+    setItensNF([])
+    setNfCarregada(false)
     setDialogOpen(false)
   }
 
@@ -347,6 +441,76 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                 </div>
                 <p className="text-xs text-muted-foreground">Busque pela NF da Entrada para carregar os itens automaticamente</p>
               </div>
+
+              {/* Lista de itens da NF */}
+              {nfCarregada && itensNF.length > 0 && (
+                <div className="space-y-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Itens da NF ({itensNF.length})</Label>
+                    <span className="text-xs text-muted-foreground">
+                      Selecionados: {itensNF.filter((i) => i.selecionado).length}
+                    </span>
+                  </div>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted">
+                        <tr>
+                          <th className="p-2 text-left font-medium w-8">
+                            <input
+                              type="checkbox"
+                              checked={itensNF.some((i) => i.selecionado)}
+                              onChange={(e) =>
+                                setItensNF((prev) =>
+                                  prev.map((item) => ({ ...item, selecionado: e.target.checked }))
+                                )
+                              }
+                              className="w-4 h-4"
+                            />
+                          </th>
+                          <th className="p-2 text-left font-medium">Código</th>
+                          <th className="p-2 text-left font-medium">Descrição</th>
+                          <th className="p-2 text-center font-medium">Disponível</th>
+                          <th className="p-2 text-center font-medium">Saída</th>
+                          <th className="p-2 text-center font-medium">Restante</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {itensNF.map((item) => (
+                          <tr key={item.codigo} className="border-t hover:bg-muted/50">
+                            <td className="p-2">
+                              <input
+                                type="checkbox"
+                                checked={item.selecionado}
+                                onChange={() => handleToggleSelecionado(item.codigo)}
+                                className="w-4 h-4"
+                              />
+                            </td>
+                            <td className="p-2 font-mono text-xs">{item.codigo}</td>
+                            <td className="p-2 text-sm">{item.descricao}</td>
+                            <td className="p-2 text-center font-medium">{item.quantidade_disponivel}</td>
+                            <td className="p-2">
+                              <Input
+                                type="number"
+                                min="0"
+                                max={item.quantidade_disponivel}
+                                value={item.quantidade_saida}
+                                onChange={(e) =>
+                                  handleAtualizarQuantidade(item.codigo, parseInt(e.target.value) || 0)
+                                }
+                                disabled={!item.selecionado}
+                                className="w-20 text-center h-8"
+                              />
+                            </td>
+                            <td className="p-2 text-center text-sm">
+                              {item.quantidade_disponivel - item.quantidade_saida}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -490,7 +654,13 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
-                <Button type="submit">{editingSaida ? "Salvar Alterações" : "Registrar Saída"}</Button>
+                {nfCarregada ? (
+                  <Button type="button" onClick={handleConfirmarSaida} className="bg-green-600 hover:bg-green-700">
+                    Confirmar Saída
+                  </Button>
+                ) : (
+                  <Button type="submit">{editingSaida ? "Salvar Alterações" : "Registrar Saída"}</Button>
+                )}
               </div>
             </form>
           </DialogContent>
