@@ -452,69 +452,74 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     </span>
                   </div>
                   <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full text-sm">
-                      <thead className="bg-muted">
-                        <tr>
-                          <th className="p-2 text-left font-medium w-8">
-                            <input
-                              type="checkbox"
-                              checked={itensNF.some((i) => i.selecionado)}
-                              onChange={(e) =>
-                                setItensNF((prev) =>
-                                  prev.map((item) => ({ ...item, selecionado: e.target.checked }))
-                                )
-                              }
-                              className="w-4 h-4"
-                            />
-                          </th>
-                          <th className="p-2 text-left font-medium">Código</th>
-                          <th className="p-2 text-left font-medium">Descrição</th>
-                          <th className="p-2 text-center font-medium">Disponível</th>
-                          <th className="p-2 text-center font-medium">Saída</th>
-                          <th className="p-2 text-center font-medium">Restante</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {itensNF.map((item) => (
-                          <tr key={item.codigo} className="border-t hover:bg-muted/50">
-                            <td className="p-2">
+                    <div className="max-h-[400px] overflow-y-auto">
+                      <table className="w-full text-sm">
+                        <thead className="bg-muted sticky top-0">
+                          <tr>
+                            <th className="p-2 text-left font-medium w-8">
                               <input
                                 type="checkbox"
-                                checked={item.selecionado}
-                                onChange={() => handleToggleSelecionado(item.codigo)}
+                                checked={itensNF.some((i) => i.selecionado)}
+                                onChange={(e) =>
+                                  setItensNF((prev) =>
+                                    prev.map((item) => ({ ...item, selecionado: e.target.checked }))
+                                  )
+                                }
                                 className="w-4 h-4"
                               />
-                            </td>
-                            <td className="p-2 font-mono text-xs">{item.codigo}</td>
-                            <td className="p-2 text-sm">{item.descricao}</td>
-                            <td className="p-2 text-center font-medium">{item.quantidade_disponivel}</td>
-                            <td className="p-2">
-                              <Input
-                                type="number"
-                                min="0"
-                                max={item.quantidade_disponivel}
-                                value={item.quantidade_saida}
-                                onChange={(e) =>
-                                  handleAtualizarQuantidade(item.codigo, parseInt(e.target.value) || 0)
-                                }
-                                disabled={!item.selecionado}
-                                className="w-20 text-center h-8"
-                              />
-                            </td>
-                            <td className="p-2 text-center text-sm">
-                              {item.quantidade_disponivel - item.quantidade_saida}
-                            </td>
+                            </th>
+                            <th className="p-2 text-left font-medium">Código</th>
+                            <th className="p-2 text-left font-medium">Descrição</th>
+                            <th className="p-2 text-center font-medium">Disponível</th>
+                            <th className="p-2 text-center font-medium">Saída</th>
+                            <th className="p-2 text-center font-medium">Restante</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {itensNF.map((item) => (
+                            <tr key={item.codigo} className="border-t hover:bg-muted/50">
+                              <td className="p-2">
+                                <input
+                                  type="checkbox"
+                                  checked={item.selecionado}
+                                  onChange={() => handleToggleSelecionado(item.codigo)}
+                                  className="w-4 h-4"
+                                />
+                              </td>
+                              <td className="p-2 font-mono text-xs">{item.codigo}</td>
+                              <td className="p-2 text-sm">{item.descricao}</td>
+                              <td className="p-2 text-center font-medium">{item.quantidade_disponivel}</td>
+                              <td className="p-2">
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max={item.quantidade_disponivel}
+                                  value={item.quantidade_saida}
+                                  onChange={(e) =>
+                                    handleAtualizarQuantidade(item.codigo, parseInt(e.target.value) || 0)
+                                  }
+                                  disabled={!item.selecionado}
+                                  className="w-20 text-center h-8"
+                                />
+                              </td>
+                              <td className="p-2 text-center text-sm">
+                                {item.quantidade_disponivel - item.quantidade_saida}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                   </div>
-                </div>
+
+                  <div className="grid grid-cols-4 gap-4">
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="codigo">Código (PN)</Label>
+              {/* Mostrar campos manuais apenas quando NF não está carregada */}
+              {!nfCarregada && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="codigo">Código (PN)</Label>
                   <div className="relative">
                     <Input
                       id="codigo"
@@ -641,6 +646,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   </Select>
                 </div>
               </div>
+                </>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="observacao">Observação</Label>
