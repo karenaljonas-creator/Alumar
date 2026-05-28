@@ -47,6 +47,8 @@ export function EntradaPecas() {
   const [searchTerm, setSearchTerm] = useState("")
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
+  const [buscaNF, setBuscaNF] = useState("")
+  const [buscandoNF, setBuscandoNF] = useState(false)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -95,6 +97,38 @@ export function EntradaPecas() {
       setSortDirection("asc")
     }
   }, [sortKey, sortDirection])
+
+  // Buscar itens por Nota Fiscal
+  const handleBuscarNF = async () => {
+    if (!buscaNF.trim()) {
+      toast({ title: "Digite o número da Nota Fiscal", variant: "destructive" })
+      return
+    }
+
+    setBuscandoNF(true)
+    const { data, error } = await supabase
+      .from("estoque_pecas")
+      .select("*")
+      .ilike("nota_fiscal", `%${buscaNF.trim()}%`)
+      .order("created_at", { ascending: false })
+
+    if (error) {
+      toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
+    } else if (data && data.length > 0) {
+      setPecas(data)
+      setSearchTerm("")
+      toast({ title: "Encontrado!", description: `${data.length} item(ns) com a NF ${buscaNF}` })
+    } else {
+      setPecas([])
+      toast({ title: "Nota Fiscal não encontrada", description: "Nenhum item com essa NF foi encontrado.", variant: "destructive" })
+    }
+    setBuscandoNF(false)
+  }
+
+  const handleLimparBuscaNF = () => {
+    setBuscaNF("")
+    loadPecas()
+  }
 
   const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
     if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
@@ -459,14 +493,34 @@ export function EntradaPecas() {
               <Package className="h-5 w-5" />
               Registro de Entradas
             </CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código, descrição ou OS..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex gap-2 items-center">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Buscar por NF..."
+                  value={buscaNF}
+                  onChange={(e) => setBuscaNF(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleBuscarNF()}
+                  className="w-40"
+                  disabled={buscandoNF}
+                />
+                <Button onClick={handleBuscarNF} disabled={buscandoNF} size="sm">
+                  Buscar NF
+                </Button>
+                {buscaNF && (
+                  <Button onClick={handleLimparBuscaNF} variant="outline" size="sm">
+                    Limpar
+                  </Button>
+                )}
+              </div>
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código, descrição ou OS..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
