@@ -511,7 +511,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       </table>
                     </div>
                   </div>
-                </>
+                </div>
               )}
 
               {/* Mostrar campos manuais apenas quando NF não está carregada */}
