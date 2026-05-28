@@ -509,9 +509,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                           ))}
                         </tbody>
                       </table>
+                    </div>
                   </div>
-
-                  <div className="grid grid-cols-4 gap-4">
+                </>
               )}
 
               {/* Mostrar campos manuais apenas quando NF não está carregada */}
