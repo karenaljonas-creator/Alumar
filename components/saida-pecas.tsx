@@ -520,7 +520,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="codigo">Código (PN)</Label>
-                  <div className="relative">
+                      <div className="relative">
                     <Input
                       id="codigo"
                       value={formData.codigo}
@@ -586,25 +586,35 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ordem_servico">Ordem de Serviço</Label>
+                  <Label htmlFor="ordem_servico">OS</Label>
                   <Input
                     id="ordem_servico"
                     value={formData.ordem_servico}
                     onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
-                    placeholder="Ex: 408103074"
+                    placeholder="Ordem de Serviço (opcional)"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="nota_fiscal">Nota Fiscal</Label>
+                  <Label htmlFor="nota_fiscal">NF Saída</Label>
                   <Input
                     id="nota_fiscal"
                     value={formData.nota_fiscal}
                     onChange={(e) => setFormData({ ...formData, nota_fiscal: e.target.value })}
-                    placeholder="Ex: 276521-15"
+                    placeholder="Nota Fiscal (opcional)"
                   />
                 </div>
               </div>
-
+                </>
+              )}
+                  <Input
+                    id="quantidade"
+                    type="number"
+                    min="1"
+                    value={formData.quantidade}
+                    onChange={(e) => setFormData({ ...formData, quantidade: parseInt(e.target.value) || 1 })}
+                    required
+                  />
+                </div>
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="area">Área</Label>
