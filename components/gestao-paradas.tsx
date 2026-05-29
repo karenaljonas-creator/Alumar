@@ -369,9 +369,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   <TableHead className="text-center">
                     <span className="font-medium text-xs">Campos</span>
                   </TableHead>
-                  <TableHead className="w-[80px] text-center">
-                    <span className="font-medium">Editar</span>
-                  </TableHead>
                   {visibleFields.contrato && (
                     <TableHead>
                       <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
@@ -393,6 +390,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       </button>
                     </TableHead>
                   )}
+                  <TableHead className="w-[80px] text-center">
+                    <span className="font-medium">Editar</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -465,21 +465,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm w-fit">
                         {/* Empty cell - data shown in dynamic columns */}
                       </TableCell>
-                      {visibleFields.contrato && (
-                        <TableCell className="text-sm text-center">
-                          {maquina.temContrato ? "Sim" : "Não"}
-                        </TableCell>
-                      )}
-                      {visibleFields.dataParada && (
-                        <TableCell className="text-sm">
-                          {formatDate(maquina.dataParada)}
-                        </TableCell>
-                      )}
-                      {visibleFields.tempoParada && (
-                        <TableCell className="text-sm text-center font-medium">
-                          {getDiasParadaNum(maquina.dataParada)} dias
-                        </TableCell>
-                      )}
                       <TableCell className="text-sm font-medium">
                         {isEditing(maquina.id, "prazo") ? (
                           <div className="flex gap-2 items-center">
@@ -588,6 +573,21 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
+                      {visibleFields.contrato && (
+                        <TableCell className="text-sm text-center">
+                          {maquina.temContrato ? "Sim" : "Não"}
+                        </TableCell>
+                      )}
+                      {visibleFields.dataParada && (
+                        <TableCell className="text-sm">
+                          {formatDate(maquina.dataParada)}
+                        </TableCell>
+                      )}
+                      {visibleFields.tempoParada && (
+                        <TableCell className="text-sm text-center font-medium">
+                          {getDiasParadaNum(maquina.dataParada)} dias
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">
                         <Button
                           variant="ghost"
@@ -604,7 +604,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={13 + (visibleFields.contrato ? 1 : 0) + (visibleFields.dataParada ? 1 : 0) + (visibleFields.tempoParada ? 1 : 0)} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
