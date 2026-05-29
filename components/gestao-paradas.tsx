@@ -183,7 +183,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               </div>
             </div>
             <Badge variant="destructive" className="text-base px-3 py-1">
-              {maquinasParadas.length} parada{maquinasParadas.length !== 1 ? "s" : ""}
+                      {filteredMachines.length} parada{filteredMachines.length !== 1 ? "s" : ""}
             </Badge>
           </div>
         </CardHeader>
