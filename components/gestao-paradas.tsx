@@ -589,9 +589,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               ) : (
                 <TableRow>
                   <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                      Nenhuma máquina parada encontrada com os filtros aplicados
-                    </TableCell>
-                  </TableRow>
+                    Nenhuma máquina parada encontrada com os filtros aplicados
+                  </TableCell>
+                </TableRow>
+              )}
                 )}
               </TableBody>
             </Table>
