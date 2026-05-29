@@ -165,6 +165,20 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     }
   }
 
+  const getDiasParadaNum = (dateStr?: string) => {
+    if (!dateStr) return 0
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return 0
+      const today = new Date()
+      const diffTime = Math.abs(today.getTime() - date.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays
+    } catch {
+      return 0
+    }
+  }
+
   // Unique values for filters
   const acoes = useMemo(
     () => [...new Set(machines.map((m) => m.acaoResponsavel).filter(Boolean))],
