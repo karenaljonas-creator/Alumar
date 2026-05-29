@@ -35,133 +35,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [visibleFields, setVisibleFields] = useState<Record<string, Set<string>>>({})
   const { toast } = useToast()
-
-  const toggleFieldVisibility = (machineId: string, fieldName: string) => {
-    setVisibleFields((prev) => {
-      const current = prev[machineId] || new Set()
-      const updated = new Set(current)
-      if (updated.has(fieldName)) {
-        updated.delete(fieldName)
-      } else {
-        updated.add(fieldName)
-      }
-      return { ...prev, [machineId]: updated }
-    })
-  }
-
-  const isFieldVisible = (machineId: string, fieldName: string) => {
-    return visibleFields[machineId]?.has(fieldName) || false
-  }
-
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc")
-      } else {
-        setSortKey(null)
-        setSortDirection("asc")
-      }
-    } else {
-      setSortKey(key)
-      setSortDirection("asc")
-    }
-  }, [sortKey, sortDirection])
-
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
-    return <ArrowDown className="h-3 w-3 ml-1" />
-  }
-
-  const maquinasParadas = useMemo(() => {
-    return machines.filter((m) => m.status === "parada" || m.status === "v0")
-  }, [machines])
-
-  const getTipoEquip = (m: Machine) => {
-    if (m.tipo.includes("Compressor")) return "Compressor"
-    if (m.tipo.includes("Secador")) return "Secador"
-    if (m.tipo.includes("Soprador")) return "Soprador"
-    return "Filtro"
-  }
-
-  const getDiasParadaNum = (dataParada?: string) => {
-    if (!dataParada) return -1
-    try {
-      const data = new Date(dataParada)
-      const hoje = new Date()
-      return Math.floor((hoje.getTime() - data.getTime()) / (1000 * 60 * 60 * 24))
-    } catch {
-      return -1
-    }
-  }
-
-  const filteredMachines = useMemo(() => {
-    const filtered = maquinasParadas.filter((m) => {
-      const matchesSearch =
-        m.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.responsavel || "").toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesContrato =
-        contratoFilter === "todos" ||
-        (contratoFilter === "sim" && m.temContrato) ||
-        (contratoFilter === "nao" && !m.temContrato)
-      const matchesAcao =
-        acaoFilter === "todos" || (m.acaoResponsavel || "").toLowerCase() === acaoFilter.toLowerCase()
-      const matchesLocalizacao =
-        localizacaoFilter === "todas" || m.localizacao === localizacaoFilter
-      return matchesSearch && matchesContrato && matchesAcao && matchesLocalizacao
-    })
-
-    if (!sortKey) return filtered
-
-    return [...filtered].sort((a, b) => {
-      let valA: string | number = ""
-      let valB: string | number = ""
-
-      switch (sortKey) {
-        case "nome":
-          valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); break
-        case "tipo":
-          valA = a.tipo.toLowerCase(); valB = b.tipo.toLowerCase(); break
-        case "localizacao":
-          valA = a.localizacao.toLowerCase(); valB = b.localizacao.toLowerCase(); break
-        case "contrato":
-          valA = a.temContrato ? 1 : 0; valB = b.temContrato ? 1 : 0; break
-        case "tipoEquip":
-          valA = getTipoEquip(a).toLowerCase(); valB = getTipoEquip(b).toLowerCase(); break
-        case "status":
-          valA = a.status; valB = b.status; break
-        case "dataParada":
-          valA = a.dataParada || ""; valB = b.dataParada || ""; break
-        case "diasParada":
-          valA = getDiasParadaNum(a.dataParada); valB = getDiasParadaNum(b.dataParada); break
-        case "prazo":
-          valA = a.contratoConfig?.dataFim || ""; valB = b.contratoConfig?.dataFim || ""; break
-        case "dataAtualizacao":
-          valA = a.updated_at || a.dataParada || ""; valB = b.updated_at || b.dataParada || ""; break
-        case "acao":
-          valA = (a.acaoResponsavel || "").toLowerCase(); valB = (b.acaoResponsavel || "").toLowerCase(); break
-        case "responsavel":
-          valA = (a.responsavel || "").toLowerCase(); valB = (b.responsavel || "").toLowerCase(); break
-        case "observacoes":
-          valA = (a.motivoParada || "").toLowerCase(); valB = (b.motivoParada || "").toLowerCase(); break
-      }
-
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1
-      return 0
-    })
-  }, [maquinasParadas, searchTerm, contratoFilter, acaoFilter, localizacaoFilter, sortKey, sortDirection])
-
-  const localizacoes = useMemo(() => {
-    return Array.from(new Set(maquinasParadas.map((m) => m.localizacao))).sort()
-  }, [maquinasParadas])
-
-  const acoes = useMemo(() => {
-    return Array.from(new Set(maquinasParadas.map((m) => m.acaoResponsavel).filter(Boolean))).sort()
-  }, [maquinasParadas])
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
     setEditingState({ machineId, field, value })
@@ -473,69 +347,55 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm min-w-fit relative">
-                        <div className="flex gap-1 items-center">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleFieldVisibility(maquina.id, "contrato")}
-                            className="h-6 w-6 p-0"
-                            title="Contrato"
-                          >
-                            <ChevronDown
-                              className={`h-4 w-4 transition-transform ${
-                                isFieldVisible(maquina.id, "contrato") ? "rotate-180" : ""
-                              }`}
-                            />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleFieldVisibility(maquina.id, "dataParada")}
-                            className="h-6 w-6 p-0"
-                            title="Data de Parada"
-                          >
-                            <ChevronDown
-                              className={`h-4 w-4 transition-transform ${
-                                isFieldVisible(maquina.id, "dataParada") ? "rotate-180" : ""
-                              }`}
-                            />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleFieldVisibility(maquina.id, "tempoParada")}
-                            className="h-6 w-6 p-0"
-                            title="Tempo de Parada"
-                          >
-                            <ChevronDown
-                              className={`h-4 w-4 transition-transform ${
-                                isFieldVisible(maquina.id, "tempoParada") ? "rotate-180" : ""
-                              }`}
-                            />
-                          </Button>
-                        </div>
+                      <TableCell className="text-sm w-fit">
+                        <div className="flex gap-0 items-center">
+                          {/* Contrato Dropdown */}
+                          <div className="relative group">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                              title="Contrato"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[120px]">
+                              <p className="text-muted-foreground font-semibold mb-1">Contrato</p>
+                              <p>{maquina.temContrato ? "Sim" : "Não"}</p>
+                            </div>
+                          </div>
 
-                        {/* Fields popup */}
-                        <div className="absolute mt-1 left-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 min-w-[200px] text-sm">
-                          {isFieldVisible(maquina.id, "contrato") && (
-                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
-                              <p className="font-semibold text-muted-foreground text-xs">Contrato</p>
-                              <p className="font-medium">{maquina.temContrato ? "Sim" : "Não"}</p>
+                          {/* Data de Parada Dropdown */}
+                          <div className="relative group">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                              title="Data de Parada"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[140px]">
+                              <p className="text-muted-foreground font-semibold mb-1">Data de Parada</p>
+                              <p>{formatDate(maquina.dataParada)}</p>
                             </div>
-                          )}
-                          {isFieldVisible(maquina.id, "dataParada") && (
-                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
-                              <p className="font-semibold text-muted-foreground text-xs">Data de Parada</p>
-                              <p className="font-medium">{formatDate(maquina.dataParada)}</p>
-                            </div>
-                          )}
-                          {isFieldVisible(maquina.id, "tempoParada") && (
-                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
-                              <p className="font-semibold text-muted-foreground text-xs">Tempo de Parada</p>
+                          </div>
+
+                          {/* Tempo de Parada Dropdown */}
+                          <div className="relative group">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 hover:bg-muted"
+                              title="Tempo de Parada"
+                            >
+                              <ChevronDown className="h-3 w-3" />
+                            </Button>
+                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[140px]">
+                              <p className="text-muted-foreground font-semibold mb-1">Tempo de Parada</p>
                               <p className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</p>
                             </div>
-                          )}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
