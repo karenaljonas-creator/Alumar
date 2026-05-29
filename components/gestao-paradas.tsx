@@ -384,7 +384,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
-                              className="h-8 text-xs flex-1"
+                              className="h-8 text-sm flex-1"
                               placeholder="Digite a observação"
                               disabled={isSaving}
                             />
@@ -418,7 +418,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span className="text-xs leading-relaxed flex-1">{maquina.motivoParada || "-"}</span>
+                            <span className="text-sm leading-relaxed flex-1">{maquina.motivoParada || "-"}</span>
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                           </div>
                         )}
@@ -428,7 +428,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal text-xs py-1 h-auto"
+                              className="w-full justify-start text-left font-normal text-sm py-1 h-auto"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {maquina.prazoDados || maquina.contratoConfig?.dataFim 
@@ -498,7 +498,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             }}
                             defaultOpen={true}
                           >
-                            <SelectTrigger className="h-8 text-xs w-24">
+                            <SelectTrigger className="h-8 text-sm w-24">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -512,7 +512,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
                             onClick={() => handleEditStart(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "Vale")}
                           >
-                            <span className="text-xs">{maquina.acaoResponsavel || "-"}</span>
+                            <span className="text-sm">{maquina.acaoResponsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>
@@ -526,7 +526,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
-                              className="h-8 text-xs flex-1"
+                              className="h-8 text-sm flex-1"
                               placeholder="Digite o responsável"
                               disabled={isSaving}
                             />
@@ -560,7 +560,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span className="text-xs">{maquina.responsavel || "-"}</span>
+                            <span className="text-sm">{maquina.responsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>
