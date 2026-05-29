@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown, Calendar as CalendarIcon } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, Calendar as CalendarIcon } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
@@ -39,8 +39,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [visibleFields, setVisibleFields] = useState({ contrato: false, dataParada: false, tempoParada: false })
-  const [expandedLabels, setExpandedLabels] = useState({ contrato: false, dataParada: false, tempoParada: false })
   const [openDatePicker, setOpenDatePicker] = useState<string | null>(null)
   const { toast } = useToast()
 
@@ -316,6 +314,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
+                  <TableHead className="w-[10%] text-center">
+                    <span className="font-medium">Tempo de Parada</span>
+                  </TableHead>
                   <TableHead className="w-[28%] min-w-[400px]">
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
@@ -341,42 +342,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[10%] min-w-[80px] text-center">
-                    <button 
-                      onClick={() => {
-                        setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))
-                        setExpandedLabels(prev => ({ ...prev, contrato: !prev.contrato }))
-                      }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
-                    >
-                      <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.contrato ? 'rotate-180' : ''}`} />
-                      {expandedLabels.contrato && <span className="text-xs ml-1">Contrato</span>}
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-[10%] min-w-[80px] text-center">
-                    <button 
-                      onClick={() => {
-                        setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))
-                        setExpandedLabels(prev => ({ ...prev, dataParada: !prev.dataParada }))
-                      }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
-                    >
-                      <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.dataParada ? 'rotate-180' : ''}`} />
-                      {expandedLabels.dataParada && <span className="text-xs ml-1">Data de Parada</span>}
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-[10%] min-w-[80px] text-center">
-                    <button 
-                      onClick={() => {
-                        setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))
-                        setExpandedLabels(prev => ({ ...prev, tempoParada: !prev.tempoParada }))
-                      }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
-                    >
-                      <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.tempoParada ? 'rotate-180' : ''}`} />
-                      {expandedLabels.tempoParada && <span className="text-xs ml-1">Tempo de Parada</span>}
-                    </button>
-                  </TableHead>
                   <TableHead className="w-[6%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
@@ -399,6 +364,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
+                        {getDiasParadaNum(maquina.dataParada)} dias
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle whitespace-normal break-words max-w-[400px]">
                         {isEditing(maquina.id, "motivoParada") ? (
@@ -582,21 +550,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground py-3 px-4 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
-                      {visibleFields.contrato && (
-                        <TableCell className="w-[10%] min-w-[80px] text-sm text-center py-3 px-4 align-middle">
-                          {maquina.temContrato ? "Sim" : "Não"}
-                        </TableCell>
-                      )}
-                      {visibleFields.dataParada && (
-                        <TableCell className="w-[10%] min-w-[80px] text-sm py-3 px-4 align-middle">
-                          {formatDate(maquina.dataParada)}
-                        </TableCell>
-                      )}
-                      {visibleFields.tempoParada && (
-                        <TableCell className="w-[10%] min-w-[80px] text-sm text-center font-medium py-3 px-4 align-middle">
-                          {getDiasParadaNum(maquina.dataParada)} dias
-                        </TableCell>
-                      )}
                       <TableCell className="text-center py-3 px-4 align-middle">
                         <Button
                           variant="ghost"
@@ -613,7 +566,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={13 + (visibleFields.contrato ? 1 : 0) + (visibleFields.dataParada ? 1 : 0) + (visibleFields.tempoParada ? 1 : 0)} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
