@@ -165,6 +165,17 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     }
   }
 
+  // Unique values for filters
+  const acoes = useMemo(
+    () => [...new Set(machines.map((m) => m.acaoResponsavel).filter(Boolean))],
+    [machines]
+  )
+
+  const localizacoes = useMemo(
+    () => [...new Set(machines.map((m) => m.localizacao).filter(Boolean))],
+    [machines]
+  )
+
   return (
     <div className="space-y-6">
       <Card className="border-border shadow-sm">
