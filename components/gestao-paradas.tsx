@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { useToast } from "@/hooks/use-toast"
 
@@ -35,7 +35,18 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const { toast } = useToast()
+
+  const toggleRowExpand = (machineId: string) => {
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(machineId)) {
+      newExpanded.delete(machineId)
+    } else {
+      newExpanded.add(machineId)
+    }
+    setExpandedRows(newExpanded)
+  }
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -160,10 +171,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           const updated = { ...m }
           
           if (editingState.field === "prazo") {
-            // Salvar a data exatamente como foi escolhida (sem conversão de timezone)
-            if (updated.contratoConfig) {
-              updated.contratoConfig.dataFim = editingState.value
-            }
+            // Salvar em um campo separado prazoDados (não depende de contratoConfig)
+            updated.prazoDados = editingState.value
           } else if (editingState.field === "motivoParada") {
             updated.motivoParada = editingState.value
           } else if (editingState.field === "responsavel") {
@@ -304,6 +313,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             <Table className="w-full">
                 <TableHeader>
                 <TableRow className="bg-muted">
+                  <TableHead className="w-10 text-center">
+                    <span className="font-medium">+</span>
+                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
@@ -352,8 +364,23 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               <TableBody>
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
-                    <TableRow key={maquina.id}>
-                      <TableCell className="text-sm">{maquina.tipo}</TableCell>
+                    <>
+                      <TableRow key={maquina.id} className="group">
+                        <TableCell className="w-10 text-center">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleRowExpand(maquina.id)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <ChevronRight
+                              className={`h-4 w-4 transition-transform ${
+                                expandedRows.has(maquina.id) ? "rotate-90" : ""
+                              }`}
+                            />
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
                       <TableCell>
                         <Badge
@@ -452,12 +479,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         ) : (
                           <div className="flex gap-2 items-center">
                             <span>
-                              {formatDate(maquina.contratoConfig?.dataFim)}
+                              {formatDate(maquina.prazoDados || maquina.contratoConfig?.dataFim)}
                             </span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")}
+                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")}
                               className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                             >
                               <Edit2 className="h-3 w-3" />
@@ -537,14 +564,35 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                      Nenhuma máquina parada encontrada com os filtros aplicados
-                    </TableCell>
-                  </TableRow>
-                )}
+                    {expandedRows.has(maquina.id) && (
+                      <TableRow className="bg-muted/50 hover:bg-muted/50">
+                        <TableCell colSpan={10} className="p-4">
+                          <div className="grid grid-cols-3 gap-6 text-sm">
+                            <div>
+                              <p className="font-semibold text-muted-foreground mb-1">Contrato</p>
+                              <p>{maquina.temContrato ? "Sim" : "Não"}</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-muted-foreground mb-1">Data de Parada</p>
+                              <p>{formatDate(maquina.dataParada)}</p>
+                            </div>
+                            <div>
+                              <p className="font-semibold text-muted-foreground mb-1">Tempo de Parada</p>
+                              <p className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                    Nenhuma máquina parada encontrada com os filtros aplicados
+                  </TableCell>
+                </TableRow>
+              )}
               </TableBody>
             </Table>
           </div>
