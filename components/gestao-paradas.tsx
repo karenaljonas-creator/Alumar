@@ -454,11 +454,13 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   const day = String(date.getDate()).padStart(2, "0")
                                   const dateString = `${year}-${month}-${day}`
                                   
-                                  const updatedMaquinas = allMaquinas.map(m => 
+                                  const updatedMachines = machines.map(m => 
                                     m.id === maquina.id ? { ...m, prazoDados: dateString } : m
                                   )
-                                  onMaquinasChange(updatedMaquinas)
-                                  await saveMachines(updatedMaquinas)
+                                  if (onUpdate) {
+                                    onUpdate(updatedMachines)
+                                  }
+                                  await saveMachines(updatedMachines)
                                   setOpenDatePicker(null)
                                   toast({ title: "Prazo salvo", description: `Data ${day}/${month}/${year} salva com sucesso.` })
                                 }
