@@ -292,50 +292,50 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
 
           <div className="w-full overflow-x-auto rounded-lg border border-border">
-            <Table style={{ tableLayout: 'fixed' }} className="w-full">
+            <Table className="w-full border-collapse">
                 <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead>
+                  <TableHead className="w-[14%]">
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[12%]">
                     <button onClick={() => handleSort("localizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[10%]">
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
-                  <TableHead className="min-w-[300px]">
+                  <TableHead className="w-[28%] min-w-[400px]">
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[10%]">
                     <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Prazo <SortIcon columnKey="prazo" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[10%]">
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[12%]">
                     <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
-                  <TableHead>
+                  <TableHead className="w-[10%]">
                     <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="text-center">
+                  <TableHead className="w-[8%] text-center">
                     <div className="flex gap-1 items-center justify-center">
                       <Button
                         size="sm"
@@ -367,27 +367,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </div>
                   </TableHead>
                   {visibleFields.contrato && (
-                    <TableHead>
+                    <TableHead className="w-[10%] min-w-[100px]">
                       <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                         Contrato <SortIcon columnKey="contrato" />
                       </button>
                     </TableHead>
                   )}
                   {visibleFields.dataParada && (
-                    <TableHead>
+                    <TableHead className="w-[12%] min-w-[120px]">
                       <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                         Data de Parada <SortIcon columnKey="dataParada" />
                       </button>
                     </TableHead>
                   )}
                   {visibleFields.tempoParada && (
-                    <TableHead>
+                    <TableHead className="w-[10%] min-w-[100px]">
                       <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                         Tempo de Parada <SortIcon columnKey="diasParada" />
                       </button>
                     </TableHead>
                   )}
-                  <TableHead className="w-[80px] text-center">
+                  <TableHead className="w-[6%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
                 </TableRow>
@@ -395,10 +395,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               <TableBody>
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
-                    <TableRow key={maquina.id} className="group">
-                      <TableCell className="text-sm">{maquina.tipo}</TableCell>
-                      <TableCell className="text-sm">{maquina.localizacao}</TableCell>
-                      <TableCell>
+                    <TableRow key={maquina.id} className="group border-b">
+                      <TableCell className="text-sm py-3 px-4 align-middle">{maquina.tipo}</TableCell>
+                      <TableCell className="text-sm py-3 px-4 align-middle">{maquina.localizacao}</TableCell>
+                      <TableCell className="py-3 px-4 align-middle">
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
                           className={
@@ -410,9 +410,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm min-w-[300px] whitespace-normal">
+                      <TableCell className="text-sm py-3 px-4 align-middle whitespace-normal break-words max-w-[400px]">
                         {isEditing(maquina.id, "motivoParada") ? (
-                          <div className="flex gap-2 items-start">
+                          <div className="flex gap-2 items-center">
                             <Input
                               value={editingState?.value || ""}
                               onChange={(e) =>
@@ -420,7 +420,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
-                              className="h-8 text-xs"
+                              className="h-8 text-xs flex-1"
                               placeholder="Digite a observação"
                               disabled={isSaving}
                             />
@@ -428,7 +428,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
@@ -437,7 +437,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               size="sm"
                               variant="ghost"
                               onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
@@ -445,7 +445,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         ) : (
                           <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
                             onClick={() =>
                               handleEditStart(
                                 maquina.id,
@@ -454,30 +454,30 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span className="text-xs">{maquina.motivoParada || "-"}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
+                            <span className="text-xs leading-relaxed flex-1">{maquina.motivoParada || "-"}</span>
+                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm font-medium">
+                      <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "prazo") ? (
                           <div className="flex gap-2 items-center">
                             <Input
-                              type="date"
                               value={editingState?.value || ""}
                               onChange={(e) =>
                                 setEditingState((prev) =>
                                   prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
-                              className="h-8 text-xs"
+                              className="h-8 text-xs flex-1"
+                              placeholder="Digite o prazo"
                               disabled={isSaving}
                             />
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
@@ -486,37 +486,69 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               size="sm"
                               variant="ghost"
                               onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
                             </Button>
                           </div>
                         ) : (
-                          <div className="flex gap-2 items-center">
-                            <span>
-                              {formatDate(maquina.prazoDados || maquina.contratoConfig?.dataFim)}
-                            </span>
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            onClick={() =>
+                              handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
+                            }
+                          >
+                            <span className="text-xs flex-1">{maquina.prazoDados || maquina.contratoConfig?.dataFim || "-"}</span>
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")}
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
+                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0"
                             >
                               <Edit2 className="h-3 w-3" />
                             </Button>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className={maquina.acaoResponsavel === "Manutenção" ? "bg-blue-100 text-blue-800" : ""}
-                        >
-                          {maquina.acaoResponsavel || "-"}
-                        </Badge>
+                      <TableCell className="text-sm py-3 px-4 align-middle">
+                        {isEditing(maquina.id, "acaoResponsavel") ? (
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={editingState?.value || ""}
+                              onChange={(e) =>
+                                setEditingState((prev) =>
+                                  prev ? { ...prev, value: e.target.value } : null
+                                )
+                              }
+                              className="h-8 text-xs flex-1"
+                              placeholder="Digite a ação"
+                              disabled={isSaving}
+                            />
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleEditSave(maquina.id)}
+                              className="h-8 w-8 p-0 flex-shrink-0"
+                              disabled={isSaving}
+                            >
+                              <Check className="h-4 w-4 text-green-600" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleEditCancel}
+                              className="h-8 w-8 p-0 flex-shrink-0"
+                              disabled={isSaving}
+                            >
+                              <X className="h-4 w-4 text-red-600" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-center">{maquina.acaoResponsavel || "-"}</div>
+                        )}
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "responsavel") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -526,7 +558,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   prev ? { ...prev, value: e.target.value } : null
                                 )
                               }
-                              className="h-8 text-xs"
+                              className="h-8 text-xs flex-1"
                               placeholder="Digite o responsável"
                               disabled={isSaving}
                             />
@@ -534,7 +566,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               size="sm"
                               variant="ghost"
                               onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <Check className="h-4 w-4 text-green-600" />
@@ -543,7 +575,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               size="sm"
                               variant="ghost"
                               onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
+                              className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
                               <X className="h-4 w-4 text-red-600" />
@@ -551,7 +583,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         ) : (
                           <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
                             onClick={() =>
                               handleEditStart(
                                 maquina.id,
@@ -560,29 +592,29 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span>{maquina.responsavel || "-"}</span>
+                            <span className="text-xs">{maquina.responsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
+                      <TableCell className="text-sm text-muted-foreground py-3 px-4 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
                       {visibleFields.contrato && (
-                        <TableCell className="text-sm text-center">
+                        <TableCell className="text-sm text-center py-3 px-4 align-middle">
                           {maquina.temContrato ? "Sim" : "Não"}
                         </TableCell>
                       )}
                       {visibleFields.dataParada && (
-                        <TableCell className="text-sm">
+                        <TableCell className="text-sm py-3 px-4 align-middle">
                           {formatDate(maquina.dataParada)}
                         </TableCell>
                       )}
                       {visibleFields.tempoParada && (
-                        <TableCell className="text-sm text-center font-medium">
+                        <TableCell className="text-sm text-center font-medium py-3 px-4 align-middle">
                           {getDiasParadaNum(maquina.dataParada)} dias
                         </TableCell>
                       )}
-                      <TableCell className="text-center">
+                      <TableCell className="text-center py-3 px-4 align-middle">
                         <Button
                           variant="ghost"
                           size="sm"
