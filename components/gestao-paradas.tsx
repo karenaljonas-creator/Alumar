@@ -491,6 +491,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               setEditingState(null)
                               toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
                             }}
+                            onOpenChange={(open) => {
+                              if (!open) {
+                                setEditingState(null)
+                              }
+                            }}
+                            defaultOpen={true}
                           >
                             <SelectTrigger className="h-8 text-xs w-24">
                               <SelectValue />
