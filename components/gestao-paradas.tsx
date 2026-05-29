@@ -426,7 +426,11 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
                               {maquina.prazoDados || maquina.contratoConfig?.dataFim 
-                                ? format(new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || ""), "dd/MM/yyyy")
+                                ? (() => {
+                                    const dateStr = maquina.prazoDados || maquina.contratoConfig?.dataFim || ""
+                                    const [year, month, day] = dateStr.split("-")
+                                    return `${day}/${month}/${year}`
+                                  })()
                                 : "Selecione data"
                               }
                             </Button>
@@ -436,16 +440,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               mode="single"
                               selected={
                                 maquina.prazoDados || maquina.contratoConfig?.dataFim
-                                  ? new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
+                                  ? (() => {
+                                      const dateStr = maquina.prazoDados || maquina.contratoConfig?.dataFim || ""
+                                      const [year, month, day] = dateStr.split("-").map(Number)
+                                      return new Date(year, month - 1, day)
+                                    })()
                                   : undefined
                               }
-                              onSelect={(date) => {
+                              onSelect={async (date) => {
                                 if (date) {
-                                  handleEditStart(maquina.id, "prazo", format(date, "yyyy-MM-dd"))
-                                  setTimeout(() => {
-                                    handleEditSave(maquina.id)
-                                    setOpenDatePicker(null)
-                                  }, 100)
+                                  const year = date.getFullYear()
+                                  const month = String(date.getMonth() + 1).padStart(2, "0")
+                                  const day = String(date.getDate()).padStart(2, "0")
+                                  const dateString = `${year}-${month}-${day}`
+                                  
+                                  const updatedMaquinas = allMaquinas.map(m => 
+                                    m.id === maquina.id ? { ...m, prazoDados: dateString } : m
+                                  )
+                                  onMaquinasChange(updatedMaquinas)
+                                  await saveMachines(updatedMaquinas)
+                                  setOpenDatePicker(null)
+                                  toast({ title: "Prazo salvo", description: `Data ${day}/${month}/${year} salva com sucesso.` })
                                 }
                               }}
                               locale={pt}
