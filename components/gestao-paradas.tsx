@@ -160,10 +160,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           const updated = { ...m }
           
           if (editingState.field === "prazo") {
-            // Salvar a data exatamente como foi escolhida (sem conversão de timezone)
-            if (updated.contratoConfig) {
-              updated.contratoConfig.dataFim = editingState.value
-            }
+            // Salvar em um campo separado prazoDados (não depende de contratoConfig)
+            updated.prazoDados = editingState.value
           } else if (editingState.field === "motivoParada") {
             updated.motivoParada = editingState.value
           } else if (editingState.field === "responsavel") {
@@ -452,12 +450,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         ) : (
                           <div className="flex gap-2 items-center">
                             <span>
-                              {formatDate(maquina.contratoConfig?.dataFim)}
+                              {formatDate(maquina.prazoDados || maquina.contratoConfig?.dataFim)}
                             </span>
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")}
+                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")}
                               className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100"
                             >
                               <Edit2 className="h-3 w-3" />
