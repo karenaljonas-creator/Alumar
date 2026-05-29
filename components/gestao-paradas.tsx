@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronRight } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown } from "lucide-react"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { useToast } from "@/hooks/use-toast"
 
@@ -35,126 +35,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
+  const [visibleFields, setVisibleFields] = useState({ contrato: false, dataParada: false, tempoParada: false })
   const { toast } = useToast()
-
-  const toggleRowExpand = (machineId: string) => {
-    const newExpanded = new Set(expandedRows)
-    if (newExpanded.has(machineId)) {
-      newExpanded.delete(machineId)
-    } else {
-      newExpanded.add(machineId)
-    }
-    setExpandedRows(newExpanded)
-  }
-
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc")
-      } else {
-        setSortKey(null)
-        setSortDirection("asc")
-      }
-    } else {
-      setSortKey(key)
-      setSortDirection("asc")
-    }
-  }, [sortKey, sortDirection])
-
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
-    return <ArrowDown className="h-3 w-3 ml-1" />
-  }
-
-  const maquinasParadas = useMemo(() => {
-    return machines.filter((m) => m.status === "parada" || m.status === "v0")
-  }, [machines])
-
-  const getTipoEquip = (m: Machine) => {
-    if (m.tipo.includes("Compressor")) return "Compressor"
-    if (m.tipo.includes("Secador")) return "Secador"
-    if (m.tipo.includes("Soprador")) return "Soprador"
-    return "Filtro"
-  }
-
-  const getDiasParadaNum = (dataParada?: string) => {
-    if (!dataParada) return -1
-    try {
-      const data = new Date(dataParada)
-      const hoje = new Date()
-      return Math.floor((hoje.getTime() - data.getTime()) / (1000 * 60 * 60 * 24))
-    } catch {
-      return -1
-    }
-  }
-
-  const filteredMachines = useMemo(() => {
-    const filtered = maquinasParadas.filter((m) => {
-      const matchesSearch =
-        m.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.tipo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (m.responsavel || "").toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesContrato =
-        contratoFilter === "todos" ||
-        (contratoFilter === "sim" && m.temContrato) ||
-        (contratoFilter === "nao" && !m.temContrato)
-      const matchesAcao =
-        acaoFilter === "todos" || (m.acaoResponsavel || "").toLowerCase() === acaoFilter.toLowerCase()
-      const matchesLocalizacao =
-        localizacaoFilter === "todas" || m.localizacao === localizacaoFilter
-      return matchesSearch && matchesContrato && matchesAcao && matchesLocalizacao
-    })
-
-    if (!sortKey) return filtered
-
-    return [...filtered].sort((a, b) => {
-      let valA: string | number = ""
-      let valB: string | number = ""
-
-      switch (sortKey) {
-        case "nome":
-          valA = a.nome.toLowerCase(); valB = b.nome.toLowerCase(); break
-        case "tipo":
-          valA = a.tipo.toLowerCase(); valB = b.tipo.toLowerCase(); break
-        case "localizacao":
-          valA = a.localizacao.toLowerCase(); valB = b.localizacao.toLowerCase(); break
-        case "contrato":
-          valA = a.temContrato ? 1 : 0; valB = b.temContrato ? 1 : 0; break
-        case "tipoEquip":
-          valA = getTipoEquip(a).toLowerCase(); valB = getTipoEquip(b).toLowerCase(); break
-        case "status":
-          valA = a.status; valB = b.status; break
-        case "dataParada":
-          valA = a.dataParada || ""; valB = b.dataParada || ""; break
-        case "diasParada":
-          valA = getDiasParadaNum(a.dataParada); valB = getDiasParadaNum(b.dataParada); break
-        case "prazo":
-          valA = a.contratoConfig?.dataFim || ""; valB = b.contratoConfig?.dataFim || ""; break
-        case "dataAtualizacao":
-          valA = a.updated_at || a.dataParada || ""; valB = b.updated_at || b.dataParada || ""; break
-        case "acao":
-          valA = (a.acaoResponsavel || "").toLowerCase(); valB = (b.acaoResponsavel || "").toLowerCase(); break
-        case "responsavel":
-          valA = (a.responsavel || "").toLowerCase(); valB = (b.responsavel || "").toLowerCase(); break
-        case "observacoes":
-          valA = (a.motivoParada || "").toLowerCase(); valB = (b.motivoParada || "").toLowerCase(); break
-      }
-
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1
-      return 0
-    })
-  }, [maquinasParadas, searchTerm, contratoFilter, acaoFilter, localizacaoFilter, sortKey, sortDirection])
-
-  const localizacoes = useMemo(() => {
-    return Array.from(new Set(maquinasParadas.map((m) => m.localizacao))).sort()
-  }, [maquinasParadas])
-
-  const acoes = useMemo(() => {
-    return Array.from(new Set(maquinasParadas.map((m) => m.acaoResponsavel).filter(Boolean))).sort()
-  }, [maquinasParadas])
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
     setEditingState({ machineId, field, value })
@@ -217,6 +99,61 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     return editingState?.machineId === machineId && editingState?.field === field
   }
 
+  // Compute filtered and sorted machines
+  const filteredMachines = useMemo(() => {
+    let result = machines.filter((m) => m.status === "parada")
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(
+        (m) =>
+          m.tag?.toLowerCase().includes(term) ||
+          m.tipo?.toLowerCase().includes(term) ||
+          m.responsavel?.toLowerCase().includes(term)
+      )
+    }
+
+    // Contrato filter
+    if (contratoFilter !== "todos") {
+      result = result.filter((m) =>
+        contratoFilter === "sim" ? m.temContrato : !m.temContrato
+      )
+    }
+
+    // Acao filter
+    if (acaoFilter !== "todos") {
+      result = result.filter((m) => m.acaoResponsavel === acaoFilter)
+    }
+
+    // Localizacao filter
+    if (localizacaoFilter !== "todas") {
+      result = result.filter((m) => m.localizacao === localizacaoFilter)
+    }
+
+    // Sort
+    if (sortKey) {
+      result.sort((a, b) => {
+        let aVal: any = a[sortKey as keyof typeof a]
+        let bVal: any = b[sortKey as keyof typeof b]
+
+        if (aVal === undefined || aVal === null) aVal = ""
+        if (bVal === undefined || bVal === null) bVal = ""
+
+        if (typeof aVal === "string" && typeof bVal === "string") {
+          const comparison = aVal.localeCompare(bVal)
+          return sortDirection === "asc" ? comparison : -comparison
+        }
+
+        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+        return 0
+      })
+    }
+
+    return result
+  }, [machines, searchTerm, contratoFilter, acaoFilter, localizacaoFilter, sortKey, sortDirection])
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "-"
     try {
@@ -227,6 +164,51 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     } catch {
       return "-"
     }
+  }
+
+  const getDiasParadaNum = (dateStr?: string) => {
+    if (!dateStr) return 0
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return 0
+      const today = new Date()
+      const diffTime = Math.abs(today.getTime() - date.getTime())
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      return diffDays
+    } catch {
+      return 0
+    }
+  }
+
+  // Unique values for filters
+  const acoes = useMemo(
+    () => [...new Set(machines.map((m) => m.acaoResponsavel).filter(Boolean))],
+    [machines]
+  )
+
+  const localizacoes = useMemo(
+    () => [...new Set(machines.map((m) => m.localizacao).filter(Boolean))],
+    [machines]
+  )
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDirection("asc")
+    }
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortKey !== columnKey) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-3 w-3 ml-1" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1" />
+    )
   }
 
   return (
@@ -247,7 +229,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               </div>
             </div>
             <Badge variant="destructive" className="text-base px-3 py-1">
-              {maquinasParadas.length} parada{maquinasParadas.length !== 1 ? "s" : ""}
+                      {filteredMachines.length} parada{filteredMachines.length !== 1 ? "s" : ""}
             </Badge>
           </div>
         </CardHeader>
@@ -310,12 +292,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
 
           <div className="w-full overflow-x-auto rounded-lg border border-border">
-            <Table className="w-full">
+            <Table style={{ tableLayout: 'fixed' }} className="w-full">
                 <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead className="w-10 text-center">
-                    <span className="font-medium">+</span>
-                  </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
@@ -356,6 +335,58 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
+                  <TableHead className="text-center">
+                    <div className="flex gap-1 items-center justify-center">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
+                        className="h-5 w-5 p-0"
+                        title="Contrato"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
+                        className="h-5 w-5 p-0"
+                        title="Data de Parada"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
+                        className="h-5 w-5 p-0"
+                        title="Tempo de Parada"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                      </Button>
+                    </div>
+                  </TableHead>
+                  {visibleFields.contrato && (
+                    <TableHead>
+                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Contrato <SortIcon columnKey="contrato" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {visibleFields.dataParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Data de Parada <SortIcon columnKey="dataParada" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {visibleFields.tempoParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Tempo de Parada <SortIcon columnKey="diasParada" />
+                      </button>
+                    </TableHead>
+                  )}
                   <TableHead className="w-[80px] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
@@ -364,23 +395,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               <TableBody>
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
-                    <>
-                      <TableRow key={maquina.id} className="group">
-                        <TableCell className="w-10 text-center">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => toggleRowExpand(maquina.id)}
-                            className="h-6 w-6 p-0"
-                          >
-                            <ChevronRight
-                              className={`h-4 w-4 transition-transform ${
-                                expandedRows.has(maquina.id) ? "rotate-90" : ""
-                              }`}
-                            />
-                          </Button>
-                        </TableCell>
-                        <TableCell className="text-sm">{maquina.tipo}</TableCell>
+                    <TableRow key={maquina.id} className="group">
+                      <TableCell className="text-sm">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm">{maquina.localizacao}</TableCell>
                       <TableCell>
                         <Badge
@@ -551,6 +567,21 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
+                      {visibleFields.contrato && (
+                        <TableCell className="text-sm text-center">
+                          {maquina.temContrato ? "Sim" : "Não"}
+                        </TableCell>
+                      )}
+                      {visibleFields.dataParada && (
+                        <TableCell className="text-sm">
+                          {formatDate(maquina.dataParada)}
+                        </TableCell>
+                      )}
+                      {visibleFields.tempoParada && (
+                        <TableCell className="text-sm text-center font-medium">
+                          {getDiasParadaNum(maquina.dataParada)} dias
+                        </TableCell>
+                      )}
                       <TableCell className="text-center">
                         <Button
                           variant="ghost"
@@ -564,31 +595,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </Button>
                       </TableCell>
                     </TableRow>
-                    {expandedRows.has(maquina.id) && (
-                      <TableRow className="bg-muted/50 hover:bg-muted/50">
-                        <TableCell colSpan={10} className="p-4">
-                          <div className="grid grid-cols-3 gap-6 text-sm">
-                            <div>
-                              <p className="font-semibold text-muted-foreground mb-1">Contrato</p>
-                              <p>{maquina.temContrato ? "Sim" : "Não"}</p>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-muted-foreground mb-1">Data de Parada</p>
-                              <p>{formatDate(maquina.dataParada)}</p>
-                            </div>
-                            <div>
-                              <p className="font-semibold text-muted-foreground mb-1">Tempo de Parada</p>
-                              <p className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</p>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
-                ))
+                  ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={13 + (visibleFields.contrato ? 1 : 0) + (visibleFields.dataParada ? 1 : 0) + (visibleFields.tempoParada ? 1 : 0)} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
