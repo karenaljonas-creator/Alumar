@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2 } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown } from "lucide-react"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { useToast } from "@/hooks/use-toast"
 
@@ -35,7 +35,25 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [visibleFields, setVisibleFields] = useState<Record<string, Set<string>>>({})
   const { toast } = useToast()
+
+  const toggleFieldVisibility = (machineId: string, fieldName: string) => {
+    setVisibleFields((prev) => {
+      const current = prev[machineId] || new Set()
+      const updated = new Set(current)
+      if (updated.has(fieldName)) {
+        updated.delete(fieldName)
+      } else {
+        updated.add(fieldName)
+      }
+      return { ...prev, [machineId]: updated }
+    })
+  }
+
+  const isFieldVisible = (machineId: string, fieldName: string) => {
+    return visibleFields[machineId]?.has(fieldName) || false
+  }
 
   const handleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -322,10 +340,36 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Contrato <SortIcon columnKey="contrato" />
+                  <TableHead className="min-w-[300px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
                     </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Prazo <SortIcon columnKey="prazo" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Acao <SortIcon columnKey="acao" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Responsavel <SortIcon columnKey="responsavel" />
+                    </button>
+                  </TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Atualizado em <SortIcon columnKey="dataAtualizacao" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="text-center">
+                    <span className="font-medium text-xs">Campos</span>
+                  </TableHead>
+                  <TableHead className="w-[80px] text-center">
+                    <span className="font-medium">Editar</span>
                   </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
@@ -429,14 +473,70 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-center">
-                        {maquina.temContrato ? "Sim" : "Não"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {formatDate(maquina.dataParada)}
-                      </TableCell>
-                      <TableCell className="text-sm text-center font-medium">
-                        {getDiasParadaNum(maquina.dataParada)} dias
+                      <TableCell className="text-sm min-w-fit relative">
+                        <div className="flex gap-1 items-center">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleFieldVisibility(maquina.id, "contrato")}
+                            className="h-6 w-6 p-0"
+                            title="Contrato"
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${
+                                isFieldVisible(maquina.id, "contrato") ? "rotate-180" : ""
+                              }`}
+                            />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleFieldVisibility(maquina.id, "dataParada")}
+                            className="h-6 w-6 p-0"
+                            title="Data de Parada"
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${
+                                isFieldVisible(maquina.id, "dataParada") ? "rotate-180" : ""
+                              }`}
+                            />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => toggleFieldVisibility(maquina.id, "tempoParada")}
+                            className="h-6 w-6 p-0"
+                            title="Tempo de Parada"
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform ${
+                                isFieldVisible(maquina.id, "tempoParada") ? "rotate-180" : ""
+                              }`}
+                            />
+                          </Button>
+                        </div>
+
+                        {/* Fields popup */}
+                        <div className="absolute mt-1 left-0 z-50 bg-white border border-gray-200 rounded-md shadow-lg p-3 min-w-[200px] text-sm">
+                          {isFieldVisible(maquina.id, "contrato") && (
+                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
+                              <p className="font-semibold text-muted-foreground text-xs">Contrato</p>
+                              <p className="font-medium">{maquina.temContrato ? "Sim" : "Não"}</p>
+                            </div>
+                          )}
+                          {isFieldVisible(maquina.id, "dataParada") && (
+                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
+                              <p className="font-semibold text-muted-foreground text-xs">Data de Parada</p>
+                              <p className="font-medium">{formatDate(maquina.dataParada)}</p>
+                            </div>
+                          )}
+                          {isFieldVisible(maquina.id, "tempoParada") && (
+                            <div className="mb-2 pb-2 border-b last:border-b-0 last:mb-0 last:pb-0">
+                              <p className="font-semibold text-muted-foreground text-xs">Tempo de Parada</p>
+                              <p className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</p>
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
                         {isEditing(maquina.id, "prazo") ? (
@@ -560,13 +660,13 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       </TableCell>
                     </TableRow>
                   ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                      Nenhuma máquina parada encontrada com os filtros aplicados
-                    </TableCell>
-                  </TableRow>
-                )}
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                    Nenhuma máquina parada encontrada com os filtros aplicados
+                  </TableCell>
+                </TableRow>
+              )}
               </TableBody>
             </Table>
           </div>
