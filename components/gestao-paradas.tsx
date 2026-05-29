@@ -344,27 +344,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     <button 
                       onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
                       className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      title="Mostrar/Ocultar Contrato"
                     >
-                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-4 w-4 transition-transform ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                      <span className="text-xs">Contrato</span>
                     </button>
                   </TableHead>
                   <TableHead className="w-[12%] min-w-[120px] text-center">
                     <button 
                       onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
                       className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      title="Mostrar/Ocultar Data de Parada"
                     >
-                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-4 w-4 transition-transform ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                      <span className="text-xs">Data de Parada</span>
                     </button>
                   </TableHead>
                   <TableHead className="w-[10%] min-w-[100px] text-center">
                     <button 
                       onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
                       className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      title="Mostrar/Ocultar Tempo de Parada"
                     >
-                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`h-4 w-4 transition-transform ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                      <span className="text-xs">Tempo de Parada</span>
                     </button>
                   </TableHead>
                   <TableHead className="w-[6%] text-center">
