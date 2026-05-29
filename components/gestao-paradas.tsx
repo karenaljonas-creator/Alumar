@@ -35,6 +35,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [visibleFields, setVisibleFields] = useState({ contrato: false, dataParada: false, tempoParada: false })
   const { toast } = useToast()
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
@@ -310,14 +311,40 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead className="min-w-[300px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Observacoes <SortIcon columnKey="observacoes" />
-                    </button>
-                  </TableHead>
-                  <TableHead className="min-w-[300px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Observacoes <SortIcon columnKey="observacoes" />
-                    </button>
+                    <div className="flex items-center justify-between">
+                      <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Observacoes <SortIcon columnKey="observacoes" />
+                      </button>
+                      <div className="flex gap-1 ml-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
+                          className="h-5 w-5 p-0"
+                          title="Contrato"
+                        >
+                          <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
+                          className="h-5 w-5 p-0"
+                          title="Data de Parada"
+                        >
+                          <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
+                          className="h-5 w-5 p-0"
+                          title="Tempo de Parada"
+                        >
+                          <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                        </Button>
+                      </div>
+                    </div>
                   </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
@@ -447,55 +474,17 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm w-fit relative z-40">
-                        <div className="flex gap-0 items-center relative z-50">
-                          {/* Contrato Dropdown */}
-                          <div className="relative group">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 hover:bg-muted"
-                              title="Contrato"
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[120px]">
-                              <p className="text-muted-foreground font-semibold mb-1">Contrato</p>
-                              <p>{maquina.temContrato ? "Sim" : "Não"}</p>
-                            </div>
-                          </div>
-
-                          {/* Data de Parada Dropdown */}
-                          <div className="relative group">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 hover:bg-muted"
-                              title="Data de Parada"
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[140px]">
-                              <p className="text-muted-foreground font-semibold mb-1">Data de Parada</p>
-                              <p>{formatDate(maquina.dataParada)}</p>
-                            </div>
-                          </div>
-
-                          {/* Tempo de Parada Dropdown */}
-                          <div className="relative group">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0 hover:bg-muted"
-                              title="Tempo de Parada"
-                            >
-                              <ChevronDown className="h-3 w-3" />
-                            </Button>
-                            <div className="absolute left-0 top-full hidden group-hover:block bg-white border border-gray-200 rounded shadow-lg p-2 whitespace-nowrap text-xs z-50 min-w-[140px]">
-                              <p className="text-muted-foreground font-semibold mb-1">Tempo de Parada</p>
-                              <p className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</p>
-                            </div>
-                          </div>
+                      <TableCell className="text-sm w-fit">
+                        <div className="flex gap-2 items-center text-xs">
+                          {visibleFields.contrato && (
+                            <span>Contrato: {maquina.temContrato ? "Sim" : "Não"}</span>
+                          )}
+                          {visibleFields.dataParada && (
+                            <span>Data: {formatDate(maquina.dataParada)}</span>
+                          )}
+                          {visibleFields.tempoParada && (
+                            <span>{getDiasParadaNum(maquina.dataParada)} dias</span>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">
