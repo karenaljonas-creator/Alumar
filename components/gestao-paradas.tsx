@@ -347,10 +347,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))
                         setExpandedLabels(prev => ({ ...prev, contrato: !prev.contrato }))
                       }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full gap-1 whitespace-nowrap px-2"
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
                     >
                       <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.contrato ? 'rotate-180' : ''}`} />
-                      {expandedLabels.contrato && <span className="text-xs">Contrato</span>}
+                      {expandedLabels.contrato && <span className="text-xs ml-1">Contrato</span>}
                     </button>
                   </TableHead>
                   <TableHead className="w-[10%] min-w-[80px] text-center">
@@ -359,10 +359,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))
                         setExpandedLabels(prev => ({ ...prev, dataParada: !prev.dataParada }))
                       }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full gap-1 whitespace-nowrap px-2"
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
                     >
                       <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.dataParada ? 'rotate-180' : ''}`} />
-                      {expandedLabels.dataParada && <span className="text-xs">Data de Parada</span>}
+                      {expandedLabels.dataParada && <span className="text-xs ml-1">Data de Parada</span>}
                     </button>
                   </TableHead>
                   <TableHead className="w-[10%] min-w-[80px] text-center">
@@ -371,10 +371,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))
                         setExpandedLabels(prev => ({ ...prev, tempoParada: !prev.tempoParada }))
                       }}
-                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full gap-1 whitespace-nowrap px-2"
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-all cursor-pointer w-full whitespace-nowrap"
                     >
                       <ChevronDown className={`h-4 w-4 transition-transform flex-shrink-0 ${expandedLabels.tempoParada ? 'rotate-180' : ''}`} />
-                      {expandedLabels.tempoParada && <span className="text-xs">Tempo de Parada</span>}
+                      {expandedLabels.tempoParada && <span className="text-xs ml-1">Tempo de Parada</span>}
                     </button>
                   </TableHead>
                   <TableHead className="w-[6%] text-center">
@@ -583,17 +583,17 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
                       {visibleFields.contrato && (
-                        <TableCell className="text-sm text-center py-3 px-4 align-middle">
+                        <TableCell className="w-[10%] min-w-[80px] text-sm text-center py-3 px-4 align-middle">
                           {maquina.temContrato ? "Sim" : "Não"}
                         </TableCell>
                       )}
                       {visibleFields.dataParada && (
-                        <TableCell className="text-sm py-3 px-4 align-middle">
+                        <TableCell className="w-[10%] min-w-[80px] text-sm py-3 px-4 align-middle">
                           {formatDate(maquina.dataParada)}
                         </TableCell>
                       )}
                       {visibleFields.tempoParada && (
-                        <TableCell className="text-sm text-center font-medium py-3 px-4 align-middle">
+                        <TableCell className="w-[10%] min-w-[80px] text-sm text-center font-medium py-3 px-4 align-middle">
                           {getDiasParadaNum(maquina.dataParada)} dias
                         </TableCell>
                       )}
