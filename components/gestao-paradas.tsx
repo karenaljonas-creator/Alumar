@@ -418,49 +418,40 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
-                        {isEditing(maquina.id, "prazo") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
+                        <Popover open={openDatePicker === maquina.id} onOpenChange={(open) => setOpenDatePicker(open ? maquina.id : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal text-xs py-1 h-auto"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {maquina.prazoDados || maquina.contratoConfig?.dataFim 
+                                ? format(new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || ""), "dd/MM/yyyy")
+                                : "Selecione data"
                               }
-                              className="h-8 text-xs flex-1"
-                              placeholder="DD/MM/YYYY"
-                              disabled={isSaving}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                maquina.prazoDados || maquina.contratoConfig?.dataFim
+                                  ? new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
+                                  : undefined
+                              }
+                              onSelect={(date) => {
+                                if (date) {
+                                  handleEditStart(maquina.id, "prazo", format(date, "yyyy-MM-dd"))
+                                  setTimeout(() => {
+                                    handleEditSave(maquina.id)
+                                    setOpenDatePicker(null)
+                                  }, 100)
+                                }
+                              }}
+                              locale={pt}
                             />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
-                            onClick={() =>
-                              handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
-                            }
-                          >
-                            <span className="text-xs flex-1">{maquina.prazoDados || maquina.contratoConfig?.dataFim || "-"}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
-                          </div>
-                        )}
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
