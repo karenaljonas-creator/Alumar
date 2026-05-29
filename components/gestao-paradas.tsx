@@ -593,7 +593,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   </TableCell>
                 </TableRow>
               )}
-                )}
               </TableBody>
             </Table>
           </div>
