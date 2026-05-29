@@ -8,9 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown, Calendar as CalendarIcon } from "lucide-react"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { useToast } from "@/hooks/use-toast"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { pt } from "date-fns/locale"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -36,6 +40,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [visibleFields, setVisibleFields] = useState({ contrato: false, dataParada: false, tempoParada: false })
+  const [openDatePicker, setOpenDatePicker] = useState<string | null>(null)
   const { toast } = useToast()
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
@@ -335,55 +340,36 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[8%] text-center">
-                    <div className="flex gap-1 items-center justify-center">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
-                        className="h-5 w-5 p-0"
-                        title="Contrato"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
-                        className="h-5 w-5 p-0"
-                        title="Data de Parada"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
-                        className="h-5 w-5 p-0"
-                        title="Tempo de Parada"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
-                      </Button>
-                    </div>
-                  </TableHead>
                   {visibleFields.contrato && (
-                    <TableHead className="w-[10%] min-w-[100px]">
-                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Contrato <SortIcon columnKey="contrato" />
+                    <TableHead className="w-[10%] min-w-[100px] text-center">
+                      <button 
+                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
+                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      >
+                        Contrato
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
                       </button>
                     </TableHead>
                   )}
                   {visibleFields.dataParada && (
-                    <TableHead className="w-[12%] min-w-[120px]">
-                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Data de Parada <SortIcon columnKey="dataParada" />
+                    <TableHead className="w-[12%] min-w-[120px] text-center">
+                      <button 
+                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
+                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      >
+                        Data de Parada
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
                       </button>
                     </TableHead>
                   )}
                   {visibleFields.tempoParada && (
-                    <TableHead className="w-[10%] min-w-[100px]">
-                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Tempo de Parada <SortIcon columnKey="diasParada" />
+                    <TableHead className="w-[10%] min-w-[100px] text-center">
+                      <button 
+                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
+                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      >
+                        Tempo de Parada
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
                       </button>
                     </TableHead>
                   )}
@@ -460,56 +446,43 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
-                        {isEditing(maquina.id, "prazo") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
+                        <Popover open={openDatePicker === maquina.id} onOpenChange={(open) => setOpenDatePicker(open ? maquina.id : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal text-xs py-1 h-auto"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {maquina.prazoDados || maquina.contratoConfig?.dataFim 
+                                ? format(new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || ""), "dd/MM/yyyy")
+                                : "Selecione data"
                               }
-                              className="h-8 text-xs flex-1"
-                              placeholder="Digite o prazo"
-                              disabled={isSaving}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                maquina.prazoDados || maquina.contratoConfig?.dataFim
+                                  ? new Date(maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
+                                  : undefined
+                              }
+                              onSelect={(date) => {
+                                if (date) {
+                                  handleEditStart(maquina.id, "prazo", format(date, "yyyy-MM-dd"))
+                                  setTimeout(() => {
+                                    handleEditSave(maquina.id)
+                                    setOpenDatePicker(null)
+                                  }, 100)
+                                }
+                              }}
+                              locale={pt}
+                              disabled={(date) =>
+                                date < new Date(new Date().setHours(0, 0, 0, 0))
+                              }
                             />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
-                            onClick={() =>
-                              handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
-                            }
-                          >
-                            <span className="text-xs flex-1">{maquina.prazoDados || maquina.contratoConfig?.dataFim || "-"}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")}
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
