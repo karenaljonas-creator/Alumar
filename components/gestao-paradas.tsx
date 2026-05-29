@@ -447,8 +447,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm w-fit">
-                        <div className="flex gap-0 items-center">
+                      <TableCell className="text-sm w-fit relative z-40">
+                        <div className="flex gap-0 items-center relative z-50">
                           {/* Contrato Dropdown */}
                           <div className="relative group">
                             <Button
