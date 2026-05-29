@@ -340,39 +340,33 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  {visibleFields.contrato && (
-                    <TableHead className="w-[10%] min-w-[100px] text-center">
-                      <button 
-                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
-                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      >
-                        Contrato
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
-                      </button>
-                    </TableHead>
-                  )}
-                  {visibleFields.dataParada && (
-                    <TableHead className="w-[12%] min-w-[120px] text-center">
-                      <button 
-                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
-                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      >
-                        Data de Parada
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
-                      </button>
-                    </TableHead>
-                  )}
-                  {visibleFields.tempoParada && (
-                    <TableHead className="w-[10%] min-w-[100px] text-center">
-                      <button 
-                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
-                        className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
-                      >
-                        Tempo de Parada
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
-                      </button>
-                    </TableHead>
-                  )}
+                  <TableHead className="w-[10%] min-w-[100px] text-center">
+                    <button 
+                      onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      title="Mostrar/Ocultar Contrato"
+                    >
+                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[12%] min-w-[120px] text-center">
+                    <button 
+                      onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      title="Mostrar/Ocultar Data de Parada"
+                    >
+                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[10%] min-w-[100px] text-center">
+                    <button 
+                      onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
+                      className="flex items-center justify-center font-medium hover:text-foreground transition-colors cursor-pointer w-full gap-1"
+                      title="Mostrar/Ocultar Tempo de Parada"
+                    >
+                      <ChevronDown className={`h-3 w-3 transition-transform ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                    </button>
+                  </TableHead>
                   <TableHead className="w-[6%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
