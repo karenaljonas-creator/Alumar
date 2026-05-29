@@ -380,21 +380,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   <TableHead className="w-[6%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
-                  {visibleFields.contrato && (
-                    <TableHead className="w-[10%] min-w-[80px]">
-                      <span className="font-medium">Contrato</span>
-                    </TableHead>
-                  )}
-                  {visibleFields.dataParada && (
-                    <TableHead className="w-[10%] min-w-[80px]">
-                      <span className="font-medium">Data de Parada</span>
-                    </TableHead>
-                  )}
-                  {visibleFields.tempoParada && (
-                    <TableHead className="w-[10%] min-w-[80px]">
-                      <span className="font-medium">Tempo de Parada</span>
-                    </TableHead>
-                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
