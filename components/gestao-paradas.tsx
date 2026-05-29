@@ -291,6 +291,32 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             </div>
           </div>
 
+          {/* Fields Display Bar */}
+          {(visibleFields.contrato || visibleFields.dataParada || visibleFields.tempoParada) && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex gap-12 items-start text-sm">
+                {visibleFields.contrato && (
+                  <div>
+                    <p className="font-semibold text-blue-900 mb-2">Contrato</p>
+                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
+                  </div>
+                )}
+                {visibleFields.dataParada && (
+                  <div>
+                    <p className="font-semibold text-blue-900 mb-2">Data de Parada</p>
+                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
+                  </div>
+                )}
+                {visibleFields.tempoParada && (
+                  <div>
+                    <p className="font-semibold text-blue-900 mb-2">Tempo de Parada</p>
+                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="w-full overflow-x-auto rounded-lg border border-border">
             <Table className="w-full">
                 <TableHeader>
@@ -475,15 +501,15 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-sm w-fit">
-                        <div className="flex gap-2 items-center text-xs">
+                        <div className="flex gap-4 items-center text-xs">
                           {visibleFields.contrato && (
-                            <span>Contrato: {maquina.temContrato ? "Sim" : "Não"}</span>
+                            <span>{maquina.temContrato ? "Sim" : "Não"}</span>
                           )}
                           {visibleFields.dataParada && (
-                            <span>Data: {formatDate(maquina.dataParada)}</span>
+                            <span>{formatDate(maquina.dataParada)}</span>
                           )}
                           {visibleFields.tempoParada && (
-                            <span>{getDiasParadaNum(maquina.dataParada)} dias</span>
+                            <span className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</span>
                           )}
                         </div>
                       </TableCell>
