@@ -599,69 +599,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground py-3 px-4 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="py-3 px-4 align-middle">
-                        <Badge
-                          variant={maquina.status === "parada" ? "destructive" : "secondary"}
-                          className={
-                            maquina.status === "v0"
-                              ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                              : ""
-                          }
-                        >
-                          {maquina.status === "parada" ? "Parada" : "V0"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {isEditing(maquina.id, "responsavel") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
-                              }
-                              className="h-8 text-xs"
-                              placeholder="Digite o responsável"
-                              disabled={isSaving}
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0"
-                              disabled={isSaving}
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0"
-                              disabled={isSaving}
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1 rounded"
-                            onClick={() =>
-                              handleEditStart(
-                                maquina.id,
-                                "responsavel",
-                                maquina.responsavel || ""
-                              )
-                            }
-                          >
-                            <span>{maquina.responsavel || "-"}</span>
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {formatDate(maquina.updated_at || maquina.dataParada)}
-                      </TableCell>
                       {visibleFields.contrato && (
                         <TableCell className="text-sm text-center py-3 px-4 align-middle">
                           {maquina.temContrato ? "Sim" : "Não"}
