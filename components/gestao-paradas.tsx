@@ -98,6 +98,61 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     return editingState?.machineId === machineId && editingState?.field === field
   }
 
+  // Compute filtered and sorted machines
+  const filteredMachines = useMemo(() => {
+    let result = machines.filter((m) => m.status === "parada")
+
+    // Search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(
+        (m) =>
+          m.tag?.toLowerCase().includes(term) ||
+          m.tipo?.toLowerCase().includes(term) ||
+          m.responsavel?.toLowerCase().includes(term)
+      )
+    }
+
+    // Contrato filter
+    if (contratoFilter !== "todos") {
+      result = result.filter((m) =>
+        contratoFilter === "sim" ? m.temContrato : !m.temContrato
+      )
+    }
+
+    // Acao filter
+    if (acaoFilter !== "todos") {
+      result = result.filter((m) => m.acaoResponsavel === acaoFilter)
+    }
+
+    // Localizacao filter
+    if (localizacaoFilter !== "todas") {
+      result = result.filter((m) => m.localizacao === localizacaoFilter)
+    }
+
+    // Sort
+    if (sortKey) {
+      result.sort((a, b) => {
+        let aVal: any = a[sortKey as keyof typeof a]
+        let bVal: any = b[sortKey as keyof typeof b]
+
+        if (aVal === undefined || aVal === null) aVal = ""
+        if (bVal === undefined || bVal === null) bVal = ""
+
+        if (typeof aVal === "string" && typeof bVal === "string") {
+          const comparison = aVal.localeCompare(bVal)
+          return sortDirection === "asc" ? comparison : -comparison
+        }
+
+        if (aVal > bVal) return sortDirection === "asc" ? 1 : -1
+        if (aVal < bVal) return sortDirection === "asc" ? -1 : 1
+        return 0
+      })
+    }
+
+    return result
+  }, [machines, searchTerm, contratoFilter, acaoFilter, localizacaoFilter, sortKey, sortDirection])
+
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return "-"
     try {
