@@ -299,7 +299,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             <Table className="w-full border-collapse">
                 <TableHeader>
                 <TableRow className="bg-muted">
-                  <TableHead className="w-[14%]">
+                  <TableHead className="w-[10%]">
+                    <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      TAG <SortIcon columnKey="nome" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[12%]">
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
                     </button>
@@ -351,6 +356,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
                     <TableRow key={maquina.id} className="group border-b">
+                      <TableCell className="text-sm py-3 px-4 align-middle font-medium">{maquina.nome}</TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">{maquina.localizacao}</TableCell>
                       <TableCell className="py-3 px-4 align-middle">
@@ -485,6 +491,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               setEditingState(null)
                               toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
                             }}
+                            onOpenChange={(open) => {
+                              if (!open) {
+                                setEditingState(null)
+                              }
+                            }}
+                            defaultOpen={true}
                           >
                             <SelectTrigger className="h-8 text-xs w-24">
                               <SelectValue />
@@ -571,7 +583,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
