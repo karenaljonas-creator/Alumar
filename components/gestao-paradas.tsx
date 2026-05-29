@@ -455,7 +455,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                   const dateString = `${year}-${month}-${day}`
                                   
                                   const updatedMachines = machines.map(m => 
-                                    m.id === maquina.id ? { ...m, prazoDados: dateString } : m
+                                    m.id === maquina.id ? { ...m, prazoDados: dateString, updated_at: new Date().toISOString() } : m
                                   )
                                   if (onUpdate) {
                                     onUpdate(updatedMachines)
@@ -471,28 +471,38 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </Popover>
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
-                        <Select
-                          value={maquina.acaoResponsavel || "Vale"}
-                          onValueChange={async (value) => {
-                            const updatedMachines = machines.map(m => 
-                              m.id === maquina.id ? { ...m, acaoResponsavel: value } : m
-                            )
-                            if (onUpdate) {
-                              onUpdate(updatedMachines)
-                            }
-                            await saveMachines(updatedMachines)
-                            toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs w-20">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Vale">Vale</SelectItem>
-                            <SelectItem value="Atlas">Atlas</SelectItem>
-                            <SelectItem value="Outro">Outro</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isEditing(maquina.id, "acaoResponsavel") ? (
+                          <Select
+                            value={editingState?.value || maquina.acaoResponsavel || "Vale"}
+                            onValueChange={async (value) => {
+                              const updatedMachines = machines.map(m => 
+                                m.id === maquina.id ? { ...m, acaoResponsavel: value, updated_at: new Date().toISOString() } : m
+                              )
+                              if (onUpdate) {
+                                onUpdate(updatedMachines)
+                              }
+                              await saveMachines(updatedMachines)
+                              setEditingState(null)
+                              toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Vale">Vale</SelectItem>
+                              <SelectItem value="Atlas">Atlas</SelectItem>
+                              <SelectItem value="Outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            onClick={() => handleEditStart(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "Vale")}
+                          >
+                            <span className="text-xs">{maquina.acaoResponsavel || "-"}</span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "responsavel") ? (

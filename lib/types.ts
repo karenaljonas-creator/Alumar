@@ -21,6 +21,8 @@ export interface Machine {
   contratoConfig?: ContratoConfig // Adicionando configuração do contrato
   responsavel?: string // Adicionando responsável
   tempoParada?: number // Adicionando tempo de parada em dias
+  prazoDados?: string // Data do prazo (formato yyyy-MM-dd)
+  updated_at?: string // Data da última atualização
 }
 
 export interface MachineStats {
