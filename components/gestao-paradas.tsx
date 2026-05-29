@@ -291,32 +291,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             </div>
           </div>
 
-          {/* Fields Display Bar */}
-          {(visibleFields.contrato || visibleFields.dataParada || visibleFields.tempoParada) && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex gap-12 items-start text-sm">
-                {visibleFields.contrato && (
-                  <div>
-                    <p className="font-semibold text-blue-900 mb-2">Contrato</p>
-                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
-                  </div>
-                )}
-                {visibleFields.dataParada && (
-                  <div>
-                    <p className="font-semibold text-blue-900 mb-2">Data de Parada</p>
-                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
-                  </div>
-                )}
-                {visibleFields.tempoParada && (
-                  <div>
-                    <p className="font-semibold text-blue-900 mb-2">Tempo de Parada</p>
-                    <p className="text-xs text-muted-foreground">Exibindo nas linhas abaixo</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
           <div className="w-full overflow-x-auto rounded-lg border border-border">
             <Table className="w-full">
                 <TableHeader>
@@ -398,39 +372,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   <TableHead className="w-[80px] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Data de Parada <SortIcon columnKey="dataParada" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Tempo de Parada <SortIcon columnKey="diasParada" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Prazo <SortIcon columnKey="prazo" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Acao <SortIcon columnKey="acao" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Responsavel <SortIcon columnKey="responsavel" />
-                    </button>
-                  </TableHead>
-                  <TableHead>
-                    <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                      Atualizado em <SortIcon columnKey="dataAtualizacao" />
-                    </button>
-                  </TableHead>
-                  <TableHead className="w-[80px] text-center">
-                    <span className="font-medium">Editar</span>
-                  </TableHead>
+                  {visibleFields.contrato && (
+                    <TableHead>
+                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Contrato <SortIcon columnKey="contrato" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {visibleFields.dataParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Data de Parada <SortIcon columnKey="dataParada" />
+                      </button>
+                    </TableHead>
+                  )}
+                  {visibleFields.tempoParada && (
+                    <TableHead>
+                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                        Tempo de Parada <SortIcon columnKey="diasParada" />
+                      </button>
+                    </TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -501,18 +463,23 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-sm w-fit">
-                        <div className="flex gap-4 items-center text-xs">
-                          {visibleFields.contrato && (
-                            <span>{maquina.temContrato ? "Sim" : "Não"}</span>
-                          )}
-                          {visibleFields.dataParada && (
-                            <span>{formatDate(maquina.dataParada)}</span>
-                          )}
-                          {visibleFields.tempoParada && (
-                            <span className="font-medium">{getDiasParadaNum(maquina.dataParada)} dias</span>
-                          )}
-                        </div>
+                        {/* Empty cell - data shown in dynamic columns */}
                       </TableCell>
+                      {visibleFields.contrato && (
+                        <TableCell className="text-sm text-center">
+                          {maquina.temContrato ? "Sim" : "Não"}
+                        </TableCell>
+                      )}
+                      {visibleFields.dataParada && (
+                        <TableCell className="text-sm">
+                          {formatDate(maquina.dataParada)}
+                        </TableCell>
+                      )}
+                      {visibleFields.tempoParada && (
+                        <TableCell className="text-sm text-center font-medium">
+                          {getDiasParadaNum(maquina.dataParada)} dias
+                        </TableCell>
+                      )}
                       <TableCell className="text-sm font-medium">
                         {isEditing(maquina.id, "prazo") ? (
                           <div className="flex gap-2 items-center">
