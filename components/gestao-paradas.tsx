@@ -292,7 +292,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
 
           <div className="w-full overflow-x-auto rounded-lg border border-border">
-            <Table className="w-full">
+            <Table style={{ tableLayout: 'fixed' }} className="w-full">
                 <TableHeader>
                 <TableRow className="bg-muted">
                   <TableHead>
@@ -458,9 +458,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100" />
                           </div>
                         )}
-                      </TableCell>
-                      <TableCell className="text-sm w-fit">
-                        {/* Empty cell - data shown in dynamic columns */}
                       </TableCell>
                       <TableCell className="text-sm font-medium">
                         {isEditing(maquina.id, "prazo") ? (
