@@ -176,6 +176,26 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     [machines]
   )
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc")
+    } else {
+      setSortKey(key)
+      setSortDirection("asc")
+    }
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortKey !== columnKey) {
+      return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
+    }
+    return sortDirection === "asc" ? (
+      <ArrowUp className="h-3 w-3 ml-1" />
+    ) : (
+      <ArrowDown className="h-3 w-3 ml-1" />
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Card className="border-border shadow-sm">
