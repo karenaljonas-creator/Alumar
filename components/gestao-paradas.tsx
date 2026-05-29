@@ -311,40 +311,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead className="min-w-[300px]">
-                    <div className="flex items-center justify-between">
-                      <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Observacoes <SortIcon columnKey="observacoes" />
-                      </button>
-                      <div className="flex gap-1 ml-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
-                          className="h-5 w-5 p-0"
-                          title="Contrato"
-                        >
-                          <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
-                          className="h-5 w-5 p-0"
-                          title="Data de Parada"
-                        >
-                          <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
-                          className="h-5 w-5 p-0"
-                          title="Tempo de Parada"
-                        >
-                          <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
-                        </Button>
-                      </div>
-                    </div>
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Observacoes <SortIcon columnKey="observacoes" />
+                    </button>
                   </TableHead>
                   <TableHead>
                     <button onClick={() => handleSort("prazo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
@@ -367,7 +336,35 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead className="text-center">
-                    <span className="font-medium text-xs">Campos</span>
+                    <div className="flex gap-1 items-center justify-center">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
+                        className="h-5 w-5 p-0"
+                        title="Contrato"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
+                        className="h-5 w-5 p-0"
+                        title="Data de Parada"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
+                        className="h-5 w-5 p-0"
+                        title="Tempo de Parada"
+                      >
+                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
+                      </Button>
+                    </div>
                   </TableHead>
                   {visibleFields.contrato && (
                     <TableHead>
