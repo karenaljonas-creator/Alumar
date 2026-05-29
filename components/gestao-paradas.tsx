@@ -8,7 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, ChevronDown } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, Calendar as CalendarIcon } from "lucide-react"
+import { Calendar } from "@/components/ui/calendar"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { format } from "date-fns"
+import { pt } from "date-fns/locale"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { useToast } from "@/hooks/use-toast"
 
@@ -35,7 +39,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [visibleFields, setVisibleFields] = useState({ contrato: false, dataParada: false, tempoParada: false })
+  const [openDatePicker, setOpenDatePicker] = useState<string | null>(null)
   const { toast } = useToast()
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
@@ -310,6 +314,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
+                  <TableHead className="w-[10%] text-center">
+                    <span className="font-medium">Tempo de Parada</span>
+                  </TableHead>
                   <TableHead className="w-[28%] min-w-[400px]">
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
@@ -335,58 +342,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[8%] text-center">
-                    <div className="flex gap-1 items-center justify-center">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, contrato: !prev.contrato }))}
-                        className="h-5 w-5 p-0"
-                        title="Contrato"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.contrato ? 'rotate-180' : ''}`} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, dataParada: !prev.dataParada }))}
-                        className="h-5 w-5 p-0"
-                        title="Data de Parada"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.dataParada ? 'rotate-180' : ''}`} />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setVisibleFields(prev => ({ ...prev, tempoParada: !prev.tempoParada }))}
-                        className="h-5 w-5 p-0"
-                        title="Tempo de Parada"
-                      >
-                        <ChevronDown className={`h-3 w-3 ${visibleFields.tempoParada ? 'rotate-180' : ''}`} />
-                      </Button>
-                    </div>
-                  </TableHead>
-                  {visibleFields.contrato && (
-                    <TableHead className="w-[10%] min-w-[100px]">
-                      <button onClick={() => handleSort("contrato")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Contrato <SortIcon columnKey="contrato" />
-                      </button>
-                    </TableHead>
-                  )}
-                  {visibleFields.dataParada && (
-                    <TableHead className="w-[12%] min-w-[120px]">
-                      <button onClick={() => handleSort("dataParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Data de Parada <SortIcon columnKey="dataParada" />
-                      </button>
-                    </TableHead>
-                  )}
-                  {visibleFields.tempoParada && (
-                    <TableHead className="w-[10%] min-w-[100px]">
-                      <button onClick={() => handleSort("diasParada")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
-                        Tempo de Parada <SortIcon columnKey="diasParada" />
-                      </button>
-                    </TableHead>
-                  )}
                   <TableHead className="w-[6%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
@@ -409,6 +364,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
+                        {getDiasParadaNum(maquina.dataParada)} dias
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle whitespace-normal break-words max-w-[400px]">
                         {isEditing(maquina.id, "motivoParada") ? (
@@ -460,92 +418,90 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         )}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
-                        {isEditing(maquina.id, "prazo") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
+                        <Popover open={openDatePicker === maquina.id} onOpenChange={(open) => setOpenDatePicker(open ? maquina.id : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className="w-full justify-start text-left font-normal text-xs py-1 h-auto"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {maquina.prazoDados || maquina.contratoConfig?.dataFim 
+                                ? (() => {
+                                    const dateStr = maquina.prazoDados || maquina.contratoConfig?.dataFim || ""
+                                    const [year, month, day] = dateStr.split("-")
+                                    return `${day}/${month}/${year}`
+                                  })()
+                                : "Selecione data"
                               }
-                              className="h-8 text-xs flex-1"
-                              placeholder="Digite o prazo"
-                              disabled={isSaving}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={
+                                maquina.prazoDados || maquina.contratoConfig?.dataFim
+                                  ? (() => {
+                                      const dateStr = maquina.prazoDados || maquina.contratoConfig?.dataFim || ""
+                                      const [year, month, day] = dateStr.split("-").map(Number)
+                                      return new Date(year, month - 1, day)
+                                    })()
+                                  : undefined
+                              }
+                              onSelect={async (date) => {
+                                if (date) {
+                                  const year = date.getFullYear()
+                                  const month = String(date.getMonth() + 1).padStart(2, "0")
+                                  const day = String(date.getDate()).padStart(2, "0")
+                                  const dateString = `${year}-${month}-${day}`
+                                  
+                                  const updatedMachines = machines.map(m => 
+                                    m.id === maquina.id ? { ...m, prazoDados: dateString, updated_at: new Date().toISOString() } : m
+                                  )
+                                  if (onUpdate) {
+                                    onUpdate(updatedMachines)
+                                  }
+                                  await saveMachines(updatedMachines)
+                                  setOpenDatePicker(null)
+                                  toast({ title: "Prazo salvo", description: `Data ${day}/${month}/${year} salva com sucesso.` })
+                                }
+                              }}
+                              locale={pt}
                             />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
-                            onClick={() =>
-                              handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")
-                            }
-                          >
-                            <span className="text-xs flex-1">{maquina.prazoDados || maquina.contratoConfig?.dataFim || "-"}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditStart(maquina.id, "prazo", maquina.prazoDados || maquina.contratoConfig?.dataFim || "")}
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 flex-shrink-0"
-                            >
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        )}
+                          </PopoverContent>
+                        </Popover>
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
-                          <div className="flex gap-2 items-center">
-                            <Input
-                              value={editingState?.value || ""}
-                              onChange={(e) =>
-                                setEditingState((prev) =>
-                                  prev ? { ...prev, value: e.target.value } : null
-                                )
+                          <Select
+                            value={editingState?.value || maquina.acaoResponsavel || "Vale"}
+                            onValueChange={async (value) => {
+                              const updatedMachines = machines.map(m => 
+                                m.id === maquina.id ? { ...m, acaoResponsavel: value, updated_at: new Date().toISOString() } : m
+                              )
+                              if (onUpdate) {
+                                onUpdate(updatedMachines)
                               }
-                              className="h-8 text-xs flex-1"
-                              placeholder="Digite a ação"
-                              disabled={isSaving}
-                            />
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleEditSave(maquina.id)}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleEditCancel}
-                              className="h-8 w-8 p-0 flex-shrink-0"
-                              disabled={isSaving}
-                            >
-                              <X className="h-4 w-4 text-red-600" />
-                            </Button>
-                          </div>
+                              await saveMachines(updatedMachines)
+                              setEditingState(null)
+                              toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-24">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Vale">Vale</SelectItem>
+                              <SelectItem value="Atlas">Atlas</SelectItem>
+                              <SelectItem value="Outro">Outro</SelectItem>
+                            </SelectContent>
+                          </Select>
                         ) : (
-                          <div className="text-xs text-center">{maquina.acaoResponsavel || "-"}</div>
+                          <div
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            onClick={() => handleEditStart(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "Vale")}
+                          >
+                            <span className="text-xs">{maquina.acaoResponsavel || "-"}</span>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">
@@ -599,21 +555,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-sm text-muted-foreground py-3 px-4 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
-                      {visibleFields.contrato && (
-                        <TableCell className="text-sm text-center py-3 px-4 align-middle">
-                          {maquina.temContrato ? "Sim" : "Não"}
-                        </TableCell>
-                      )}
-                      {visibleFields.dataParada && (
-                        <TableCell className="text-sm py-3 px-4 align-middle">
-                          {formatDate(maquina.dataParada)}
-                        </TableCell>
-                      )}
-                      {visibleFields.tempoParada && (
-                        <TableCell className="text-sm text-center font-medium py-3 px-4 align-middle">
-                          {getDiasParadaNum(maquina.dataParada)} dias
-                        </TableCell>
-                      )}
                       <TableCell className="text-center py-3 px-4 align-middle">
                         <Button
                           variant="ghost"
@@ -630,7 +571,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={13 + (visibleFields.contrato ? 1 : 0) + (visibleFields.dataParada ? 1 : 0) + (visibleFields.tempoParada ? 1 : 0)} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>

@@ -45,9 +45,10 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
       responsavel: m.responsavel,
       temContrato: m.temContrato,
       numeroSerie: m.numeroSerie,
+      prazoDados: m.prazoDados,
     }),
     acao_responsavel: m.acaoResponsavel || null,
-    updated_at: new Date().toISOString(),
+    updated_at: m.updated_at || new Date().toISOString(),
   }))
 
   const { error } = await supabase.from("machines").upsert(records, {
@@ -109,6 +110,8 @@ export async function loadMachines(): Promise<Machine[]> {
         temContrato: parsedData.temContrato !== undefined ? parsedData.temContrato : true,
         responsavel: parsedData.responsavel || row.acao_responsavel || undefined,
         tempoParada: row.horas_operacao || 0,
+        prazoDados: parsedData.prazoDados || undefined,
+        updated_at: row.updated_at || undefined,
       }
     })
 
