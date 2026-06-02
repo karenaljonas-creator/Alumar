@@ -173,7 +173,22 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem - SALDO ATUAL (não total de entrada)
+  // Função para mapear origem para categoria
+  const getOrigemKey = (origem: string): string => {
+    const origemLower = (origem || "").toLowerCase().trim()
+    if (origemLower.includes("estratégico") || origemLower.includes("estrategico")) {
+      return "Estoque Estratégico"
+    } else if (origemLower.includes("corretiva") || origemLower.includes("contrato")) {
+      return "Corretiva Contrato"
+    } else if (origemLower.includes("plano") || origemLower.includes("manutenção") || origemLower.includes("manutencao") || origemLower.includes("preventiva") || origemLower.includes("preventivo")) {
+      return "Plano Manutenção"
+    } else if (origemLower.includes("acordo") && origemLower.includes("inicial")) {
+      return "Acordo inicial"
+    }
+    return ""
+  }
+
+  // Calcular valores por origem - EXATO usando FIFO por código
   const valoresPorOrigem = useMemo(() => {
     const origens = {
       "Estoque Estratégico": 0,
@@ -182,30 +197,58 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Calcular saldo atual por origem usando os itens calculados
-    estoqueCalculado.forEach((item) => {
-      const entrada = entradas.find((e) => e.codigo === item.codigo)
-      if (!entrada) return
-
-      const origem = (entrada.origem || "").toLowerCase().trim()
-      if (!origem) return
-
-      // Usar o valorTotalEstoque que já é (entrada - saída) * valor médio
-      const saldoValor = item.valorTotalEstoque || 0
-
-      if (origem.includes("estratégico") || origem.includes("estrategico")) {
-        origens["Estoque Estratégico"] += saldoValor
-      } else if (origem.includes("corretiva") || origem.includes("contrato")) {
-        origens["Corretiva Contrato"] += saldoValor
-      } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
-        origens["Plano Manutenção"] += saldoValor
-      } else if (origem.includes("acordo") && origem.includes("inicial")) {
-        origens["Acordo inicial"] += saldoValor
+    // Agrupar entradas por código
+    const entradasPorCodigo: Record<string, Array<{ origem: string; quantidade: number; valorUnitario: number; data: string }>> = {}
+    
+    entradas.forEach((entrada) => {
+      const codigo = entrada.codigo
+      if (!entradasPorCodigo[codigo]) {
+        entradasPorCodigo[codigo] = []
       }
+      const valorUnitario = entrada.quantidade > 0 ? (entrada.valor_total || 0) / entrada.quantidade : 0
+      entradasPorCodigo[codigo].push({
+        origem: getOrigemKey(entrada.origem || ""),
+        quantidade: entrada.quantidade || 0,
+        valorUnitario,
+        data: entrada.data_emissao || ""
+      })
+    })
+
+    // Ordenar entradas por data (FIFO)
+    Object.keys(entradasPorCodigo).forEach((codigo) => {
+      entradasPorCodigo[codigo].sort((a, b) => a.data.localeCompare(b.data))
+    })
+
+    // Agrupar saídas por código
+    const saidasPorCodigo: Record<string, number> = {}
+    saidas.forEach((saida) => {
+      saidasPorCodigo[saida.codigo] = (saidasPorCodigo[saida.codigo] || 0) + (saida.quantidade || 0)
+    })
+
+    // Para cada código, calcular o saldo por origem usando FIFO
+    Object.keys(entradasPorCodigo).forEach((codigo) => {
+      const entradasDoCodigo = entradasPorCodigo[codigo]
+      let saidaRestante = saidasPorCodigo[codigo] || 0
+
+      entradasDoCodigo.forEach((entrada) => {
+        let qtdDisponivel = entrada.quantidade
+        
+        // Subtrair saídas (FIFO)
+        if (saidaRestante > 0) {
+          const qtdUsada = Math.min(saidaRestante, qtdDisponivel)
+          qtdDisponivel -= qtdUsada
+          saidaRestante -= qtdUsada
+        }
+
+        // Adicionar valor restante à origem correspondente
+        if (qtdDisponivel > 0 && entrada.origem) {
+          origens[entrada.origem as keyof typeof origens] += qtdDisponivel * entrada.valorUnitario
+        }
+      })
     })
 
     return origens
-  }, [estoqueCalculado, entradas])
+  }, [entradas, saidas])
 
   return (
     <div className="space-y-6">

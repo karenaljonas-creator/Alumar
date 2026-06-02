@@ -533,66 +533,66 @@ export function EntradaPecas() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="table-fixed w-full">
                 <TableHeader>
                   <TableRow className="bg-muted">
-                    <TableHead>
+                    <TableHead className="w-[8%]">
                       <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Código <SortIcon columnKey="codigo" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[12%]">
                       <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Descrição <SortIcon columnKey="descricao" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[4%]">
                       <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Qtd <SortIcon columnKey="quantidade" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[8%]">
                       <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Ordem Serviço <SortIcon columnKey="ordem_servico" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[8%]">
                       <button onClick={() => handleSort("numero_serie")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Nº Série <SortIcon columnKey="numero_serie" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[7%]">
                       <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         NF <SortIcon columnKey="nota_fiscal" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[8%]">
                       <button onClick={() => handleSort("data_emissao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Data Emissão <SortIcon columnKey="data_emissao" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[7%]">
                       <button onClick={() => handleSort("valor_unitario")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Valor Unit. <SortIcon columnKey="valor_unitario" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[7%]">
                       <button onClick={() => handleSort("valor_total")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Valor Total <SortIcon columnKey="valor_total" />
                       </button>
                     </TableHead>
-                    <TableHead>
+                    <TableHead className="w-[10%]">
                       <button onClick={() => handleSort("origem")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Origem <SortIcon columnKey="origem" />
                       </button>
                     </TableHead>
-                    <TableHead>Observação</TableHead>
-                    <TableHead>
+                    <TableHead className="w-[10%]">Observação</TableHead>
+                    <TableHead className="w-[7%]">
                       <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
                         Atualizado em <SortIcon columnKey="data_atualizacao" />
                       </button>
                     </TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    <TableHead className="w-[4%] text-center">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
