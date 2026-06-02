@@ -173,7 +173,7 @@ export function EstoqueSaldo() {
   const totalItensEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.saldo), 0)
   const valorTotalEstoque = filteredEstoque.reduce((acc, item) => acc + Math.max(0, item.valorTotalEstoque), 0)
 
-  // Calcular valores por origem - SALDO ATUAL (não total de entrada)
+  // Calcular valores por origem - baseado nas ENTRADAS menos SAÍDAS proporcionais
   const valoresPorOrigem = useMemo(() => {
     const origens = {
       "Estoque Estratégico": 0,
@@ -182,30 +182,57 @@ export function EstoqueSaldo() {
       "Acordo inicial": 0,
     }
 
-    // Calcular saldo atual por origem usando os itens calculados
-    estoqueCalculado.forEach((item) => {
-      const entrada = entradas.find((e) => e.codigo === item.codigo)
-      if (!entrada) return
+    // Primeiro, calcular total de entradas por origem
+    const entradasPorOrigem: Record<string, number> = {}
+    let totalEntradasValor = 0
 
+    entradas.forEach((entrada) => {
       const origem = (entrada.origem || "").toLowerCase().trim()
-      if (!origem) return
-
-      // Usar o valorTotalEstoque que já é (entrada - saída) * valor médio
-      const saldoValor = item.valorTotalEstoque || 0
-
+      const valor = entrada.valor_total || 0
+      
+      let origemKey = ""
       if (origem.includes("estratégico") || origem.includes("estrategico")) {
-        origens["Estoque Estratégico"] += saldoValor
+        origemKey = "Estoque Estratégico"
       } else if (origem.includes("corretiva") || origem.includes("contrato")) {
-        origens["Corretiva Contrato"] += saldoValor
+        origemKey = "Corretiva Contrato"
       } else if (origem.includes("plano") || origem.includes("manutenção") || origem.includes("manutencao") || origem.includes("preventiva") || origem.includes("preventivo")) {
-        origens["Plano Manutenção"] += saldoValor
+        origemKey = "Plano Manutenção"
       } else if (origem.includes("acordo") && origem.includes("inicial")) {
-        origens["Acordo inicial"] += saldoValor
+        origemKey = "Acordo inicial"
+      }
+      
+      if (origemKey) {
+        entradasPorOrigem[origemKey] = (entradasPorOrigem[origemKey] || 0) + valor
+        totalEntradasValor += valor
       }
     })
 
+    // Calcular total de saídas
+    const totalSaidasValor = saidas.reduce((acc, saida) => {
+      // Encontrar o valor unitário médio da entrada correspondente
+      const entradasDoItem = entradas.filter(e => e.codigo === saida.codigo)
+      if (entradasDoItem.length === 0) return acc
+      
+      const totalValorEntrada = entradasDoItem.reduce((sum, e) => sum + (e.valor_total || 0), 0)
+      const totalQtdEntrada = entradasDoItem.reduce((sum, e) => sum + (e.quantidade || 0), 0)
+      const valorMedio = totalQtdEntrada > 0 ? totalValorEntrada / totalQtdEntrada : 0
+      
+      return acc + (saida.quantidade * valorMedio)
+    }, 0)
+
+    // Calcular proporção de cada origem no estoque atual
+    // Estoque = Entradas - Saídas, distribuído proporcionalmente
+    const proporcaoSaida = totalEntradasValor > 0 ? totalSaidasValor / totalEntradasValor : 0
+
+    Object.keys(entradasPorOrigem).forEach((origem) => {
+      const valorEntrada = entradasPorOrigem[origem]
+      // Saldo = Entrada - (Saída proporcional)
+      const saldoOrigem = valorEntrada * (1 - proporcaoSaida)
+      origens[origem as keyof typeof origens] = Math.max(0, saldoOrigem)
+    })
+
     return origens
-  }, [estoqueCalculado, entradas])
+  }, [entradas, saidas])
 
   return (
     <div className="space-y-6">
