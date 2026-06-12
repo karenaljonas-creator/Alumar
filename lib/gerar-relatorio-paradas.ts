@@ -87,6 +87,9 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
 <head>
 <meta charset="utf-8" />
 <title>Relatório de Máquinas Paradas - Salobo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet" />
 <style>
   @page { size: A4 landscape; margin: 14mm; }
   * {
@@ -96,7 +99,9 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     color-adjust: exact !important;
   }
   body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Roboto", Arial, Helvetica, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     color: #1f2d3a;
     margin: 0;
     padding: 0;
@@ -239,8 +244,15 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   </div>
 
   <script>
+    function dispararImpressao() {
+      setTimeout(function () { window.print(); }, 250);
+    }
     window.onload = function () {
-      setTimeout(function () { window.print(); }, 350);
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(dispararImpressao).catch(dispararImpressao);
+      } else {
+        dispararImpressao();
+      }
     };
   </script>
 </body>
