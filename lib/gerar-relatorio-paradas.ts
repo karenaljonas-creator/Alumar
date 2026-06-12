@@ -107,13 +107,10 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     gap: 22px;
   }
   .header .logo {
-    background: #ffffff;
-    padding: 10px 14px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
   }
-  .header .logo img { height: 38px; display: block; }
+  .header .logo img { height: 48px; display: block; }
   .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.4px; }
   .header p { margin: 4px 0 0; font-size: 13px; color: #b9c9d6; }
   .section { padding: 24px 28px 0; }
