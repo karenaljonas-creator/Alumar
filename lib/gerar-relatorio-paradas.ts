@@ -1,5 +1,6 @@
 import type { Machine } from "@/lib/types"
 import { ATLAS_COPCO_LOGO_DATA_URI } from "@/lib/atlas-copco-logo"
+import { ROBOTO_FONT_DATA_URI } from "@/lib/roboto-font"
 
 function escapeHtml(value: string): string {
   return value
@@ -88,6 +89,13 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
 <meta charset="utf-8" />
 <title>Relatório de Máquinas Paradas - Salobo</title>
 <style>
+  @font-face {
+    font-family: "ReportRoboto";
+    font-style: normal;
+    font-weight: 400 900;
+    font-display: block;
+    src: url(${ROBOTO_FONT_DATA_URI}) format("woff2");
+  }
   @page { size: A4 landscape; margin: 14mm; }
   * {
     box-sizing: border-box;
@@ -96,7 +104,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     color-adjust: exact !important;
   }
   body {
-    font-family: Arial, "Segoe UI", Helvetica, sans-serif;
+    font-family: "ReportRoboto", Arial, Helvetica, sans-serif;
     color: #1f2d3a;
     margin: 0;
     padding: 0;
