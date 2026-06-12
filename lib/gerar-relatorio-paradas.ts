@@ -58,14 +58,14 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
       const zebra = index % 2 === 0 ? "#ffffff" : "#f3f6f9"
       return `
         <tr style="background:${zebra};">
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#0f2d44;">${escapeHtml(m.nome || "-")}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(m.tipo || "-")}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(m.localizacao || "-")}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">${dias} dias</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;max-width:320px;">${escapeHtml(m.motivoParada || "-")}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:center;">${formatDate(m.prazoDados)}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;text-align:center;">${escapeHtml(m.acaoResponsavel || "-")}</td>
-          <td style="padding:9px 10px;border-bottom:1px solid #e2e8f0;">${escapeHtml(m.responsavel || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#0f2d44;">${escapeHtml(m.nome || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(m.tipo || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;" class="wrap">${escapeHtml(m.localizacao || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">${dias} dias</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;" class="wrap">${escapeHtml(m.motivoParada || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">${formatDate(m.prazoDados)}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">${escapeHtml(m.acaoResponsavel || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;" class="wrap">${escapeHtml(m.responsavel || "-")}</td>
         </tr>`
     })
     .join("")
@@ -144,25 +144,26 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   .v-amber { color: #fbbf24; }
   .v-red { color: #f87171; }
   .v-blue { color: #38bdf8; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; table-layout: fixed; }
-  td, th { word-break: normal; overflow-wrap: break-word; hyphens: none; vertical-align: top; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; table-layout: fixed; }
+  td, th { word-break: keep-all; overflow-wrap: normal; hyphens: none; vertical-align: top; }
+  td.wrap, th.wrap { overflow-wrap: break-word; }
   thead th {
     background: #0c2c44;
     color: #ffffff;
     text-align: left;
-    padding: 10px;
-    font-size: 12.5px;
+    padding: 9px 8px;
+    font-size: 12px;
     font-weight: 700;
   }
   thead th.center { text-align: center; }
-  .col-tag { width: 9%; }
-  .col-modelo { width: 9%; }
-  .col-local { width: 16%; }
-  .col-tempo { width: 8%; }
-  .col-obs { width: 27%; }
+  .col-tag { width: 11%; }
+  .col-modelo { width: 10%; }
+  .col-local { width: 15%; }
+  .col-tempo { width: 7%; }
+  .col-obs { width: 25%; }
   .col-prazo { width: 9%; }
   .col-acao { width: 6%; }
-  .col-resp { width: 16%; }
+  .col-resp { width: 17%; }
   .footer {
     padding: 18px 28px;
     color: #8094a4;
