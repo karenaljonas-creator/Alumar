@@ -1,4 +1,5 @@
 import type { Machine } from "@/lib/types"
+import { ATLAS_COPCO_LOGO_DATA_URI } from "@/lib/atlas-copco-logo"
 
 function escapeHtml(value: string): string {
   return value
@@ -49,7 +50,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   const paradasVale = machines.filter((m) => m.acaoResponsavel === "Vale").length
   const paradasAtlas = machines.filter((m) => m.acaoResponsavel === "Atlas").length
 
-  const logoUrl = `${window.location.origin}/atlas-copco-logo.svg`
+  const logoUrl = ATLAS_COPCO_LOGO_DATA_URI
 
   const rows = machines
     .map((m, index) => {
