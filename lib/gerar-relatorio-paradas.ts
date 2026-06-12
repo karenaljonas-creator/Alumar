@@ -107,13 +107,10 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     gap: 22px;
   }
   .header .logo {
-    background: #ffffff;
-    padding: 10px 14px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
   }
-  .header .logo img { height: 38px; display: block; }
+  .header .logo img { height: 48px; display: block; }
   .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.4px; }
   .header p { margin: 4px 0 0; font-size: 13px; color: #b9c9d6; }
   .section { padding: 24px 28px 0; }
@@ -142,7 +139,8 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   .v-amber { color: #fbbf24; }
   .v-red { color: #f87171; }
   .v-blue { color: #38bdf8; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; table-layout: fixed; }
+  td, th { word-break: normal; overflow-wrap: break-word; hyphens: none; vertical-align: top; }
   thead th {
     background: #0c2c44;
     color: #ffffff;
@@ -152,6 +150,14 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     font-weight: 700;
   }
   thead th.center { text-align: center; }
+  .col-tag { width: 9%; }
+  .col-modelo { width: 9%; }
+  .col-local { width: 16%; }
+  .col-tempo { width: 8%; }
+  .col-obs { width: 27%; }
+  .col-prazo { width: 9%; }
+  .col-acao { width: 6%; }
+  .col-resp { width: 16%; }
   .footer {
     padding: 18px 28px;
     color: #8094a4;
@@ -190,12 +196,22 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   <div class="section">
     <h2>Detalhamento das máquinas paradas</h2>
     <table>
+      <colgroup>
+        <col class="col-tag" />
+        <col class="col-modelo" />
+        <col class="col-local" />
+        <col class="col-tempo" />
+        <col class="col-obs" />
+        <col class="col-prazo" />
+        <col class="col-acao" />
+        <col class="col-resp" />
+      </colgroup>
       <thead>
         <tr>
           <th>TAG</th>
           <th>Modelo</th>
           <th>Localização</th>
-          <th class="center">Tempo de Parada</th>
+          <th class="center">Tempo</th>
           <th>Observações</th>
           <th class="center">Prazo</th>
           <th class="center">Ação</th>
