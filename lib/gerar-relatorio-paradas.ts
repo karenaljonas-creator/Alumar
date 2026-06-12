@@ -49,13 +49,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   const paradasVale = machines.filter((m) => m.acaoResponsavel === "Vale").length
   const paradasAtlas = machines.filter((m) => m.acaoResponsavel === "Atlas").length
 
-  // Tempo médio de parada
-  const temposParada = machines.map((m) => m.tempoParada ?? getDiasParada(m.dataParada))
-  const tempoMedio =
-    temposParada.length > 0
-      ? Math.round(temposParada.reduce((acc, t) => acc + t, 0) / temposParada.length)
-      : 0
-  const maiorParada = temposParada.length > 0 ? Math.max(...temposParada) : 0
+  const logoUrl = `${window.location.origin}/atlas-copco-logo.svg`
 
   const rows = machines
     .map((m, index) => {
@@ -112,15 +106,13 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     gap: 22px;
   }
   .header .logo {
-    font-weight: 800;
-    font-size: 22px;
-    letter-spacing: 0.5px;
-    background: #15adda;
-    color: #ffffff;
-    padding: 8px 14px;
+    background: #ffffff;
+    padding: 10px 14px;
     border-radius: 4px;
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
   }
+  .header .logo img { height: 38px; display: block; }
   .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.4px; }
   .header p { margin: 4px 0 0; font-size: 13px; color: #b9c9d6; }
   .section { padding: 24px 28px 0; }
@@ -133,7 +125,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   .section .lead { color: #45586a; font-size: 14px; line-height: 1.5; margin: 0 0 18px; }
   .cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 14px;
     margin-bottom: 8px;
   }
@@ -172,7 +164,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
 </head>
 <body>
   <div class="header">
-    <div class="logo">Atlas Copco</div>
+    <div class="logo"><img src="${logoUrl}" alt="Atlas Copco" /></div>
     <div>
       <h1>RELATÓRIO DE MÁQUINAS PARADAS</h1>
       <p>Dashboard de Confiabilidade - Salobo | Gerado em ${escapeHtml(dataGeracao)}</p>
@@ -191,8 +183,6 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
       <div class="card"><div class="label">Máquinas paradas</div><div class="value v-red">${totalParadas}</div></div>
       <div class="card"><div class="label">Ação Vale</div><div class="value v-blue">${paradasVale}</div></div>
       <div class="card"><div class="label">Ação Atlas</div><div class="value v-amber">${paradasAtlas}</div></div>
-      <div class="card"><div class="label">Tempo médio parada</div><div class="value v-white">${tempoMedio} dias</div></div>
-      <div class="card"><div class="label">Maior tempo parada</div><div class="value v-red">${maiorParada} dias</div></div>
     </div>
   </div>
 
