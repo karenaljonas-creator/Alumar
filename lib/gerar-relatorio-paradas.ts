@@ -1,6 +1,6 @@
 import type { Machine } from "@/lib/types"
 import { ATLAS_COPCO_LOGO_DATA_URI } from "@/lib/atlas-copco-logo"
-import { ROBOTO_FONT_DATA_URI } from "@/lib/roboto-font"
+import { ROBOTO_400, ROBOTO_500, ROBOTO_700, ROBOTO_900 } from "@/lib/roboto-font"
 
 function escapeHtml(value: string): string {
   return value
@@ -59,10 +59,10 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
       const zebra = index % 2 === 0 ? "#ffffff" : "#f3f6f9"
       return `
         <tr style="background:${zebra};">
-          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;font-weight:600;color:#0f2d44;">${escapeHtml(m.nome || "-")}</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;font-weight:700;color:#0f2d44;">${escapeHtml(m.nome || "-")}</td>
           <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;">${escapeHtml(m.tipo || "-")}</td>
           <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;" class="wrap">${escapeHtml(m.localizacao || "-")}</td>
-          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">${dias} dias</td>
+          <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:700;">${dias} dias</td>
           <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;" class="wrap">${escapeHtml(m.motivoParada || "-")}</td>
           <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">${formatDate(m.prazoDados)}</td>
           <td style="padding:9px 8px;border-bottom:1px solid #e2e8f0;text-align:center;">${escapeHtml(m.acaoResponsavel || "-")}</td>
@@ -92,9 +92,30 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   @font-face {
     font-family: "ReportRoboto";
     font-style: normal;
-    font-weight: 400 900;
+    font-weight: 400;
     font-display: block;
-    src: url(${ROBOTO_FONT_DATA_URI}) format("woff2");
+    src: url(${ROBOTO_400}) format("woff2");
+  }
+  @font-face {
+    font-family: "ReportRoboto";
+    font-style: normal;
+    font-weight: 500;
+    font-display: block;
+    src: url(${ROBOTO_500}) format("woff2");
+  }
+  @font-face {
+    font-family: "ReportRoboto";
+    font-style: normal;
+    font-weight: 700;
+    font-display: block;
+    src: url(${ROBOTO_700}) format("woff2");
+  }
+  @font-face {
+    font-family: "ReportRoboto";
+    font-style: normal;
+    font-weight: 900;
+    font-display: block;
+    src: url(${ROBOTO_900}) format("woff2");
   }
   @page { size: A4 landscape; margin: 14mm; }
   * {
@@ -105,6 +126,8 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   }
   body {
     font-family: "ReportRoboto", Arial, Helvetica, sans-serif;
+    font-synthesis: none;
+    -webkit-font-smoothing: antialiased;
     color: #1f2d3a;
     margin: 0;
     padding: 0;
@@ -124,14 +147,14 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     align-items: center;
   }
   .header .logo img { height: 48px; display: block; }
-  .header h1 { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.4px; }
+  .header h1 { margin: 0; font-size: 22px; font-weight: 900; letter-spacing: 0.4px; }
   .header p { margin: 4px 0 0; font-size: 13px; color: #b9c9d6; }
   .section { padding: 24px 28px 0; }
   .section h2 {
     color: #15607a;
     font-size: 20px;
     margin: 0 0 10px;
-    font-weight: 800;
+    font-weight: 900;
   }
   .section .lead { color: #45586a; font-size: 14px; line-height: 1.5; margin: 0 0 18px; }
   .cards {
@@ -146,7 +169,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     padding: 14px 16px;
   }
   .card .label { color: #9fb4c4; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; }
-  .card .value { font-size: 26px; font-weight: 800; margin-top: 6px; }
+  .card .value { font-size: 26px; font-weight: 900; margin-top: 6px; }
   .v-white { color: #ffffff; }
   .v-green { color: #4ade80; }
   .v-amber { color: #fbbf24; }
