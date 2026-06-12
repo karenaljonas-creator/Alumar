@@ -147,6 +147,9 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 4px; table-layout: fixed; }
   td, th { word-break: keep-all; overflow-wrap: normal; hyphens: none; vertical-align: top; }
   td.wrap, th.wrap { overflow-wrap: break-word; }
+  thead { display: table-header-group; }
+  tbody tr { page-break-inside: avoid; break-inside: avoid; }
+  .section h2 { page-break-after: avoid; }
   thead th {
     background: #0c2c44;
     color: #ffffff;
