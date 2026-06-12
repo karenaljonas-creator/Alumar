@@ -29,11 +29,9 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
       return []
     }
 
-    const last7Weeks = history.slice(-7).sort((a, b) => {
-      const weekA = Number.parseInt(a.semana.split("-W")[1] || "0")
-      const weekB = Number.parseInt(b.semana.split("-W")[1] || "0")
-      return weekA - weekB
-    })
+    const last7Weeks = history
+      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
+      .slice(-7)
 
     return last7Weeks.map((snapshot) => {
       let paradas: number
