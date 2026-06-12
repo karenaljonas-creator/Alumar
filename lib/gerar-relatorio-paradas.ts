@@ -174,7 +174,7 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     <div class="logo"><img src="${logoUrl}" alt="Atlas Copco" /></div>
     <div>
       <h1>RELATÓRIO DE MÁQUINAS PARADAS</h1>
-      <p>Dashboard de Confiabilidade - Salobo | Gerado em ${escapeHtml(dataGeracao)}</p>
+      <p>Salobo | Gerado em ${escapeHtml(dataGeracao)}</p>
     </div>
   </div>
 
