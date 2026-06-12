@@ -8,12 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, Calendar as CalendarIcon } from "lucide-react"
+import { Search, AlertTriangle, ArrowUp, ArrowDown, ArrowUpDown, Check, X, Edit2, Calendar as CalendarIcon, FileDown } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { format } from "date-fns"
 import { pt } from "date-fns/locale"
 import { saveMachines } from "@/lib/supabase-machine-storage"
+import { gerarRelatorioParadas } from "@/lib/gerar-relatorio-paradas"
 import { useToast } from "@/hooks/use-toast"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
@@ -204,6 +205,20 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     }
   }
 
+  const handleGerarRelatorio = () => {
+    const sucesso = gerarRelatorioParadas(filteredMachines, {
+      localizacao: localizacaoFilter,
+      contrato: contratoFilter,
+    })
+    if (!sucesso) {
+      toast({
+        title: "Não foi possível abrir o relatório",
+        description: "Permita pop-ups para este site e tente novamente.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const SortIcon = ({ columnKey }: { columnKey: string }) => {
     if (sortKey !== columnKey) {
       return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
@@ -232,9 +247,18 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                 </p>
               </div>
             </div>
-            <Badge variant="destructive" className="text-base px-3 py-1">
-                      {filteredMachines.length} parada{filteredMachines.length !== 1 ? "s" : ""}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleGerarRelatorio}
+                className="gap-2 bg-[#0c2c44] hover:bg-[#0c2c44]/90 text-white"
+              >
+                <FileDown className="h-4 w-4" />
+                Gerar Relatório PDF
+              </Button>
+              <Badge variant="destructive" className="text-base px-3 py-1">
+                {filteredMachines.length} parada{filteredMachines.length !== 1 ? "s" : ""}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 p-4 overflow-hidden">
