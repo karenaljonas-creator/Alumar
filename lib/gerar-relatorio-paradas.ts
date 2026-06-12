@@ -139,7 +139,8 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   .v-amber { color: #fbbf24; }
   .v-red { color: #f87171; }
   .v-blue { color: #38bdf8; }
-  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 4px; table-layout: fixed; }
+  td, th { word-break: normal; overflow-wrap: break-word; hyphens: none; vertical-align: top; }
   thead th {
     background: #0c2c44;
     color: #ffffff;
@@ -149,6 +150,14 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     font-weight: 700;
   }
   thead th.center { text-align: center; }
+  .col-tag { width: 9%; }
+  .col-modelo { width: 9%; }
+  .col-local { width: 16%; }
+  .col-tempo { width: 8%; }
+  .col-obs { width: 27%; }
+  .col-prazo { width: 9%; }
+  .col-acao { width: 6%; }
+  .col-resp { width: 16%; }
   .footer {
     padding: 18px 28px;
     color: #8094a4;
@@ -187,12 +196,22 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   <div class="section">
     <h2>Detalhamento das máquinas paradas</h2>
     <table>
+      <colgroup>
+        <col class="col-tag" />
+        <col class="col-modelo" />
+        <col class="col-local" />
+        <col class="col-tempo" />
+        <col class="col-obs" />
+        <col class="col-prazo" />
+        <col class="col-acao" />
+        <col class="col-resp" />
+      </colgroup>
       <thead>
         <tr>
           <th>TAG</th>
           <th>Modelo</th>
           <th>Localização</th>
-          <th class="center">Tempo de Parada</th>
+          <th class="center">Tempo</th>
           <th>Observações</th>
           <th class="center">Prazo</th>
           <th class="center">Ação</th>
