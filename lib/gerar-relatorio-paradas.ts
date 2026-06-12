@@ -89,14 +89,19 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
 <title>Relatório de Máquinas Paradas - Salobo</title>
 <style>
   @page { size: A4 landscape; margin: 14mm; }
-  * { box-sizing: border-box; }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
   body {
     font-family: Arial, Helvetica, sans-serif;
     color: #1f2d3a;
     margin: 0;
     padding: 0;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .header {
     background: #0c2c44;
