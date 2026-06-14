@@ -129,23 +129,25 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     loadEstoquePecas()
   }, [loadSaidas, loadEstoquePecas])
 
-  // Buscar TODOS os itens por Nota Fiscal da entrada
+  // Buscar TODOS os itens por Nota Fiscal OU por Código (PN) da entrada
   const handleBuscarNF = async () => {
-    if (!buscaNF.trim()) {
-      toast({ title: "Digite o número da Nota Fiscal", variant: "destructive" })
+    const termo = buscaNF.trim()
+    if (!termo) {
+      toast({ title: "Digite a Nota Fiscal ou o Código do item", variant: "destructive" })
       return
     }
 
     setBuscandoNF(true)
-    
+
+    // Procura tanto na nota fiscal quanto no código da peça
     const { data, error } = await supabase
       .from("estoque_pecas")
       .select("*")
-      .ilike("nota_fiscal", `%${buscaNF.trim()}%`)
+      .or(`nota_fiscal.ilike.%${termo}%,codigo.ilike.%${termo}%`)
       .order("codigo")
 
     if (error) {
-      toast({ title: "Erro ao buscar NF", description: error.message, variant: "destructive" })
+      toast({ title: "Erro ao buscar", description: error.message, variant: "destructive" })
       setItensNF([])
       setNfCarregada(false)
     } else if (data && data.length > 0) {
@@ -170,12 +172,14 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       })
 
       const itens = Array.from(itensAgrupados.values())
+      // Usa a Nota Fiscal real do item encontrado (importante quando a busca foi por código)
+      const notaFiscalReal = data[0]?.nota_fiscal || buscaNF.trim()
       setItensNF(itens)
       setNfCarregada(true)
-      setFormData((prev) => ({ ...prev, nota_fiscal: buscaNF.trim() }))
-      toast({ title: "Sucesso!", description: `${itens.length} item(ns) carregado(s) da NF` })
+      setFormData((prev) => ({ ...prev, nota_fiscal: notaFiscalReal }))
+      toast({ title: "Sucesso!", description: `${itens.length} item(ns) carregado(s)` })
     } else {
-      toast({ title: "Nota Fiscal não encontrada", description: "Nenhum item com essa NF foi encontrado.", variant: "destructive" })
+      toast({ title: "Nada encontrado", description: "Nenhum item com essa Nota Fiscal ou Código foi encontrado.", variant: "destructive" })
       setItensNF([])
       setNfCarregada(false)
     }
@@ -444,13 +448,13 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <div className="space-y-2 p-3 bg-muted/50 rounded-lg border">
                 <Label className="flex items-center gap-2 text-sm font-medium">
                   <FileSearch className="h-4 w-4" />
-                  Buscar itens por Nota Fiscal
+                  Buscar itens por Nota Fiscal ou Código
                 </Label>
                 <div className="flex gap-2">
                   <Input
                     value={buscaNF}
                     onChange={(e) => setBuscaNF(e.target.value)}
-                    placeholder="Digite o número da NF da Entrada"
+                    placeholder="Digite a NF ou o Código do item da Entrada"
                     className="flex-1"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -463,7 +467,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     {buscandoNF ? "Buscando..." : "Buscar"}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">Busque pela NF da Entrada para carregar os itens automaticamente</p>
+                <p className="text-xs text-muted-foreground">Busque pela NF ou pelo Código (PN) da Entrada para carregar os itens automaticamente</p>
               </div>
 
               {/* Lista de itens da NF */}
