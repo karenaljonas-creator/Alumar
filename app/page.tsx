@@ -4,6 +4,7 @@
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
 import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
+import { downloadCsv, detectCsvDelimiter, parseCsvLine } from "@/lib/utils"
 import { loadContrato } from "@/lib/contrato-storage"
 import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } from "@/lib/supabase-history-storage"
 import {
@@ -210,44 +211,162 @@ export default function Home() {
   }
 
   const handleExport = async () => {
-    // Exportar baseado na seção ativa
-    if (activeSection === "entrada" || activeSection === "saida" || activeSection === "estoque") {
-      // Exportar dados de peças (entrada ou saída)
-      const supabase = (await import("@/lib/supabase/client")).createClient()
-      const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
-      const fileName = activeSection === "entrada" ? "entrada-pecas" : activeSection === "saida" ? "saida-pecas" : "estoque"
-      
-      const { data, error } = await supabase.from(tableName).select("*").order("created_at", { ascending: false })
-      
-      if (error) {
-        toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
+    const today = new Date().toISOString().split("T")[0]
+    // Converte datas (ISO ou yyyy-mm-dd) para dd/mm/aaaa
+    const formatDateBR = (d: string | null | undefined): string => {
+      if (!d) return ""
+      const datePart = String(d).split("T")[0]
+      const m = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+      return m ? `${m[3]}/${m[2]}/${m[1]}` : String(d)
+    }
+    const round2 = (n: number) => Math.round((Number(n) + Number.EPSILON) * 100) / 100
+
+    try {
+      if (activeSection === "estoque") {
+        // Exportar o SALDO agregado (igual à tela), não os registros crus do banco
+        const supabase = (await import("@/lib/supabase/client")).createClient()
+        const [entradasRes, saidasRes] = await Promise.all([
+          supabase.from("estoque_pecas").select("*"),
+          supabase.from("saida_pecas").select("*"),
+        ])
+        if (entradasRes.error || saidasRes.error) {
+          toast({ title: "Erro ao exportar", description: (entradasRes.error || saidasRes.error)!.message, variant: "destructive" })
+          return
+        }
+        const entradas = entradasRes.data || []
+        const saidas = saidasRes.data || []
+        const map = new Map<string, { codigo: string; descricao: string; totalEntrada: number; totalSaida: number; valorTotalEntrada: number }>()
+        entradas.forEach((e) => {
+          const cur = map.get(e.codigo)
+          if (cur) {
+            cur.totalEntrada += e.quantidade || 0
+            cur.valorTotalEntrada += e.valor_total || 0
+          } else {
+            map.set(e.codigo, { codigo: e.codigo, descricao: e.descricao || "", totalEntrada: e.quantidade || 0, totalSaida: 0, valorTotalEntrada: e.valor_total || 0 })
+          }
+        })
+        saidas.forEach((s) => {
+          const cur = map.get(s.codigo)
+          if (cur) cur.totalSaida += s.quantidade || 0
+          else map.set(s.codigo, { codigo: s.codigo, descricao: s.descricao || "", totalEntrada: 0, totalSaida: s.quantidade || 0, valorTotalEntrada: 0 })
+        })
+        const items = Array.from(map.values())
+          .map((it) => {
+            const saldo = it.totalEntrada - it.totalSaida
+            const valorMedio = it.totalEntrada > 0 ? it.valorTotalEntrada / it.totalEntrada : 0
+            return { ...it, saldo, valorMedio, valorTotalSaldo: saldo * valorMedio }
+          })
+          .sort((a, b) => a.codigo.localeCompare(b.codigo))
+
+        if (items.length === 0) {
+          toast({ title: "Nenhum dado", description: "Não há itens em estoque para exportar.", variant: "destructive" })
+          return
+        }
+        const headers = ["Código (PN)", "Descrição", "Entrada", "Saída", "Saldo", "Valor Médio Unit. (R$)", "Valor Total (R$)"]
+        const rows = items.map((it) => [
+          it.codigo,
+          it.descricao,
+          it.totalEntrada,
+          it.totalSaida,
+          it.saldo,
+          round2(it.valorMedio),
+          it.saldo > 0 ? round2(it.valorTotalSaldo) : 0,
+        ])
+        downloadCsv(`estoque-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Saldo de estoque exportado com sucesso." })
         return
       }
-      
-      if (!data || data.length === 0) {
-        toast({ title: "Nenhum dado", description: "Não há dados para exportar.", variant: "destructive" })
+
+      if (activeSection === "entrada") {
+        const supabase = (await import("@/lib/supabase/client")).createClient()
+        const { data, error } = await supabase.from("estoque_pecas").select("*").order("data_emissao", { ascending: false })
+        if (error) {
+          toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
+          return
+        }
+        if (!data || data.length === 0) {
+          toast({ title: "Nenhum dado", description: "Não há entradas para exportar.", variant: "destructive" })
+          return
+        }
+        const headers = ["Código", "Descrição", "Quantidade", "Ordem de Serviço", "Número de Série", "Nota Fiscal", "Data de Emissão", "Valor Unitário (R$)", "Valor Total (R$)", "Origem", "Observação"]
+        const rows = data.map((e) => [
+          e.codigo ?? "",
+          e.descricao ?? "",
+          e.quantidade ?? 0,
+          e.ordem_servico ?? "",
+          e.numero_serie ?? "",
+          e.nota_fiscal ?? "",
+          formatDateBR(e.data_emissao),
+          round2(e.valor_unitario ?? 0),
+          round2(e.valor_total ?? 0),
+          e.origem ?? "",
+          e.observacao ?? "",
+        ])
+        downloadCsv(`entrada-pecas-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Entradas de peças exportadas com sucesso." })
         return
       }
-      
-      // Criar CSV
-      const headers = Object.keys(data[0]).join(",")
-      const rows = data.map(row => Object.values(row).map(v => `"${v ?? ""}"`).join(","))
-      const csv = [headers, ...rows].join("\n")
-      
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      link.href = URL.createObjectURL(blob)
-      link.download = `${fileName}-${new Date().toISOString().split("T")[0]}.csv`
-      link.click()
-      
-      toast({ title: "Exportação concluída", description: `Dados de ${activeSection} exportados com sucesso.` })
-    } else {
+
+      if (activeSection === "saida") {
+        const supabase = (await import("@/lib/supabase/client")).createClient()
+        const { data, error } = await supabase.from("saida_pecas").select("*").order("data_saida", { ascending: false })
+        if (error) {
+          toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
+          return
+        }
+        if (!data || data.length === 0) {
+          toast({ title: "Nenhum dado", description: "Não há saídas para exportar.", variant: "destructive" })
+          return
+        }
+        const headers = ["Código", "Descrição", "Quantidade", "Ordem de Serviço", "Nota Fiscal", "Data de Saída", "Utilização", "Área", "Compressor", "Observação"]
+        const rows = data.map((s) => [
+          s.codigo ?? "",
+          s.descricao ?? "",
+          s.quantidade ?? 0,
+          s.ordem_servico ?? "",
+          s.nota_fiscal ?? "",
+          formatDateBR(s.data_saida),
+          s.utilizacao ?? "",
+          s.area ?? "",
+          s.compressor ?? "",
+          s.observacao ?? "",
+        ])
+        downloadCsv(`saida-pecas-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Saídas de peças exportadas com sucesso." })
+        return
+      }
+
+      if (activeSection === "estoque-estrategico") {
+        const supabase = (await import("@/lib/supabase/client")).createClient()
+        const { data, error } = await supabase.from("estoque_estrategico").select("*").order("codigo", { ascending: true })
+        if (error) {
+          toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
+          return
+        }
+        if (!data || data.length === 0) {
+          toast({ title: "Nenhum dado", description: "Não há itens estratégicos para exportar.", variant: "destructive" })
+          return
+        }
+        const headers = ["Código", "Descrição", "Equipamento", "Quantidade Mínima"]
+        const rows = data.map((it) => [
+          it.codigo ?? "",
+          it.descricao ?? "",
+          it.equipamento ?? "",
+          it.quantidade_minima ?? 0,
+        ])
+        downloadCsv(`estoque-estrategico-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
+        return
+      }
+
       // Exportar máquinas (comportamento padrão)
       downloadCSV(machines)
       toast({
         title: "Exportação concluída",
         description: "O arquivo CSV de máquinas foi baixado com sucesso.",
       })
+    } catch (err: any) {
+      toast({ title: "Erro ao exportar", description: err?.message || "Falha inesperada ao exportar.", variant: "destructive" })
     }
   }
 
@@ -267,7 +386,7 @@ export default function Home() {
           const supabase = (await import("@/lib/supabase/client")).createClient()
           const tableName = activeSection === "saida" ? "saida_pecas" : "estoque_pecas"
           
-          let rows: Record<string, string | number>[] = []
+          let rows: Record<string, string | number | null>[] = []
           
           if (isExcel) {
             // Importar Excel usando xlsx
@@ -366,20 +485,78 @@ export default function Home() {
               reader.onload = (event) => resolve(event.target?.result as string)
               reader.readAsText(file)
             })
-            
-            const lines = csvContent.split("\n").filter(line => line.trim())
-            const headers = lines[0].split(",").map(h => h.replace(/"/g, "").trim())
-            
-            rows = lines.slice(1).map(line => {
-              const values = line.match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g)?.map(v => v.replace(/"/g, "").trim()) || []
-              const obj: Record<string, string> = {}
-              headers.forEach((h, i) => {
-                if (h !== "id" && h !== "created_at") {
-                  obj[h] = values[i] || ""
-                }
-              })
-              return obj
-            }).filter(row => Object.keys(row).length > 0)
+
+            // Remove BOM e divide em linhas; detecta o delimitador (; ou ,)
+            const content = csvContent.replace(/^\uFEFF/, "")
+            const lines = content.split(/\r?\n/).filter(line => line.trim())
+            if (lines.length < 2) {
+              rows = []
+            } else {
+              const delimiter = detectCsvDelimiter(lines[0])
+
+              // Normaliza um cabeçalho: minúsculo, sem acentos, sem "(r$)"
+              const normalize = (h: string) =>
+                h.toLowerCase()
+                  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                  .replace(/\(r\$\)/g, "")
+                  .replace(/\s+/g, " ")
+                  .trim()
+
+              // Mapeia cabeçalhos (amigáveis ou do banco) para as colunas do banco
+              const headerMap: Record<string, string> = {
+                "codigo": "codigo",
+                "descricao": "descricao",
+                "quantidade": "quantidade", "qtd": "quantidade",
+                "ordem de servico": "ordem_servico", "ordem_servico": "ordem_servico", "pedido / o.s": "ordem_servico",
+                "numero de serie": "numero_serie", "numero_serie": "numero_serie", "serie": "numero_serie",
+                "nota fiscal": "nota_fiscal", "nota_fiscal": "nota_fiscal", "nf": "nota_fiscal",
+                "data de emissao": "data_emissao", "data_emissao": "data_emissao", "data envio": "data_emissao",
+                "valor unitario": "valor_unitario", "valor_unitario": "valor_unitario", "valor": "valor_unitario",
+                "valor total": "valor_total", "valor_total": "valor_total",
+                "origem": "origem",
+                "observacao": "observacao", "obs": "observacao",
+                "data de saida": "data_saida", "data_saida": "data_saida",
+                "utilizacao": "utilizacao",
+                "area": "area",
+                "compressor": "compressor",
+              }
+
+              const validFields = activeSection === "saida"
+                ? ["codigo", "descricao", "quantidade", "ordem_servico", "nota_fiscal", "data_saida", "utilizacao", "area", "compressor", "observacao"]
+                : ["codigo", "descricao", "quantidade", "ordem_servico", "numero_serie", "nota_fiscal", "data_emissao", "valor_unitario", "valor_total", "origem", "observacao"]
+
+              const headerCols = parseCsvLine(lines[0], delimiter).map(normalize)
+
+              const toNumber = (v: string) => {
+                const s = v.replace(/r\$/gi, "").trim()
+                // Remove separador de milhar e usa ponto decimal
+                const normalized = s.includes(",") ? s.replace(/\./g, "").replace(",", ".") : s
+                return parseFloat(normalized) || 0
+              }
+              const toIsoDate = (v: string): string | null => {
+                if (!v) return null
+                const br = v.match(/^(\d{2})\/(\d{2})\/(\d{4})$/)
+                if (br) return `${br[3]}-${br[2]}-${br[1]}`
+                const iso = v.match(/^(\d{4})-(\d{2})-(\d{2})/)
+                if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+                return null
+              }
+
+              rows = lines.slice(1).map(line => {
+                const values = parseCsvLine(line, delimiter)
+                const obj: Record<string, string | number | null> = {}
+                headerCols.forEach((h, i) => {
+                  const col = headerMap[h]
+                  if (!col || !validFields.includes(col)) return
+                  const raw = values[i] ?? ""
+                  if (col === "quantidade") obj[col] = parseInt(raw) || 0
+                  else if (col === "valor_unitario" || col === "valor_total") obj[col] = toNumber(raw)
+                  else if (col === "data_emissao" || col === "data_saida") obj[col] = toIsoDate(raw)
+                  else obj[col] = raw
+                })
+                return obj
+              }).filter(row => row.codigo) as Record<string, string | number | null>[]
+            }
           }
           
           if (rows.length > 0) {
