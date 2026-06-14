@@ -196,53 +196,77 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     )
   }
 
-  // Toggle seleção de item
+  // Toggle seleção de item — ao marcar, já define uma quantidade padrão (1)
+  // para que o item seja aceito na confirmação sem precisar digitar manualmente.
   const handleToggleSelecionado = (codigo: string) => {
     setItensNF((prev) =>
-      prev.map((item) =>
-        item.codigo === codigo ? { ...item, selecionado: !item.selecionado } : item
-      )
+      prev.map((item) => {
+        if (item.codigo !== codigo) return item
+        const selecionado = !item.selecionado
+        return {
+          ...item,
+          selecionado,
+          quantidade_saida: selecionado
+            ? item.quantidade_saida > 0
+              ? item.quantidade_saida
+              : Math.min(1, item.quantidade_disponivel)
+            : 0,
+        }
+      })
     )
   }
 
   // Confirmar saída dos itens selecionados
   const handleConfirmarSaida = async () => {
-    const itensSelecionados = itensNF.filter((item) => item.selecionado && item.quantidade_saida > 0)
+    const selecionados = itensNF.filter((item) => item.selecionado)
 
-    if (itensSelecionados.length === 0) {
-      toast({ title: "Selecione pelo menos um item com quantidade", variant: "destructive" })
+    if (selecionados.length === 0) {
+      toast({ title: "Selecione pelo menos um item", variant: "destructive" })
       return
     }
 
-    try {
-      // Registrar cada item selecionado como uma saída separada
-      for (const item of itensSelecionados) {
-        await supabase.from("saida_pecas").insert({
-          codigo: item.codigo,
-          descricao: item.descricao,
-          quantidade: item.quantidade_saida,
-          data_saida: formData.data_saida,
-          ordem_servico: formData.ordem_servico,
-          nota_fiscal: formData.nota_fiscal,
-          area: formData.area,
-          compressor: formData.compressor,
-          utilizacao: formData.utilizacao,
-          observacao: formData.observacao,
-        })
-      }
-
+    const itensSelecionados = selecionados.filter((item) => item.quantidade_saida > 0)
+    if (itensSelecionados.length === 0) {
       toast({
-        title: "Saída registrada com sucesso!",
-        description: `${itensSelecionados.length} item(ns) retirado(s) do estoque`,
+        title: "Informe a quantidade de saída",
+        description: "Os itens marcados estão com quantidade 0. Ajuste a coluna \"Saída\".",
+        variant: "destructive",
       })
-      
-      loadSaidas()
-      resetForm()
-      setItensNF([])
-      setNfCarregada(false)
-    } catch (error) {
-      toast({ title: "Erro ao registrar saída", variant: "destructive" })
+      return
     }
+
+    // Insert em lote (mais confiável) com verificação real de erro do banco
+    const registros = itensSelecionados.map((item) => ({
+      codigo: item.codigo,
+      descricao: item.descricao,
+      quantidade: item.quantidade_saida,
+      data_saida: formData.data_saida,
+      ordem_servico: formData.ordem_servico,
+      nota_fiscal: formData.nota_fiscal,
+      area: formData.area,
+      compressor: formData.compressor,
+      utilizacao: formData.utilizacao,
+      observacao: formData.observacao,
+    }))
+
+    const { error } = await supabase.from("saida_pecas").insert(registros)
+
+    if (error) {
+      toast({
+        title: "Erro ao registrar saída",
+        description: error.message,
+        variant: "destructive",
+      })
+      return
+    }
+
+    toast({
+      title: "Saída registrada com sucesso!",
+      description: `${itensSelecionados.length} item(ns) retirado(s) do estoque`,
+    })
+
+    await loadSaidas()
+    resetForm()
   }
   const handleCodigoChange = (codigo: string) => {
     setFormData((prev) => ({ ...prev, codigo }))
@@ -459,10 +483,18 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                             <th className="p-2 text-left font-medium w-8">
                               <input
                                 type="checkbox"
-                                checked={itensNF.some((i) => i.selecionado)}
+                                checked={itensNF.length > 0 && itensNF.every((i) => i.selecionado)}
                                 onChange={(e) =>
                                   setItensNF((prev) =>
-                                    prev.map((item) => ({ ...item, selecionado: e.target.checked }))
+                                    prev.map((item) => ({
+                                      ...item,
+                                      selecionado: e.target.checked,
+                                      quantidade_saida: e.target.checked
+                                        ? item.quantidade_saida > 0
+                                          ? item.quantidade_saida
+                                          : Math.min(1, item.quantidade_disponivel)
+                                        : 0,
+                                    }))
                                   )
                                 }
                                 className="w-4 h-4"
