@@ -550,6 +550,31 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                 </div>
               )}
 
+              {/* Data e OS também no modo de busca por NF/Código */}
+              {nfCarregada && itensNF.length > 0 && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="data_saida_nf">Data</Label>
+                    <Input
+                      id="data_saida_nf"
+                      type="date"
+                      value={formData.data_saida}
+                      onChange={(e) => setFormData({ ...formData, data_saida: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="ordem_servico_nf">OS</Label>
+                    <Input
+                      id="ordem_servico_nf"
+                      value={formData.ordem_servico}
+                      onChange={(e) => setFormData({ ...formData, ordem_servico: e.target.value })}
+                      placeholder="Ordem de Serviço (opcional)"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Mostrar campos manuais apenas quando NF não está carregada */}
               {!nfCarregada && (
                 <>
