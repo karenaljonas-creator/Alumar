@@ -5,6 +5,17 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+// Formata uma data "só data" (ex.: "2026-06-15") como "DD/MM/AAAA" SEM conversão de fuso.
+// Usar new Date("2026-06-15") interpreta como UTC e, no Brasil (-3h), volta um dia.
+export function formatDateOnly(value: string | null | undefined): string {
+  if (!value) return "-"
+  const datePart = String(value).split("T")[0]
+  const m = datePart.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`
+  const d = new Date(value)
+  return isNaN(d.getTime()) ? String(value) : d.toLocaleDateString("pt-BR")
+}
+
 export type CsvCell = string | number | null | undefined
 
 // Escapa um valor para CSV: coloca aspas quando há separador, aspas ou quebra de linha.

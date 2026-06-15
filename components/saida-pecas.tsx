@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { formatDateOnly } from "@/lib/utils"
 
 interface SaidaPeca {
   id: string
@@ -309,12 +310,16 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   }
 
   const filteredSaidas = saidas
-    .filter((s) =>
-      s.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.compressor.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter((s) => {
+      const termo = searchTerm.toLowerCase()
+      return (
+        s.codigo.toLowerCase().includes(termo) ||
+        s.descricao.toLowerCase().includes(termo) ||
+        s.ordem_servico.toLowerCase().includes(termo) ||
+        s.compressor.toLowerCase().includes(termo) ||
+        (s.nota_fiscal || "").toLowerCase().includes(termo)
+      )
+    })
     .sort((a, b) => {
       if (!sortKey) return 0
       let valA: string | number = ""
@@ -776,7 +781,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
             <div className="relative w-80">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Buscar por código, descrição, OS ou TAG..."
+                  placeholder="Buscar por código, descrição, OS, NF ou TAG..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -851,7 +856,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <TableCell className="max-w-[200px] truncate">{saida.descricao}</TableCell>
                       <TableCell className="text-center">{saida.quantidade}</TableCell>
                       <TableCell>
-                        {saida.data_saida ? new Date(saida.data_saida).toLocaleDateString("pt-BR") : "-"}
+                        {formatDateOnly(saida.data_saida)}
                       </TableCell>
                       <TableCell>{saida.ordem_servico || "-"}</TableCell>
                       <TableCell>{saida.area}</TableCell>

@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { formatDateOnly } from "@/lib/utils"
 
 interface EstoquePeca {
   id: string
@@ -605,7 +606,7 @@ export function EntradaPecas() {
                       <TableCell>{peca.numero_serie}</TableCell>
                       <TableCell>{peca.nota_fiscal}</TableCell>
                       <TableCell>
-                        {peca.data_emissao ? new Date(peca.data_emissao).toLocaleDateString("pt-BR") : "-"}
+                        {formatDateOnly(peca.data_emissao)}
                       </TableCell>
                       <TableCell className="text-right">{formatCurrency(peca.valor_unitario)}</TableCell>
                       <TableCell className="text-right font-medium">{formatCurrency(peca.valor_total)}</TableCell>
