@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch } from "lucide-react"
+import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2 } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { formatDateOnly } from "@/lib/utils"
@@ -66,6 +66,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [codigoEncontrado, setCodigoEncontrado] = useState<boolean | null>(null)
+  const [salvando, setSalvando] = useState(false)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -129,6 +130,44 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     loadSaidas()
     loadEstoquePecas()
   }, [loadSaidas, loadEstoquePecas])
+
+  // Calcula o saldo real em estoque de um código: total de entradas - total de saídas.
+  // Quando ignoreSaidaId é informado (edição), aquela saída não é descontada.
+  const calcularSaldo = async (codigo: string, ignoreSaidaId?: string): Promise<number> => {
+    const { data: entradas } = await supabase
+      .from("estoque_pecas")
+      .select("quantidade")
+      .eq("codigo", codigo)
+    const totalEntrada = (entradas || []).reduce((acc, e) => acc + (e.quantidade || 0), 0)
+
+    let querySaidas = supabase.from("saida_pecas").select("id, quantidade").eq("codigo", codigo)
+    const { data: saidasItem } = await querySaidas
+    const totalSaida = (saidasItem || [])
+      .filter((s) => (ignoreSaidaId ? s.id !== ignoreSaidaId : true))
+      .reduce((acc, s) => acc + (s.quantidade || 0), 0)
+
+    return totalEntrada - totalSaida
+  }
+
+  // Verifica se já existe uma saída idêntica (NF + código + quantidade + data).
+  const existeDuplicata = async (
+    codigo: string,
+    quantidade: number,
+    data_saida: string,
+    nota_fiscal: string,
+    ignoreSaidaId?: string,
+  ): Promise<boolean> => {
+    let query = supabase
+      .from("saida_pecas")
+      .select("id")
+      .eq("codigo", codigo)
+      .eq("quantidade", quantidade)
+      .eq("data_saida", data_saida)
+      .eq("nota_fiscal", nota_fiscal || "")
+    if (ignoreSaidaId) query = query.neq("id", ignoreSaidaId)
+    const { data } = await query
+    return (data || []).length > 0
+  }
 
   // Buscar TODOS os itens por Nota Fiscal OU por Código (PN) da entrada
   const handleBuscarNF = async () => {
@@ -223,6 +262,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
   // Confirmar saída dos itens selecionados
   const handleConfirmarSaida = async () => {
+    if (salvando) return // Regra 3: bloqueia duplo clique / múltiplas transações
+
     const selecionados = itensNF.filter((item) => item.selecionado)
 
     if (selecionados.length === 0) {
@@ -240,38 +281,74 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       return
     }
 
-    // Insert em lote (mais confiável) com verificação real de erro do banco
-    const registros = itensSelecionados.map((item) => ({
-      codigo: item.codigo,
-      descricao: item.descricao,
-      quantidade: item.quantidade_saida,
-      data_saida: formData.data_saida,
-      ordem_servico: formData.ordem_servico,
-      nota_fiscal: formData.nota_fiscal,
-      area: formData.area,
-      compressor: formData.compressor,
-      utilizacao: formData.utilizacao,
-      observacao: formData.observacao,
-    }))
+    setSalvando(true)
+    try {
+      // Regra 2: validar saldo de estoque de cada item antes de gravar
+      for (const item of itensSelecionados) {
+        const saldo = await calcularSaldo(item.codigo)
+        if (item.quantidade_saida > saldo) {
+          toast({
+            title: "Erro: quantidade maior que o saldo disponível",
+            description: `Item ${item.codigo} — Saldo atual: ${saldo} | Solicitado: ${item.quantidade_saida} | Diferença: ${item.quantidade_saida - saldo}`,
+            variant: "destructive",
+          })
+          setSalvando(false)
+          return
+        }
+      }
 
-    const { error } = await supabase.from("saida_pecas").insert(registros)
+      // Regra 1: bloqueio de duplicidade (NF + código + quantidade + data)
+      const duplicados: string[] = []
+      for (const item of itensSelecionados) {
+        const dup = await existeDuplicata(item.codigo, item.quantidade_saida, formData.data_saida, formData.nota_fiscal)
+        if (dup) duplicados.push(item.codigo)
+      }
+      if (duplicados.length > 0) {
+        const confirmar = window.confirm(
+          `Atenção: esta saída já foi registrada anteriormente. Verifique antes de continuar.\n\nItem(ns) duplicado(s): ${duplicados.join(", ")}\n\nDeseja confirmar mesmo assim?`,
+        )
+        if (!confirmar) {
+          setSalvando(false)
+          return
+        }
+      }
 
-    if (error) {
+      // Insert em lote (mais confiável) com verificação real de erro do banco
+      const registros = itensSelecionados.map((item) => ({
+        codigo: item.codigo,
+        descricao: item.descricao,
+        quantidade: item.quantidade_saida,
+        data_saida: formData.data_saida,
+        ordem_servico: formData.ordem_servico,
+        nota_fiscal: formData.nota_fiscal,
+        area: formData.area,
+        compressor: formData.compressor,
+        utilizacao: formData.utilizacao,
+        observacao: formData.observacao,
+      }))
+
+      const { error } = await supabase.from("saida_pecas").insert(registros)
+
+      if (error) {
+        toast({
+          title: "Erro ao registrar saída",
+          description: error.message,
+          variant: "destructive",
+        })
+        setSalvando(false)
+        return
+      }
+
       toast({
-        title: "Erro ao registrar saída",
-        description: error.message,
-        variant: "destructive",
+        title: "Saída registrada com sucesso!",
+        description: `${itensSelecionados.length} item(ns) retirado(s) do estoque`,
       })
-      return
+
+      await loadSaidas()
+      resetForm()
+    } finally {
+      setSalvando(false)
     }
-
-    toast({
-      title: "Saída registrada com sucesso!",
-      description: `${itensSelecionados.length} item(ns) retirado(s) do estoque`,
-    })
-
-    await loadSaidas()
-    resetForm()
   }
   const handleCodigoChange = (codigo: string) => {
     setFormData((prev) => ({ ...prev, codigo }))
@@ -344,32 +421,68 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (salvando) return // Regra 3: bloqueia duplo clique
 
-    if (editingSaida) {
-      const { error } = await supabase
-        .from("saida_pecas")
-        .update(formData)
-        .eq("id", editingSaida.id)
-
-      if (error) {
-        toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
-      } else {
-        toast({ title: "Saída atualizada com sucesso!" })
-        loadSaidas()
-        resetForm()
+    setSalvando(true)
+    try {
+      // Regra 2: validar saldo (ignora a própria saída em edição)
+      const saldo = await calcularSaldo(formData.codigo, editingSaida?.id)
+      if (formData.quantidade > saldo) {
+        toast({
+          title: "Erro: quantidade maior que o saldo disponível",
+          description: `Saldo atual: ${saldo} | Solicitado: ${formData.quantidade} | Diferença: ${formData.quantidade - saldo}`,
+          variant: "destructive",
+        })
+        setSalvando(false)
+        return
       }
-    } else {
-      const { error } = await supabase
-        .from("saida_pecas")
-        .insert(formData)
 
-      if (error) {
-        toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
-      } else {
-        toast({ title: "Saída registrada com sucesso!" })
-        loadSaidas()
-        resetForm()
+      // Regra 1: bloqueio de duplicidade
+      const dup = await existeDuplicata(
+        formData.codigo,
+        formData.quantidade,
+        formData.data_saida,
+        formData.nota_fiscal,
+        editingSaida?.id,
+      )
+      if (dup) {
+        const confirmar = window.confirm(
+          "Atenção: esta saída já foi registrada anteriormente. Verifique antes de continuar.\n\nDeseja confirmar mesmo assim?",
+        )
+        if (!confirmar) {
+          setSalvando(false)
+          return
+        }
       }
+
+      if (editingSaida) {
+        const { error } = await supabase
+          .from("saida_pecas")
+          .update(formData)
+          .eq("id", editingSaida.id)
+
+        if (error) {
+          toast({ title: "Erro ao atualizar", description: error.message, variant: "destructive" })
+        } else {
+          toast({ title: "Saída atualizada com sucesso!" })
+          await loadSaidas()
+          resetForm()
+        }
+      } else {
+        const { error } = await supabase
+          .from("saida_pecas")
+          .insert(formData)
+
+        if (error) {
+          toast({ title: "Erro ao cadastrar", description: error.message, variant: "destructive" })
+        } else {
+          toast({ title: "Saída registrada com sucesso!" })
+          await loadSaidas()
+          resetForm()
+        }
+      }
+    } finally {
+      setSalvando(false)
     }
   }
 
@@ -726,13 +839,23 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               </div>
 
               <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={resetForm}>Cancelar</Button>
+                <Button type="button" variant="outline" onClick={resetForm} disabled={salvando}>Cancelar</Button>
                 {nfCarregada ? (
-                  <Button type="button" onClick={handleConfirmarSaida} className="bg-green-600 hover:bg-green-700">
-                    Confirmar Saída
+                  <Button type="button" onClick={handleConfirmarSaida} disabled={salvando} className="bg-green-600 hover:bg-green-700">
+                    {salvando ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</>
+                    ) : (
+                      "Confirmar Saída"
+                    )}
                   </Button>
                 ) : (
-                  <Button type="submit">{editingSaida ? "Salvar Alterações" : "Registrar Saída"}</Button>
+                  <Button type="submit" disabled={salvando}>
+                    {salvando ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</>
+                    ) : (
+                      editingSaida ? "Salvar Alterações" : "Registrar Saída"
+                    )}
+                  </Button>
                 )}
               </div>
             </form>
