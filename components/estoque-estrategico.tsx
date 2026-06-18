@@ -103,17 +103,22 @@ export function EstoqueEstrategico() {
         mapaMestre.set(m.codigo, { id: m.id, descricao: m.descricao, quantidade_minima: m.quantidade_minima })
       }
 
-      // Montar a tabela a partir de TODOS os PNs com movimentação estratégica
+      // Montar a tabela com a UNIÃO de:
+      //  (a) TODOS os itens da Lista Mestre (sempre visíveis), e
+      //  (b) PNs com movimentação estratégica que NÃO estão na Lista Mestre (status Analisar).
+      const todosCodigos = new Set<string>([...mapaMestre.keys(), ...mapaEntradas.keys()])
+
       const linhas: ItemEstrategico[] = []
-      for (const [codigo, info] of mapaEntradas.entries()) {
-        const saldo = info.total - (mapaSaidas.get(codigo) || 0)
+      for (const codigo of todosCodigos) {
+        const info = mapaEntradas.get(codigo)
+        const saldo = (info?.total || 0) - (mapaSaidas.get(codigo) || 0)
         const mestre = mapaMestre.get(codigo)
 
         if (mestre) {
           const diferenca = saldo - mestre.quantidade_minima
           linhas.push({
             codigo,
-            descricao: mestre.descricao || info.descricao,
+            descricao: mestre.descricao || info?.descricao || "",
             saldo,
             quantidade_minima: mestre.quantidade_minima,
             diferenca,
@@ -122,10 +127,10 @@ export function EstoqueEstrategico() {
             listaMestreId: mestre.id,
           })
         } else {
-          // PN não cadastrado na Lista Mestre -> ANALISAR
+          // PN com movimentação estratégica, mas não cadastrado na Lista Mestre -> ANALISAR
           linhas.push({
             codigo,
-            descricao: info.descricao,
+            descricao: info?.descricao || "",
             saldo,
             quantidade_minima: null,
             diferenca: null,
