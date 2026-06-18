@@ -338,24 +338,26 @@ export default function Home() {
 
       if (activeSection === "estoque-estrategico") {
         const supabase = (await import("@/lib/supabase/client")).createClient()
-        const { data, error } = await supabase.from("estoque_estrategico").select("*").order("codigo", { ascending: true })
+        const { data, error } = await supabase
+          .from("lista_mestre")
+          .select("codigo, descricao, quantidade_minima")
+          .order("codigo", { ascending: true })
         if (error) {
           toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
           return
         }
         if (!data || data.length === 0) {
-          toast({ title: "Nenhum dado", description: "Não há itens estratégicos para exportar.", variant: "destructive" })
+          toast({ title: "Nenhum dado", description: "A Lista Mestre está vazia.", variant: "destructive" })
           return
         }
-        const headers = ["Código", "Descrição", "Equipamento", "Quantidade Mínima"]
+        const headers = ["PN", "Descrição", "Quantidade Mínima"]
         const rows = data.map((it) => [
           it.codigo ?? "",
           it.descricao ?? "",
-          it.equipamento ?? "",
           it.quantidade_minima ?? 0,
         ])
-        downloadCsv(`estoque-estrategico-${today}.csv`, headers, rows)
-        toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
+        downloadCsv(`lista-mestre-estrategico-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Lista Mestre exportada com sucesso." })
         return
       }
 
