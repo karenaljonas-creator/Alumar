@@ -258,6 +258,28 @@ export function EstoqueEstrategico() {
     await loadDados()
   }
 
+  // Remover item "Analisar" do controle estratégico.
+  // Troca a origem das entradas desse PN de "Estoque estratégico - corretivos" para "Analisar".
+  // O item NÃO é excluído do sistema; apenas deixa de ser estratégico e, na aba Entrada,
+  // sua origem passa a aparecer como "Analisar".
+  const removerDaAnalise = async (item: ItemEstrategico) => {
+    const confirmar = window.confirm(
+      `Remover o PN ${item.codigo} do controle estratégico?\n\nO item NÃO será excluído do sistema. As entradas dele deixarão de ser estratégicas e, na aba Entrada, a Origem passará a "Analisar".`,
+    )
+    if (!confirmar) return
+    const { error } = await supabase
+      .from("estoque_pecas")
+      .update({ origem: "Analisar" })
+      .eq("codigo", item.codigo)
+      .eq("origem", ORIGEM_ESTRATEGICA)
+    if (error) {
+      toast({ title: "Erro ao remover", description: error.message, variant: "destructive" })
+      return
+    }
+    toast({ title: "Item removido do controle estratégico" })
+    await loadDados()
+  }
+
   const itensFiltrados = itens.filter((i) => {
     const termo = searchTerm.toLowerCase()
     return i.codigo.toLowerCase().includes(termo) || i.descricao.toLowerCase().includes(termo)
@@ -395,12 +417,21 @@ export function EstoqueEstrategico() {
                           >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          {item.naListaMestre && (
+                          {item.naListaMestre ? (
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={() => removerDaListaMestre(item)}
                               title="Remover da Lista Mestre"
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removerDaAnalise(item)}
+                              title="Remover do controle estratégico"
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
