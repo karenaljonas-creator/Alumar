@@ -124,15 +124,26 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
-  body {
+  html, body {
     font-family: "ReportRoboto", Arial, Helvetica, sans-serif;
     font-synthesis: none;
+    /* Desativa ligaduras (liga/clig/dlig/hlig) para que nenhum glifo seja recombinado/substituído */
+    font-variant-ligatures: none;
+    -webkit-font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0;
+    text-rendering: geometricPrecision;
     -webkit-font-smoothing: antialiased;
     color: #1f2d3a;
     margin: 0;
     padding: 0;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+  /* Garante que toda a árvore herde a mesma fonte e desative ligaduras (evita fallback por elemento) */
+  body * {
+    font-family: inherit;
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0, "dlig" 0, "hlig" 0;
   }
   .header {
     background: #0c2c44;
@@ -270,16 +281,41 @@ export function gerarRelatorioParadas(machines: Machine[], options: RelatorioOpt
   </div>
 
   <script>
+    var jaImprimiu = false;
     function dispararImpressao() {
-      setTimeout(function () { window.print(); }, 250);
+      if (jaImprimiu) return;
+      jaImprimiu = true;
+      // Pequeno atraso extra para o layout estabilizar após as fontes ficarem prontas.
+      setTimeout(function () { window.print(); }, 150);
     }
-    window.onload = function () {
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(dispararImpressao).catch(dispararImpressao);
-      } else {
-        dispararImpressao();
+
+    function carregarFontesEImprimir() {
+      if (!document.fonts || !document.fonts.load) {
+        // Navegador sem FontFaceSet API: espera fixa como último recurso.
+        setTimeout(dispararImpressao, 800);
+        return;
       }
-    };
+      // Força explicitamente o download/decodificação de TODOS os pesos usados no relatório.
+      // Isso evita que window.print() rode antes da fonte data-URI ficar pronta, o que
+      // causava fallback para Arial em alguns glifos (ex.: a letra "l").
+      var pesos = ["400", "500", "700", "900"];
+      var amostra = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789áéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ|";
+      var promessas = pesos.map(function (p) {
+        return document.fonts.load(p + ' 16px "ReportRoboto"', amostra).catch(function () {});
+      });
+      Promise.all(promessas)
+        .then(function () { return document.fonts.ready; })
+        .then(dispararImpressao)
+        .catch(dispararImpressao);
+      // Salvaguarda: nunca deixar a janela travada sem imprimir.
+      setTimeout(dispararImpressao, 3000);
+    }
+
+    if (document.readyState === "complete") {
+      carregarFontesEImprimir();
+    } else {
+      window.addEventListener("load", carregarFontesEImprimir);
+    }
   </script>
 </body>
 </html>`
