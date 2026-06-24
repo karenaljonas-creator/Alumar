@@ -66,11 +66,11 @@ export function EstoqueEstrategico() {
   const loadDados = async () => {
     setLoading(true)
     try {
-      // 1) Movimentações de ENTRADA marcadas como Estoque Estratégico
+      // 1) TODAS as movimentações de ENTRADA (o saldo real é Entrada - Saída,
+      //    igual à tela de Estoque). A origem só é usada para decidir o que aparece.
       const { data: entradas } = await supabase
         .from("estoque_pecas")
         .select("codigo, descricao, quantidade, origem")
-        .eq("origem", ORIGEM_ESTRATEGICA)
 
       // 2) Movimentações de SAÍDA (todas, descontam do saldo)
       const { data: saidas } = await supabase.from("saida_pecas").select("codigo, quantidade")
@@ -80,14 +80,20 @@ export function EstoqueEstrategico() {
         .from("lista_mestre")
         .select("id, codigo, descricao, quantidade_minima")
 
-      // Agrupar entradas estratégicas por código
+      // Agrupar TODAS as entradas por código (saldo físico real)
       const mapaEntradas = new Map<string, { descricao: string; total: number }>()
+      // Códigos que possuem AO MENOS uma entrada com origem estratégica
+      // (usado para incluir PNs fora da Lista Mestre como "Analisar")
+      const codigosEstrategicos = new Set<string>()
       for (const e of entradas || []) {
         const atual = mapaEntradas.get(e.codigo)
         if (atual) {
           atual.total += e.quantidade || 0
         } else {
           mapaEntradas.set(e.codigo, { descricao: e.descricao || "", total: e.quantidade || 0 })
+        }
+        if (e.origem === ORIGEM_ESTRATEGICA) {
+          codigosEstrategicos.add(e.codigo)
         }
       }
 
@@ -105,12 +111,13 @@ export function EstoqueEstrategico() {
 
       // Montar a tabela com a UNIÃO de:
       //  (a) TODOS os itens da Lista Mestre (sempre visíveis), e
-      //  (b) PNs com movimentação estratégica que NÃO estão na Lista Mestre (status Analisar).
-      const todosCodigos = new Set<string>([...mapaMestre.keys(), ...mapaEntradas.keys()])
+      //  (b) PNs com movimentação ESTRATÉGICA que NÃO estão na Lista Mestre (status Analisar).
+      const todosCodigos = new Set<string>([...mapaMestre.keys(), ...codigosEstrategicos])
 
       const linhas: ItemEstrategico[] = []
       for (const codigo of todosCodigos) {
         const info = mapaEntradas.get(codigo)
+        // Saldo físico real = total de entradas - total de saídas (todas as origens)
         const saldo = (info?.total || 0) - (mapaSaidas.get(codigo) || 0)
         const mestre = mapaMestre.get(codigo)
 
