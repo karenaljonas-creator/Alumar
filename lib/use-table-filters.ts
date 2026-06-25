@@ -126,6 +126,33 @@ export function useTableFilters<T>({
     return mapa
   }, [rows, columns, valor])
 
+  // Auto-cura: remove dos filtros valores que não existem mais nos dados atuais.
+  // Evita que a tabela trave vazia quando um valor filtrado deixa de existir
+  // (ex.: usuário tratou/excluiu todos os itens de um determinado valor).
+  useEffect(() => {
+    if (rows.length === 0) return
+    setFiltros((prev) => {
+      let mudou = false
+      const next: Record<string, string[]> = {}
+      for (const key of Object.keys(prev)) {
+        const selecionados = prev[key]
+        if (!selecionados || selecionados.length === 0) {
+          mudou = true
+          continue
+        }
+        const universo = universoPorColuna[key] ?? []
+        const validos = selecionados.filter((v) => universo.includes(v))
+        if (validos.length === 0) {
+          mudou = true
+          continue
+        }
+        if (validos.length !== selecionados.length) mudou = true
+        next[key] = validos
+      }
+      return mudou ? next : prev
+    })
+  }, [rows, universoPorColuna])
+
   // Contagem por valor, considerando os demais filtros + busca
   const contagensPorColuna = useMemo(() => {
     const mapa: Record<string, Record<string, number>> = {}

@@ -397,6 +397,34 @@ export function EstoqueEstrategico() {
     return mapa
   }, [itens])
 
+  // Auto-cura: remove dos filtros valores que não existem mais nos dados atuais.
+  // Evita que a tabela trave vazia quando um valor filtrado (ex.: status "Analisar")
+  // deixa de existir após o usuário tratar/excluir todos os itens daquele valor.
+  useEffect(() => {
+    if (itens.length === 0) return
+    setFiltros((prev) => {
+      let mudou = false
+      const next: Partial<Record<ColKey, string[]>> = {}
+      for (const key of Object.keys(prev) as ColKey[]) {
+        const selecionados = prev[key]
+        if (!selecionados || selecionados.length === 0) {
+          mudou = true
+          continue
+        }
+        const universo = universoPorColuna[key] ?? []
+        const validos = selecionados.filter((v) => universo.includes(v))
+        if (validos.length === 0) {
+          // nenhum valor selecionado existe mais -> descarta o filtro
+          mudou = true
+          continue
+        }
+        if (validos.length !== selecionados.length) mudou = true
+        next[key] = validos
+      }
+      return mudou ? next : prev
+    })
+  }, [itens, universoPorColuna])
+
   // Contagem por valor de cada coluna, considerando os DEMAIS filtros + busca
   const contagensPorColuna = useMemo(() => {
     const mapa = {} as Record<ColKey, Record<string, number>>
