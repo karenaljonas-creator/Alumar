@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,10 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Package, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Package, FilterX } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { formatDateOnly } from "@/lib/utils"
+import { ColumnFilter } from "@/components/column-filter"
+import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
 
 interface EstoquePeca {
   id: string
@@ -28,10 +30,8 @@ interface EstoquePeca {
   origem: string
   observacao: string
   created_at: string
+  updated_at?: string
 }
-
-type SortKey = "codigo" | "descricao" | "quantidade" | "ordem_servico" | "numero_serie" | "nota_fiscal" | "data_emissao" | "valor_unitario" | "valor_total" | "origem" | "data_atualizacao"
-type SortDirection = "asc" | "desc"
 
 const ORIGENS = [
   "Estoque estratégico - corretivos",
@@ -46,8 +46,6 @@ export function EntradaPecas() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingPeca, setEditingPeca] = useState<EstoquePeca | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [buscaNF, setBuscaNF] = useState("")
   const [buscandoNF, setBuscandoNF] = useState(false)
   const { toast } = useToast()
@@ -85,20 +83,6 @@ export function EntradaPecas() {
     loadPecas()
   }, [loadPecas])
 
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc")
-      } else {
-        setSortKey(null)
-        setSortDirection("asc")
-      }
-    } else {
-      setSortKey(key)
-      setSortDirection("asc")
-    }
-  }, [sortKey, sortDirection])
-
   // Buscar itens por Nota Fiscal
   const handleBuscarNF = async () => {
     if (!buscaNF.trim()) {
@@ -131,41 +115,86 @@ export function EntradaPecas() {
     loadPecas()
   }
 
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
-    return <ArrowDown className="h-3 w-3 ml-1" />
-  }
+  const formatCurrencyVal = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0)
 
-  const filteredPecas = pecas
-    .filter((p) =>
-      p.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.descricao.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.ordem_servico.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => {
-      if (!sortKey) return 0
-      let valA: string | number = ""
-      let valB: string | number = ""
+  const dataAtualizacaoISO = (p: EstoquePeca) => p.updated_at || p.created_at
 
-      switch (sortKey) {
-        case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
-        case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
-        case "quantidade": valA = a.quantidade; valB = b.quantidade; break
-        case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
-        case "numero_serie": valA = a.numero_serie.toLowerCase(); valB = b.numero_serie.toLowerCase(); break
-        case "nota_fiscal": valA = a.nota_fiscal.toLowerCase(); valB = b.nota_fiscal.toLowerCase(); break
-        case "data_emissao": valA = a.data_emissao; valB = b.data_emissao; break
-        case "valor_unitario": valA = a.valor_unitario; valB = b.valor_unitario; break
-        case "valor_total": valA = a.valor_total; valB = b.valor_total; break
-        case "origem": valA = a.origem.toLowerCase(); valB = b.origem.toLowerCase(); break
-        case "data_atualizacao": valA = a.updated_at || a.created_at; valB = b.updated_at || b.created_at; break
-      }
+  const colunas = useMemo<TableColumnDef<EstoquePeca>[]>(
+    () => [
+      { key: "codigo", value: (p) => p.codigo },
+      { key: "descricao", value: (p) => p.descricao },
+      { key: "quantidade", numeric: true, value: (p) => String(p.quantidade ?? 0) },
+      { key: "ordem_servico", value: (p) => p.ordem_servico },
+      { key: "numero_serie", value: (p) => p.numero_serie },
+      { key: "nota_fiscal", value: (p) => p.nota_fiscal },
+      {
+        key: "data_emissao",
+        value: (p) => (p.data_emissao ? formatDateOnly(p.data_emissao) : "-"),
+        sortValue: (p) => p.data_emissao || "",
+      },
+      {
+        key: "valor_unitario",
+        numeric: true,
+        value: (p) => formatCurrencyVal(p.valor_unitario),
+        sortValue: (p) => p.valor_unitario || 0,
+      },
+      {
+        key: "valor_total",
+        numeric: true,
+        value: (p) => formatCurrencyVal(p.valor_total),
+        sortValue: (p) => p.valor_total || 0,
+      },
+      { key: "origem", value: (p) => p.origem || "-" },
+      { key: "observacao", value: (p) => p.observacao || "-" },
+      {
+        key: "data_atualizacao",
+        value: (p) =>
+          new Date(dataAtualizacaoISO(p)).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }),
+        sortValue: (p) => dataAtualizacaoISO(p),
+      },
+    ],
+    [],
+  )
 
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1
-      return 0
-    })
+  const searchPredicate = useCallback(
+    (p: EstoquePeca, termo: string) =>
+      p.codigo.toLowerCase().includes(termo) ||
+      p.descricao.toLowerCase().includes(termo) ||
+      p.ordem_servico.toLowerCase().includes(termo),
+    [],
+  )
+
+  const {
+    linhas: filteredPecas,
+    filtros,
+    ordenacao,
+    universoPorColuna,
+    contagensPorColuna,
+    setFiltroColuna,
+    ordenarColuna,
+    limparTudo,
+    filtrosAtivos,
+  } = useTableFilters<EstoquePeca>({
+    rows: pecas,
+    columns: colunas,
+    storageKey: "entrada-pecas-filtros-v1",
+    searchTerm,
+    searchPredicate,
+  })
+
+  // Renderiza o filtro de coluna no cabeçalho
+  const renderFiltro = (key: string, align: "start" | "center" | "end" = "start") => (
+    <ColumnFilter
+      options={universoPorColuna[key] ?? []}
+      counts={contagensPorColuna[key] ?? {}}
+      selected={filtros[key] ?? null}
+      onChange={(sel) => setFiltroColuna(key, sel)}
+      sortDir={ordenacao?.key === key ? ordenacao.dir : null}
+      onSort={(dir) => ordenarColuna(key, dir)}
+      align={align}
+    />
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -513,6 +542,12 @@ export function EntradaPecas() {
                   </Button>
                 )}
               </div>
+              {filtrosAtivos && (
+                <Button onClick={limparTudo} variant="outline" size="sm" className="gap-1">
+                  <FilterX className="h-4 w-4" />
+                  Limpar filtros
+                </Button>
+              )}
               <div className="relative w-80">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -538,60 +573,40 @@ export function EntradaPecas() {
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead className="w-[8%]">
-                      <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Código <SortIcon columnKey="codigo" />
-                      </button>
+                      <div className="flex items-center font-medium">Código {renderFiltro("codigo")}</div>
                     </TableHead>
                     <TableHead className="w-[12%]">
-                      <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Descrição <SortIcon columnKey="descricao" />
-                      </button>
+                      <div className="flex items-center font-medium">Descrição {renderFiltro("descricao")}</div>
                     </TableHead>
                     <TableHead className="w-[4%]">
-                      <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Qtd <SortIcon columnKey="quantidade" />
-                      </button>
+                      <div className="flex items-center font-medium">Qtd {renderFiltro("quantidade", "center")}</div>
                     </TableHead>
                     <TableHead className="w-[8%]">
-                      <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Ordem Serviço <SortIcon columnKey="ordem_servico" />
-                      </button>
+                      <div className="flex items-center font-medium">Ordem Serviço {renderFiltro("ordem_servico")}</div>
                     </TableHead>
                     <TableHead className="w-[8%]">
-                      <button onClick={() => handleSort("numero_serie")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Nº Série <SortIcon columnKey="numero_serie" />
-                      </button>
+                      <div className="flex items-center font-medium">Nº Série {renderFiltro("numero_serie")}</div>
                     </TableHead>
                     <TableHead className="w-[7%]">
-                      <button onClick={() => handleSort("nota_fiscal")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        NF <SortIcon columnKey="nota_fiscal" />
-                      </button>
+                      <div className="flex items-center font-medium">NF {renderFiltro("nota_fiscal")}</div>
                     </TableHead>
                     <TableHead className="w-[8%]">
-                      <button onClick={() => handleSort("data_emissao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Data Emissão <SortIcon columnKey="data_emissao" />
-                      </button>
+                      <div className="flex items-center font-medium">Data Emissão {renderFiltro("data_emissao")}</div>
                     </TableHead>
                     <TableHead className="w-[7%]">
-                      <button onClick={() => handleSort("valor_unitario")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Valor Unit. <SortIcon columnKey="valor_unitario" />
-                      </button>
+                      <div className="flex items-center font-medium">Valor Unit. {renderFiltro("valor_unitario", "end")}</div>
                     </TableHead>
                     <TableHead className="w-[7%]">
-                      <button onClick={() => handleSort("valor_total")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Valor Total <SortIcon columnKey="valor_total" />
-                      </button>
+                      <div className="flex items-center font-medium">Valor Total {renderFiltro("valor_total", "end")}</div>
                     </TableHead>
                     <TableHead className="w-[10%]">
-                      <button onClick={() => handleSort("origem")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Origem <SortIcon columnKey="origem" />
-                      </button>
+                      <div className="flex items-center font-medium">Origem {renderFiltro("origem")}</div>
                     </TableHead>
-                    <TableHead className="w-[10%]">Observação</TableHead>
+                    <TableHead className="w-[10%]">
+                      <div className="flex items-center font-medium">Observação {renderFiltro("observacao")}</div>
+                    </TableHead>
                     <TableHead className="w-[7%]">
-                      <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Atualizado em <SortIcon columnKey="data_atualizacao" />
-                      </button>
+                      <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
                     <TableHead className="w-[4%] text-center">Ações</TableHead>
                   </TableRow>

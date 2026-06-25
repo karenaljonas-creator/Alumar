@@ -5,9 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, Package, ArrowUp, ArrowDown, ArrowUpDown, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Search, Package, TrendingUp, TrendingDown, AlertTriangle, FilterX } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
+import { ColumnFilter } from "@/components/column-filter"
+import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
 
 interface EstoqueItem {
   codigo: string
@@ -19,16 +22,11 @@ interface EstoqueItem {
   valorTotalEstoque: number
 }
 
-type SortKey = "codigo" | "descricao" | "totalEntrada" | "totalSaida" | "saldo" | "valorMedioUnitario" | "valorTotalEstoque"
-type SortDirection = "asc" | "desc"
-
 export function EstoqueSaldo() {
   const [entradas, setEntradas] = useState<any[]>([])
   const [saidas, setSaidas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortKey, setSortKey] = useState<SortKey>("codigo")
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -118,51 +116,67 @@ export function EstoqueSaldo() {
     return Array.from(estoqueMap.values())
   }, [entradas, saidas])
 
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc")
-      } else {
-        setSortKey("codigo")
-        setSortDirection("asc")
-      }
-    } else {
-      setSortKey(key)
-      setSortDirection("asc")
-    }
-  }, [sortKey, sortDirection])
+  const formatCurrencyVal = (value: number) =>
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0)
 
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
-    return <ArrowDown className="h-3 w-3 ml-1" />
-  }
+  const colunas = useMemo<TableColumnDef<EstoqueItem>[]>(
+    () => [
+      { key: "codigo", value: (i) => i.codigo },
+      { key: "descricao", value: (i) => i.descricao },
+      { key: "totalEntrada", numeric: true, value: (i) => String(i.totalEntrada ?? 0) },
+      { key: "totalSaida", numeric: true, value: (i) => String(i.totalSaida ?? 0) },
+      { key: "saldo", numeric: true, value: (i) => String(i.saldo ?? 0) },
+      {
+        key: "valorMedioUnitario",
+        numeric: true,
+        value: (i) => formatCurrencyVal(i.valorMedioUnitario),
+        sortValue: (i) => i.valorMedioUnitario || 0,
+      },
+      {
+        key: "valorTotalEstoque",
+        numeric: true,
+        value: (i) => formatCurrencyVal(i.valorTotalEstoque),
+        sortValue: (i) => i.valorTotalEstoque || 0,
+      },
+    ],
+    [],
+  )
 
-  const filteredEstoque = useMemo(() => {
-    return estoqueCalculado
-      .filter((item) =>
-        item.codigo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.descricao.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .sort((a, b) => {
-        let valA: string | number = ""
-        let valB: string | number = ""
+  const searchPredicate = useCallback(
+    (i: EstoqueItem, termo: string) =>
+      i.codigo.toLowerCase().includes(termo) || i.descricao.toLowerCase().includes(termo),
+    [],
+  )
 
-        switch (sortKey) {
-          case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
-          case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
-          case "totalEntrada": valA = a.totalEntrada; valB = b.totalEntrada; break
-          case "totalSaida": valA = a.totalSaida; valB = b.totalSaida; break
-          case "saldo": valA = a.saldo; valB = b.saldo; break
-          case "valorMedioUnitario": valA = a.valorMedioUnitario; valB = b.valorMedioUnitario; break
-          case "valorTotalEstoque": valA = a.valorTotalEstoque; valB = b.valorTotalEstoque; break
-        }
+  const {
+    linhas: filteredEstoque,
+    filtros,
+    ordenacao,
+    universoPorColuna,
+    contagensPorColuna,
+    setFiltroColuna,
+    ordenarColuna,
+    limparTudo,
+    filtrosAtivos,
+  } = useTableFilters<EstoqueItem>({
+    rows: estoqueCalculado,
+    columns: colunas,
+    storageKey: "estoque-saldo-filtros-v1",
+    searchTerm,
+    searchPredicate,
+  })
 
-        if (valA < valB) return sortDirection === "asc" ? -1 : 1
-        if (valA > valB) return sortDirection === "asc" ? 1 : -1
-        return 0
-      })
-  }, [estoqueCalculado, searchTerm, sortKey, sortDirection])
+  const renderFiltro = (key: string, align: "start" | "center" | "end" = "start") => (
+    <ColumnFilter
+      options={universoPorColuna[key] ?? []}
+      counts={contagensPorColuna[key] ?? {}}
+      selected={filtros[key] ?? null}
+      onChange={(sel) => setFiltroColuna(key, sel)}
+      sortDir={ordenacao?.key === key ? ordenacao.dir : null}
+      onSort={(dir) => ordenarColuna(key, dir)}
+      align={align}
+    />
+  )
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value)
@@ -330,14 +344,22 @@ export function EstoqueSaldo() {
               <Package className="h-5 w-5" />
               Saldo de Estoque por Código (PN)
             </CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por código ou descrição..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex items-center gap-2">
+              {filtrosAtivos && (
+                <Button onClick={limparTudo} variant="outline" size="sm" className="gap-1">
+                  <FilterX className="h-4 w-4" />
+                  Limpar filtros
+                </Button>
+              )}
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por código ou descrição..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -354,41 +376,31 @@ export function EstoqueSaldo() {
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead>
-                      <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Código (PN) <SortIcon columnKey="codigo" />
-                      </button>
+                      <div className="flex items-center font-medium">Código (PN) {renderFiltro("codigo")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Descrição <SortIcon columnKey="descricao" />
-                      </button>
+                      <div className="flex items-center font-medium">Descrição {renderFiltro("descricao")}</div>
                     </TableHead>
                     <TableHead className="text-center">
-                      <button onClick={() => handleSort("totalEntrada")} className="flex items-center font-medium hover:text-foreground cursor-pointer justify-center w-full">
+                      <div className="flex items-center justify-center font-medium">
                         <TrendingUp className="h-4 w-4 mr-1 text-green-600" />
-                        Entrada <SortIcon columnKey="totalEntrada" />
-                      </button>
+                        Entrada {renderFiltro("totalEntrada", "center")}
+                      </div>
                     </TableHead>
                     <TableHead className="text-center">
-                      <button onClick={() => handleSort("totalSaida")} className="flex items-center font-medium hover:text-foreground cursor-pointer justify-center w-full">
+                      <div className="flex items-center justify-center font-medium">
                         <TrendingDown className="h-4 w-4 mr-1 text-red-600" />
-                        Saída <SortIcon columnKey="totalSaida" />
-                      </button>
+                        Saída {renderFiltro("totalSaida", "center")}
+                      </div>
                     </TableHead>
                     <TableHead className="text-center">
-                      <button onClick={() => handleSort("saldo")} className="flex items-center font-medium hover:text-foreground cursor-pointer justify-center w-full">
-                        Saldo <SortIcon columnKey="saldo" />
-                      </button>
+                      <div className="flex items-center justify-center font-medium">Saldo {renderFiltro("saldo", "center")}</div>
                     </TableHead>
                     <TableHead className="text-right">
-                      <button onClick={() => handleSort("valorMedioUnitario")} className="flex items-center font-medium hover:text-foreground cursor-pointer justify-end w-full">
-                        Valor Médio Unit. <SortIcon columnKey="valorMedioUnitario" />
-                      </button>
+                      <div className="flex items-center justify-end font-medium">Valor Médio Unit. {renderFiltro("valorMedioUnitario", "end")}</div>
                     </TableHead>
                     <TableHead className="text-right">
-                      <button onClick={() => handleSort("valorTotalEstoque")} className="flex items-center font-medium hover:text-foreground cursor-pointer justify-end w-full">
-                        Valor Total <SortIcon columnKey="valorTotalEstoque" />
-                      </button>
+                      <div className="flex items-center justify-end font-medium">Valor Total {renderFiltro("valorTotalEstoque", "end")}</div>
                     </TableHead>
                   </TableRow>
                 </TableHeader>
