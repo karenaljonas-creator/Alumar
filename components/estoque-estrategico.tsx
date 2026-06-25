@@ -545,10 +545,13 @@ export function EstoqueEstrategico() {
   const totalAnalisar = itens.filter((i) => i.status === "Analisar").length
   const totalOk = itens.filter((i) => i.status === "OK").length
   const totalMonitorados = itens.length
+  // Itens avaliáveis = possuem mínimo definido (Lista Mestre): OK ou Repor.
+  // Os "Analisar" não têm mínimo, portanto não entram no cálculo de aderência/criticidade.
+  const totalAvaliaveis = totalOk + totalRepor
 
   // Métricas do painel superior
-  const aderenciaPct = totalMonitorados ? Math.round((totalOk / totalMonitorados) * 100) : 0
-  const criticosPct = totalMonitorados ? Math.round((totalRepor / totalMonitorados) * 100) : 0
+  const aderenciaPct = totalAvaliaveis ? Math.round((totalOk / totalAvaliaveis) * 100) : 0
+  const criticosPct = totalAvaliaveis ? Math.round((totalRepor / totalAvaliaveis) * 100) : 0
   const qtdRepor = itens.reduce(
     (acc, i) => acc + ((i.diferenca ?? 0) < 0 ? Math.abs(i.diferenca as number) : 0),
     0,
@@ -642,7 +645,7 @@ export function EstoqueEstrategico() {
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {totalOk} de {totalMonitorados} itens dentro do mínimo
+                {totalOk} de {totalAvaliaveis} itens dentro do mínimo
               </span>
               <Badge variant="outline" className={aderenciaCor}>
                 {aderenciaRotulo}
@@ -665,7 +668,7 @@ export function EstoqueEstrategico() {
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {totalRepor} de {totalMonitorados} itens abaixo do mínimo
+                {totalRepor} de {totalAvaliaveis} itens abaixo do mínimo
               </span>
               {criticosPct >= 50 && (
                 <Badge variant="destructive" className="gap-1">
