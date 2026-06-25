@@ -99,10 +99,10 @@ function GaugeCobertura({ value }: { value: number }) {
   const ponta = pontoArco(cx, cy, r - 18, needleDeg)
   return (
     <svg viewBox="0 0 220 130" className="w-full max-w-[260px]" role="img" aria-label={`Cobertura média ${v.toFixed(1)}x`}>
-      {/* zonas */}
-      <path d={arco(cx, cy, r, 180, 135)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 133, 92)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 90, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
+      {/* zonas: vermelho 0–1x (abaixo do mínimo), amarelo 1–1,5x (no limite), verde 1,5–2x (confortável) */}
+      <path d={arco(cx, cy, r, 180, 92)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 90, 47)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 45, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
       {/* ponteiro */}
       <line x1={cx} y1={cy} x2={ponta.x} y2={ponta.y} stroke="#0f172a" strokeWidth={4} strokeLinecap="round" />
       <circle cx={cx} cy={cy} r={7} fill="#0f172a" />
@@ -640,40 +640,36 @@ export function EstoqueEstrategico() {
                 </Badge>
               )}
             </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-yellow-600">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>Necessitam atenção imediata</span>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Quantidade a Repor */}
+        {/* Qtd. Total em Déficit */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Quantidade a Repor</p>
-                <p className="mt-1 text-4xl font-bold text-foreground">{qtdRepor}</p>
-                <p className="text-xs text-muted-foreground">peças no total</p>
+                <p className="text-sm font-medium text-muted-foreground">Qtd. Total em Déficit</p>
+                <p className="mt-1 text-4xl font-bold text-destructive">{qtdRepor > 0 ? `-${qtdRepor}` : 0}</p>
+                <p className="text-xs text-muted-foreground">Unidades abaixo do mínimo</p>
               </div>
-              <div className="rounded-full bg-muted p-3">
-                <Package className="h-6 w-6 text-muted-foreground" />
+              <div className="rounded-full bg-destructive/10 p-3">
+                <Package className="h-6 w-6 text-destructive" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">Diferença total abaixo do mínimo</p>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-yellow-600">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>Impacto na operação</span>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Mini-cards de status */}
-      <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-full bg-destructive/10 p-2">
-              <ShieldAlert className="h-5 w-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-destructive">{totalRepor}</p>
-              <p className="text-xs text-muted-foreground">Itens Críticos · abaixo do mínimo</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
             <div className="rounded-full bg-yellow-400/15 p-2">
@@ -741,24 +737,44 @@ export function EstoqueEstrategico() {
           <CardHeader>
             <CardTitle className="text-base">Cobertura média do estoque</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
-            <div>
-              <p
-                className={`text-4xl font-bold ${
-                  coberturaMedia >= 1 ? "text-green-600" : coberturaMedia >= 0.5 ? "text-yellow-500" : "text-destructive"
-                }`}
-              >
-                {coberturaMedia.toFixed(1)}x
-              </p>
-              <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
-                {coberturaMedia >= 1
-                  ? "Dentro do nível recomendado"
-                  : "Abaixo do nível mínimo recomendado"}
-              </p>
+          <CardContent>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
+              <div>
+                <p
+                  className={`text-4xl font-bold ${
+                    coberturaMedia >= 1.5 ? "text-green-600" : coberturaMedia >= 1 ? "text-yellow-500" : "text-destructive"
+                  }`}
+                >
+                  {coberturaMedia.toFixed(1)}x
+                </p>
+                <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
+                  {coberturaMedia >= 1
+                    ? "Dentro do nível recomendado"
+                    : "Abaixo do nível mínimo recomendado"}
+                </p>
+              </div>
+              <div className="flex-1">
+                <GaugeCobertura value={coberturaMedia} />
+              </div>
             </div>
-            <div className="flex-1">
-              <GaugeCobertura value={coberturaMedia} />
-            </div>
+
+            {/* Legenda de distribuição dos itens por status */}
+            <ul className="mt-4 flex flex-col gap-2 border-t pt-4">
+              {[
+                { cor: "bg-green-600", rotulo: "OK (dentro do mínimo)", valor: totalOk },
+                { cor: "bg-yellow-400", rotulo: "Analisar (fora da lista mestre)", valor: totalAnalisar },
+                { cor: "bg-destructive", rotulo: "Abaixo do mínimo", valor: totalRepor },
+              ].map((linha) => (
+                <li key={linha.rotulo} className="flex items-center gap-2 text-sm">
+                  <span className={`h-3 w-3 shrink-0 rounded-full ${linha.cor}`} aria-hidden="true" />
+                  <span className="flex-1 text-muted-foreground">{linha.rotulo}</span>
+                  <span className="font-semibold text-foreground">{linha.valor}</span>
+                  <span className="w-16 text-right text-muted-foreground">
+                    ({totalMonitorados ? ((linha.valor / totalMonitorados) * 100).toFixed(1).replace(".", ",") : "0"}%)
+                  </span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       </div>
