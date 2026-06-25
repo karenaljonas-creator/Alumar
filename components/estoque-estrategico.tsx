@@ -87,9 +87,10 @@ function arco(cx: number, cy: number, r: number, degIni: number, degFim: number)
   return `M ${ini.x.toFixed(2)} ${ini.y.toFixed(2)} A ${r} ${r} 0 0 1 ${fim.x.toFixed(2)} ${fim.y.toFixed(2)}`
 }
 
-// Medidor semicircular de cobertura (0x → 2x), com zonas vermelho/amarelo/verde
+// Medidor semicircular do % atingido do estoque mínimo (0% → 200%).
+// 100% (centro) = estoque exatamente no nível mínimo recomendado.
 function GaugeCobertura({ value }: { value: number }) {
-  const max = 2
+  const max = 2 // 2 = 200% do mínimo
   const v = Math.max(0, Math.min(max, value))
   const cx = 110
   const cy = 110
@@ -98,8 +99,13 @@ function GaugeCobertura({ value }: { value: number }) {
   const needleDeg = ang(v / max)
   const ponta = pontoArco(cx, cy, r - 18, needleDeg)
   return (
-    <svg viewBox="0 0 220 130" className="w-full max-w-[260px]" role="img" aria-label={`Cobertura média ${v.toFixed(1)}x`}>
-      {/* zonas: vermelho 0–1x (abaixo do mínimo), amarelo 1–1,5x (no limite), verde 1,5–2x (confortável) */}
+    <svg
+      viewBox="0 0 220 130"
+      className="w-full max-w-[260px]"
+      role="img"
+      aria-label={`${Math.round(v * 100)}% do estoque mínimo`}
+    >
+      {/* zonas: vermelho 0–100% (abaixo do mínimo), amarelo 100–150% (no limite), verde 150–200% (confortável) */}
       <path d={arco(cx, cy, r, 180, 92)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
       <path d={arco(cx, cy, r, 90, 47)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
       <path d={arco(cx, cy, r, 45, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
@@ -107,14 +113,14 @@ function GaugeCobertura({ value }: { value: number }) {
       <line x1={cx} y1={cy} x2={ponta.x} y2={ponta.y} stroke="#0f172a" strokeWidth={4} strokeLinecap="round" />
       <circle cx={cx} cy={cy} r={7} fill="#0f172a" />
       {/* marcadores */}
-      <text x={18} y={126} className="fill-muted-foreground" fontSize={11}>
-        0
+      <text x={14} y={126} className="fill-muted-foreground" fontSize={11}>
+        0%
       </text>
-      <text x={cx - 6} y={14} className="fill-muted-foreground" fontSize={11}>
-        1x
+      <text x={cx - 12} y={14} className="fill-muted-foreground" fontSize={11}>
+        100%
       </text>
-      <text x={198} y={126} className="fill-muted-foreground" fontSize={11}>
-        2x
+      <text x={188} y={126} className="fill-muted-foreground" fontSize={11}>
+        200%
       </text>
     </svg>
   )
@@ -735,7 +741,7 @@ export function EstoqueEstrategico() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Cobertura média do estoque</CardTitle>
+            <CardTitle className="text-base">Nível médio do estoque mínimo</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
@@ -745,12 +751,12 @@ export function EstoqueEstrategico() {
                     coberturaMedia >= 1.5 ? "text-green-600" : coberturaMedia >= 1 ? "text-yellow-500" : "text-destructive"
                   }`}
                 >
-                  {coberturaMedia.toFixed(1)}x
+                  {Math.round(coberturaMedia * 100)}%
                 </p>
-                <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
+                <p className="mt-1 max-w-[190px] text-xs text-muted-foreground">
                   {coberturaMedia >= 1
-                    ? "Dentro do nível recomendado"
-                    : "Abaixo do nível mínimo recomendado"}
+                    ? "Em média, o estoque atinge o nível mínimo recomendado"
+                    : "Em média, o estoque está abaixo do nível mínimo recomendado"}
                 </p>
               </div>
               <div className="flex-1">
