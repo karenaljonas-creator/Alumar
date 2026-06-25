@@ -640,40 +640,36 @@ export function EstoqueEstrategico() {
                 </Badge>
               )}
             </div>
+            <div className="mt-2 flex items-center gap-1.5 text-xs text-yellow-600">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>Necessitam atenção imediata</span>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Quantidade a Repor */}
+        {/* Qtd. Total em Déficit */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Quantidade a Repor</p>
-                <p className="mt-1 text-4xl font-bold text-foreground">{qtdRepor}</p>
-                <p className="text-xs text-muted-foreground">peças no total</p>
+                <p className="text-sm font-medium text-muted-foreground">Qtd. Total em Déficit</p>
+                <p className="mt-1 text-4xl font-bold text-destructive">{qtdRepor > 0 ? `-${qtdRepor}` : 0}</p>
+                <p className="text-xs text-muted-foreground">Unidades abaixo do mínimo</p>
               </div>
-              <div className="rounded-full bg-muted p-3">
-                <Package className="h-6 w-6 text-muted-foreground" />
+              <div className="rounded-full bg-destructive/10 p-3">
+                <Package className="h-6 w-6 text-destructive" />
               </div>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">Diferença total abaixo do mínimo</p>
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-yellow-600">
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span>Impacto na operação</span>
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Mini-cards de status */}
-      <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-full bg-destructive/10 p-2">
-              <ShieldAlert className="h-5 w-5 text-destructive" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-destructive">{totalRepor}</p>
-              <p className="text-xs text-muted-foreground">Itens Críticos · abaixo do mínimo</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 pt-6">
             <div className="rounded-full bg-yellow-400/15 p-2">
