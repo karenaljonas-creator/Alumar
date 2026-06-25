@@ -207,7 +207,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                         <TableCell>{new Date(snapshot.dataRegistro).toLocaleDateString("pt-BR")}</TableCell>
                         <TableCell className="text-center font-medium">{snapshot.stats.total}</TableCell>
                         <TableCell className="text-center">
-                          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                          <Badge variant="default" className="bg-primary hover:bg-primary">
                             {snapshot.stats.operacionais}
                           </Badge>
                         </TableCell>

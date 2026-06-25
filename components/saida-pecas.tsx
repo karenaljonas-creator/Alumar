@@ -601,7 +601,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
 
               {/* Lista de itens da NF */}
               {nfCarregada && itensNF.length > 0 && (
-                <div className="space-y-2 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="space-y-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Itens da NF ({itensNF.length})</Label>
                     <span className="text-xs text-muted-foreground">
@@ -718,13 +718,13 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                           placeholder="Digite o código da peça"
                           required
                           list="codigos-list"
-                          className={codigoEncontrado === true ? "border-green-500 pr-10" : codigoEncontrado === false ? "border-amber-500 pr-10" : ""}
+                          className={codigoEncontrado === true ? "border-primary pr-10" : codigoEncontrado === false ? "border-muted-foreground pr-10" : ""}
                         />
                         {codigoEncontrado === true && (
-                          <Check className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-green-500" />
+                          <Check className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
                         )}
                         {codigoEncontrado === false && (
-                          <AlertCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-amber-500" />
+                          <AlertCircle className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                         )}
                       </div>
                       <datalist id="codigos-list">
@@ -733,10 +733,10 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         ))}
                       </datalist>
                       {codigoEncontrado === true && (
-                        <p className="text-xs text-green-600">Código encontrado no estoque!</p>
+                        <p className="text-xs text-primary">Código encontrado no estoque!</p>
                       )}
                       {codigoEncontrado === false && (
-                        <p className="text-xs text-amber-600">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
+                        <p className="text-xs text-muted-foreground">Código não encontrado no estoque. Você pode preencher a descrição manualmente.</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -852,7 +852,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="outline" onClick={resetForm} disabled={salvando}>Cancelar</Button>
                 {nfCarregada ? (
-                  <Button type="button" onClick={handleConfirmarSaida} disabled={salvando} className="bg-green-600 hover:bg-green-700">
+                  <Button type="button" onClick={handleConfirmarSaida} disabled={salvando}>
                     {salvando ? (
                       <><Loader2 className="h-4 w-4 animate-spin" /> Processando...</>
                     ) : (
@@ -897,9 +897,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              <span className="text-amber-600">{filteredSaidas.filter((s) => s.utilizacao === "Corretiva").length}</span>
+              <span className="text-muted-foreground">{filteredSaidas.filter((s) => s.utilizacao === "Corretiva").length}</span>
               {" / "}
-              <span className="text-blue-600">{filteredSaidas.filter((s) => s.utilizacao === "Preventiva").length}</span>
+              <span className="text-primary">{filteredSaidas.filter((s) => s.utilizacao === "Preventiva").length}</span>
             </div>
           </CardContent>
         </Card>
@@ -988,7 +988,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <TableCell>
                         <Badge
                           variant={saida.utilizacao === "Corretiva" ? "destructive" : "default"}
-                          className={saida.utilizacao === "Preventiva" ? "bg-blue-500 hover:bg-blue-600" : ""}
+                          className={saida.utilizacao === "Preventiva" ? "bg-primary hover:bg-primary" : ""}
                         >
                           {saida.utilizacao}
                         </Badge>
