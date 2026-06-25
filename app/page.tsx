@@ -697,11 +697,11 @@ export default function Home() {
         <div className="p-4 border-b border-border">
           <h1 className="text-lg font-bold text-foreground">Gestão de Máquinas</h1>
           <div className="mt-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center rounded bg-blue-50 px-1.5 py-0.5 text-blue-700 font-medium">
+            <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-primary font-medium">
               {contrato.numero}
             </span>
             <span className="mx-1">|</span>
-            <span className="text-green-700">{contrato.localizacao}</span>
+            <span className="text-muted-foreground">{contrato.localizacao}</span>
           </div>
         </div>
 

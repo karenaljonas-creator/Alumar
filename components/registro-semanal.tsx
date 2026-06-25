@@ -262,7 +262,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
   const getStatusBadge = (status: string) => {
     if (status === "v0") {
       return (
-        <Badge variant="secondary" className="bg-yellow-400 hover:bg-yellow-500 text-yellow-900">
+        <Badge variant="secondary" className="text-muted-foreground">
           V0
         </Badge>
       )

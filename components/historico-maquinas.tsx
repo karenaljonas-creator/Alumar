@@ -215,7 +215,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                           <Badge variant="destructive">{snapshot.stats.paradas}</Badge>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant="secondary" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                          <Badge variant="secondary" className="text-muted-foreground">
                             {snapshot.stats.manutencao}
                           </Badge>
                         </TableCell>
@@ -297,11 +297,11 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                               }
                                               className={
                                                 maquina.status === "operacional"
-                                                  ? "bg-green-500 hover:bg-green-600"
+                                                  ? "bg-primary hover:bg-primary"
                                                   : maquina.status === "manutencao"
-                                                    ? "bg-gray-500 hover:bg-gray-600 text-white"
+                                                    ? "bg-muted text-muted-foreground hover:bg-muted"
                                                     : maquina.status === "v0"
-                                                      ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                                                      ? "bg-secondary text-secondary-foreground"
                                                       : ""
                                               }
                                             >
@@ -325,7 +325,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                               }
                                               className={
                                                 maquina.statusPreventiva === "OK"
-                                                  ? "bg-green-500 hover:bg-green-600"
+                                                  ? "bg-primary hover:bg-primary"
                                                   : ""
                                               }
                                             >

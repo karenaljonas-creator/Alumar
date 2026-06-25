@@ -325,7 +325,7 @@ export function ImportHistoricalButton() {
 
           {selectedFile && (
             <div className="flex items-center gap-2 rounded-lg border border-border bg-muted/50 p-3">
-              <FileSpreadsheet className="h-5 w-5 text-green-600" />
+              <FileSpreadsheet className="h-5 w-5 text-primary" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{selectedFile.name}</p>
                 <p className="text-xs text-muted-foreground">{(selectedFile.size / 1024).toFixed(1)} KB</p>
@@ -373,7 +373,7 @@ export function ImportHistoricalButton() {
           )}
 
           {success && (
-            <div className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 p-4 text-green-900 dark:border-green-800 dark:bg-green-950 dark:text-green-100">
+            <div className="flex items-start gap-2 rounded-lg border border-primary/20 bg-primary/10 p-4 text-primary">
               <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="font-semibold">Importação concluída!</p>

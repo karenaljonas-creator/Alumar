@@ -387,9 +387,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
                           className={
-                            maquina.status === "v0"
-                              ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                              : ""
+                                  maquina.status === "v0"
+                                    ? "bg-muted text-muted-foreground hover:bg-muted"
+                                    : ""
                           }
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
@@ -419,16 +419,16 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
+                                <Check className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button
                               size="sm"
                               variant="ghost"
                               onClick={handleEditCancel}
                               className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
-                              <X className="h-4 w-4 text-red-600" />
+                                <X className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </div>
                         ) : (
@@ -561,16 +561,16 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
-                              <Check className="h-4 w-4 text-green-600" />
-                            </Button>
-                            <Button
+                                <Check className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button
                               size="sm"
                               variant="ghost"
                               onClick={handleEditCancel}
                               className="h-8 w-8 p-0 flex-shrink-0"
                               disabled={isSaving}
                             >
-                              <X className="h-4 w-4 text-red-600" />
+                                <X className="h-4 w-4 text-muted-foreground" />
                             </Button>
                           </div>
                         ) : (
@@ -600,7 +600,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
                           }}
                         >
-                          <Edit2 className="h-4 w-4 text-blue-600" />
+                                <Edit2 className="h-4 w-4 text-primary" />
                         </Button>
                       </TableCell>
                     </TableRow>
