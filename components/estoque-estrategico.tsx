@@ -34,11 +34,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Loader2,
-  TrendingUp,
-  TrendingDown,
   Package,
   ClipboardList,
-  Minus,
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 
@@ -76,19 +73,6 @@ interface ItemEstrategico {
   status: Status
   naListaMestre: boolean
   listaMestreId?: number
-}
-
-const TREND_KEY = "estoque-estrategico-tendencia-v1"
-
-// Identificador de semana do ano (ex.: "2026-W26"), usado para tendência semanal
-function getWeekKey(date = new Date()) {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
-  const dayNum = (d.getUTCDay() + 6) % 7
-  d.setUTCDate(d.getUTCDate() - dayNum + 3)
-  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
-  const week =
-    1 + Math.round(((d.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7)
-  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`
 }
 
 // Ponto na semicircunferência: θ=180° (esquerda) → 0° (direita), varrendo o topo
@@ -144,8 +128,6 @@ export function EstoqueEstrategico() {
   const [filtros, setFiltros] = useState<Partial<Record<ColKey, string[]>>>({})
   // Ordenação atual
   const [ordenacao, setOrdenacao] = useState<{ key: ColKey; dir: SortDir } | null>(null)
-  // Tendência semanal de itens críticos (delta vs início da semana)
-  const [trendDelta, setTrendDelta] = useState<number | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -545,10 +527,13 @@ export function EstoqueEstrategico() {
   const totalAnalisar = itens.filter((i) => i.status === "Analisar").length
   const totalOk = itens.filter((i) => i.status === "OK").length
   const totalMonitorados = itens.length
+  // Itens avaliáveis = possuem mínimo definido (Lista Mestre): OK ou Repor.
+  // Os "Analisar" não têm mínimo, portanto não entram no cálculo de aderência/criticidade.
+  const totalAvaliaveis = totalOk + totalRepor
 
   // Métricas do painel superior
-  const aderenciaPct = totalMonitorados ? Math.round((totalOk / totalMonitorados) * 100) : 0
-  const criticosPct = totalMonitorados ? Math.round((totalRepor / totalMonitorados) * 100) : 0
+  const aderenciaPct = totalAvaliaveis ? Math.round((totalOk / totalAvaliaveis) * 100) : 0
+  const criticosPct = totalAvaliaveis ? Math.round((totalRepor / totalAvaliaveis) * 100) : 0
   const qtdRepor = itens.reduce(
     (acc, i) => acc + ((i.diferenca ?? 0) < 0 ? Math.abs(i.diferenca as number) : 0),
     0,
@@ -574,24 +559,6 @@ export function EstoqueEstrategico() {
   const aderenciaBarra =
     aderenciaNivel === "bom" ? "bg-green-600" : aderenciaNivel === "medio" ? "bg-yellow-400" : "bg-destructive"
   const aderenciaRotulo = aderenciaNivel === "bom" ? "Bom" : aderenciaNivel === "medio" ? "Médio" : "Baixo"
-
-  // Tendência semanal: compara o nº de itens críticos com o registrado no início da semana
-  useEffect(() => {
-    if (loading || itens.length === 0) return
-    try {
-      const week = getWeekKey()
-      const raw = typeof window !== "undefined" ? window.localStorage.getItem(TREND_KEY) : null
-      const parsed = raw ? JSON.parse(raw) : null
-      if (!parsed || parsed.week !== week) {
-        window.localStorage.setItem(TREND_KEY, JSON.stringify({ week, baseline: totalRepor }))
-        setTrendDelta(0)
-      } else {
-        setTrendDelta(totalRepor - parsed.baseline)
-      }
-    } catch {
-      /* ignora falha de armazenamento */
-    }
-  }, [loading, itens, totalRepor])
 
   const filtrosAtivos = Object.keys(filtros).length > 0 || !!ordenacao
 
@@ -631,7 +598,7 @@ export function EstoqueEstrategico() {
       </div>
 
       {/* Faixa de KPIs principais */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {/* Aderência ao Estoque */}
         <Card>
           <CardContent className="pt-6">
@@ -642,7 +609,7 @@ export function EstoqueEstrategico() {
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {totalOk} de {totalMonitorados} itens dentro do mínimo
+                {totalOk} de {totalAvaliaveis} itens dentro do mínimo
               </span>
               <Badge variant="outline" className={aderenciaCor}>
                 {aderenciaRotulo}
@@ -665,7 +632,7 @@ export function EstoqueEstrategico() {
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {totalRepor} de {totalMonitorados} itens abaixo do mínimo
+                {totalRepor} de {totalAvaliaveis} itens abaixo do mínimo
               </span>
               {criticosPct >= 50 && (
                 <Badge variant="destructive" className="gap-1">
@@ -690,33 +657,6 @@ export function EstoqueEstrategico() {
               </div>
             </div>
             <p className="mt-3 text-xs text-muted-foreground">Diferença total abaixo do mínimo</p>
-          </CardContent>
-        </Card>
-
-        {/* Tendência */}
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm font-medium text-muted-foreground">Tendência (vs início da semana)</p>
-            {trendDelta === null || trendDelta === 0 ? (
-              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-muted-foreground">
-                <Minus className="h-7 w-7" /> 0
-              </p>
-            ) : trendDelta > 0 ? (
-              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-destructive">
-                <TrendingUp className="h-7 w-7" /> +{trendDelta}
-              </p>
-            ) : (
-              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-green-600">
-                <TrendingDown className="h-7 w-7" /> {trendDelta}
-              </p>
-            )}
-            <p className="mt-3 text-xs text-muted-foreground">
-              {trendDelta === null || trendDelta === 0
-                ? "Sem variação no nº de itens críticos"
-                : trendDelta > 0
-                  ? "Piorou — mais itens críticos"
-                  : "Melhorou — menos itens críticos"}
-            </p>
           </CardContent>
         </Card>
       </div>
