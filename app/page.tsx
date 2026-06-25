@@ -716,7 +716,7 @@ export default function Home() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -739,7 +739,7 @@ export default function Home() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     activeSection === item.id
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-muted hover:text-foreground"
                   )}
                 >
@@ -762,7 +762,7 @@ export default function Home() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "bg-primary/10 text-primary"
                     : "text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
