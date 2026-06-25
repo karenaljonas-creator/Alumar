@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,8 +25,32 @@ import {
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { Plus, Search, Edit, Trash2, ShieldCheck, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react"
+import { ColumnFilter, type SortDir } from "@/components/column-filter"
 
 type Status = "OK" | "Repor" | "Analisar"
+
+// Colunas filtráveis/ordenáveis da tabela
+type ColKey = "codigo" | "descricao" | "saldo" | "quantidade_minima" | "diferenca" | "status"
+
+const COLUNAS: { key: ColKey; label: string; align: "start" | "center" }[] = [
+  { key: "codigo", label: "Código (PN)", align: "start" },
+  { key: "descricao", label: "Descrição", align: "start" },
+  { key: "saldo", label: "Saldo", align: "center" },
+  { key: "quantidade_minima", label: "Qtd. Mínima", align: "center" },
+  { key: "diferenca", label: "Diferença", align: "center" },
+  { key: "status", label: "Status", align: "center" },
+]
+
+const COLUNAS_NUMERICAS: ColKey[] = ["saldo", "quantidade_minima", "diferenca"]
+
+const STORAGE_KEY = "estoque-estrategico-filtros-v1"
+
+// Valor textual de uma coluna para um item (usado em filtro e ordenação)
+function valorColuna(item: ItemEstrategico, key: ColKey): string {
+  const v = item[key]
+  if (v === null || v === undefined || v === "") return "-"
+  return String(v)
+}
 
 interface ItemEstrategico {
   codigo: string
@@ -43,6 +67,10 @@ export function EstoqueEstrategico() {
   const [itens, setItens] = useState<ItemEstrategico[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  // Filtros por coluna: chave presente = filtro ativo; array = valores permitidos
+  const [filtros, setFiltros] = useState<Partial<Record<ColKey, string[]>>>({})
+  // Ordenação atual
+  const [ordenacao, setOrdenacao] = useState<{ key: ColKey; dir: SortDir } | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -62,6 +90,49 @@ export function EstoqueEstrategico() {
     loadDados()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Restaura filtros/ordenação salvos (persistência entre telas)
+  useEffect(() => {
+    try {
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem(STORAGE_KEY) : null
+      if (raw) {
+        const parsed = JSON.parse(raw)
+        if (parsed.filtros) setFiltros(parsed.filtros)
+        if (parsed.ordenacao) setOrdenacao(parsed.ordenacao)
+        if (typeof parsed.searchTerm === "string") setSearchTerm(parsed.searchTerm)
+      }
+    } catch {
+      /* ignora estado corrompido */
+    }
+  }, [])
+
+  // Salva filtros/ordenação sempre que mudarem
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ filtros, ordenacao, searchTerm }))
+      }
+    } catch {
+      /* ignora falha de armazenamento */
+    }
+  }, [filtros, ordenacao, searchTerm])
+
+  // Handlers de filtro/ordenação por coluna
+  const aplicarFiltroColuna = (key: ColKey, selecionados: string[] | null) => {
+    setFiltros((prev) => {
+      const next = { ...prev }
+      if (selecionados === null) {
+        delete next[key]
+      } else {
+        next[key] = selecionados
+      }
+      return next
+    })
+  }
+
+  const ordenarColuna = (key: ColKey, dir: SortDir) => {
+    setOrdenacao((prev) => (prev?.key === key && prev.dir === dir ? null : { key, dir }))
+  }
 
   const loadDados = async () => {
     setLoading(true)
@@ -287,14 +358,96 @@ export function EstoqueEstrategico() {
     await loadDados()
   }
 
-  const itensFiltrados = itens.filter((i) => {
-    const termo = searchTerm.toLowerCase()
+  // Verifica se um item passa na busca textual
+  const passaBusca = (i: ItemEstrategico) => {
+    const termo = searchTerm.trim().toLowerCase()
+    if (!termo) return true
     return i.codigo.toLowerCase().includes(termo) || i.descricao.toLowerCase().includes(termo)
-  })
+  }
+
+  // Verifica se um item passa nos filtros de coluna (podendo ignorar uma coluna)
+  const passaFiltros = (i: ItemEstrategico, exceto?: ColKey) => {
+    for (const key of Object.keys(filtros) as ColKey[]) {
+      if (key === exceto) continue
+      const permitidos = filtros[key]
+      if (!permitidos || permitidos.length === 0) continue
+      if (!permitidos.includes(valorColuna(i, key))) return false
+    }
+    return true
+  }
+
+  // Universo estável de valores por coluna (sobre todos os itens)
+  const universoPorColuna = useMemo(() => {
+    const mapa = {} as Record<ColKey, string[]>
+    for (const col of COLUNAS) {
+      const set = new Set<string>()
+      for (const i of itens) set.add(valorColuna(i, col.key))
+      const arr = Array.from(set)
+      if (COLUNAS_NUMERICAS.includes(col.key)) {
+        arr.sort((a, b) => {
+          const na = a === "-" ? Number.NEGATIVE_INFINITY : Number(a)
+          const nb = b === "-" ? Number.NEGATIVE_INFINITY : Number(b)
+          return na - nb
+        })
+      } else {
+        arr.sort((a, b) => a.localeCompare(b, "pt-BR"))
+      }
+      mapa[col.key] = arr
+    }
+    return mapa
+  }, [itens])
+
+  // Contagem por valor de cada coluna, considerando os DEMAIS filtros + busca
+  const contagensPorColuna = useMemo(() => {
+    const mapa = {} as Record<ColKey, Record<string, number>>
+    for (const col of COLUNAS) {
+      const contagem: Record<string, number> = {}
+      for (const i of itens) {
+        if (!passaBusca(i)) continue
+        if (!passaFiltros(i, col.key)) continue
+        const v = valorColuna(i, col.key)
+        contagem[v] = (contagem[v] || 0) + 1
+      }
+      mapa[col.key] = contagem
+    }
+    return mapa
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itens, filtros, searchTerm])
+
+  // Lista final: busca + filtros de coluna + ordenação
+  const itensFiltrados = useMemo(() => {
+    const filtrados = itens.filter((i) => passaBusca(i) && passaFiltros(i))
+    if (ordenacao) {
+      const { key, dir } = ordenacao
+      const numerica = COLUNAS_NUMERICAS.includes(key)
+      filtrados.sort((a, b) => {
+        const va = valorColuna(a, key)
+        const vb = valorColuna(b, key)
+        let cmp: number
+        if (numerica) {
+          const na = va === "-" ? Number.NEGATIVE_INFINITY : Number(va)
+          const nb = vb === "-" ? Number.NEGATIVE_INFINITY : Number(vb)
+          cmp = na - nb
+        } else {
+          cmp = va.localeCompare(vb, "pt-BR")
+        }
+        return dir === "asc" ? cmp : -cmp
+      })
+    }
+    return filtrados
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itens, filtros, searchTerm, ordenacao])
 
   const totalRepor = itens.filter((i) => i.status === "Repor").length
   const totalAnalisar = itens.filter((i) => i.status === "Analisar").length
   const totalOk = itens.filter((i) => i.status === "OK").length
+
+  const filtrosAtivos = Object.keys(filtros).length > 0 || !!ordenacao
+
+  const limparTodosFiltros = () => {
+    setFiltros({})
+    setOrdenacao(null)
+  }
 
   const StatusBadge = ({ status }: { status: Status }) => {
     if (status === "OK") {
@@ -383,12 +536,26 @@ export function EstoqueEstrategico() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Código (PN)</TableHead>
-                    <TableHead>Descrição</TableHead>
-                    <TableHead className="text-center">Saldo</TableHead>
-                    <TableHead className="text-center">Qtd. Mínima</TableHead>
-                    <TableHead className="text-center">Diferença</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                    {COLUNAS.map((col) => (
+                      <TableHead key={col.key} className={col.align === "center" ? "text-center" : ""}>
+                        <div
+                          className={
+                            "flex items-center gap-0.5 " + (col.align === "center" ? "justify-center" : "")
+                          }
+                        >
+                          <span>{col.label}</span>
+                          <ColumnFilter
+                            options={universoPorColuna[col.key]}
+                            counts={contagensPorColuna[col.key]}
+                            selected={filtros[col.key] ?? null}
+                            onChange={(sel) => aplicarFiltroColuna(col.key, sel)}
+                            sortDir={ordenacao?.key === col.key ? ordenacao.dir : null}
+                            onSort={(dir) => ordenarColuna(col.key, dir)}
+                            align={col.align === "center" ? "center" : "start"}
+                          />
+                        </div>
+                      </TableHead>
+                    ))}
                     <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
                 </TableHeader>
