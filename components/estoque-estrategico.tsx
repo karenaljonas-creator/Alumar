@@ -24,7 +24,22 @@ import {
 } from "@/components/ui/table"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Search, Edit, Trash2, ShieldCheck, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react"
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  CheckCircle2,
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Package,
+  ClipboardList,
+  Minus,
+} from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 
 type Status = "OK" | "Repor" | "Analisar"
@@ -63,6 +78,64 @@ interface ItemEstrategico {
   listaMestreId?: number
 }
 
+const TREND_KEY = "estoque-estrategico-tendencia-v1"
+
+// Identificador de semana do ano (ex.: "2026-W26"), usado para tendência semanal
+function getWeekKey(date = new Date()) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = (d.getUTCDay() + 6) % 7
+  d.setUTCDate(d.getUTCDate() - dayNum + 3)
+  const firstThursday = new Date(Date.UTC(d.getUTCFullYear(), 0, 4))
+  const week =
+    1 + Math.round(((d.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7)
+  return `${d.getUTCFullYear()}-W${String(week).padStart(2, "0")}`
+}
+
+// Ponto na semicircunferência: θ=180° (esquerda) → 0° (direita), varrendo o topo
+function pontoArco(cx: number, cy: number, r: number, deg: number) {
+  const rad = (deg * Math.PI) / 180
+  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) }
+}
+
+function arco(cx: number, cy: number, r: number, degIni: number, degFim: number) {
+  const ini = pontoArco(cx, cy, r, degIni)
+  const fim = pontoArco(cx, cy, r, degFim)
+  return `M ${ini.x.toFixed(2)} ${ini.y.toFixed(2)} A ${r} ${r} 0 0 1 ${fim.x.toFixed(2)} ${fim.y.toFixed(2)}`
+}
+
+// Medidor semicircular de cobertura (0x → 2x), com zonas vermelho/amarelo/verde
+function GaugeCobertura({ value }: { value: number }) {
+  const max = 2
+  const v = Math.max(0, Math.min(max, value))
+  const cx = 110
+  const cy = 110
+  const r = 88
+  const ang = (frac: number) => 180 - frac * 180 // fração 0..1 → graus 180..0
+  const needleDeg = ang(v / max)
+  const ponta = pontoArco(cx, cy, r - 18, needleDeg)
+  return (
+    <svg viewBox="0 0 220 130" className="w-full max-w-[260px]" role="img" aria-label={`Cobertura média ${v.toFixed(1)}x`}>
+      {/* zonas */}
+      <path d={arco(cx, cy, r, 180, 135)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 133, 92)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 90, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
+      {/* ponteiro */}
+      <line x1={cx} y1={cy} x2={ponta.x} y2={ponta.y} stroke="#0f172a" strokeWidth={4} strokeLinecap="round" />
+      <circle cx={cx} cy={cy} r={7} fill="#0f172a" />
+      {/* marcadores */}
+      <text x={18} y={126} className="fill-muted-foreground" fontSize={11}>
+        0
+      </text>
+      <text x={cx - 6} y={14} className="fill-muted-foreground" fontSize={11}>
+        1x
+      </text>
+      <text x={198} y={126} className="fill-muted-foreground" fontSize={11}>
+        2x
+      </text>
+    </svg>
+  )
+}
+
 export function EstoqueEstrategico() {
   const [itens, setItens] = useState<ItemEstrategico[]>([])
   const [loading, setLoading] = useState(true)
@@ -71,6 +144,8 @@ export function EstoqueEstrategico() {
   const [filtros, setFiltros] = useState<Partial<Record<ColKey, string[]>>>({})
   // Ordenação atual
   const [ordenacao, setOrdenacao] = useState<{ key: ColKey; dir: SortDir } | null>(null)
+  // Tendência semanal de itens críticos (delta vs início da semana)
+  const [trendDelta, setTrendDelta] = useState<number | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -469,6 +544,54 @@ export function EstoqueEstrategico() {
   const totalRepor = itens.filter((i) => i.status === "Repor").length
   const totalAnalisar = itens.filter((i) => i.status === "Analisar").length
   const totalOk = itens.filter((i) => i.status === "OK").length
+  const totalMonitorados = itens.length
+
+  // Métricas do painel superior
+  const aderenciaPct = totalMonitorados ? Math.round((totalOk / totalMonitorados) * 100) : 0
+  const criticosPct = totalMonitorados ? Math.round((totalRepor / totalMonitorados) * 100) : 0
+  const qtdRepor = itens.reduce(
+    (acc, i) => acc + ((i.diferenca ?? 0) < 0 ? Math.abs(i.diferenca as number) : 0),
+    0,
+  )
+
+  // Top 5 itens mais críticos (maior déficit primeiro)
+  const top5Criticos = [...itens]
+    .filter((i) => (i.diferenca ?? 0) < 0)
+    .sort((a, b) => (a.diferenca ?? 0) - (b.diferenca ?? 0))
+    .slice(0, 5)
+
+  // Cobertura média do estoque (saldo / mínimo), considerando itens com mínimo definido
+  const itensComMinimo = itens.filter((i) => (i.quantidade_minima ?? 0) > 0)
+  const coberturaMedia = itensComMinimo.length
+    ? itensComMinimo.reduce((acc, i) => acc + i.saldo / (i.quantidade_minima as number), 0) / itensComMinimo.length
+    : 0
+
+  // Faixa de aderência: define cor e rótulo
+  const aderenciaNivel =
+    aderenciaPct >= 70 ? "bom" : aderenciaPct >= 40 ? "medio" : "baixo"
+  const aderenciaCor =
+    aderenciaNivel === "bom" ? "text-green-600" : aderenciaNivel === "medio" ? "text-yellow-500" : "text-destructive"
+  const aderenciaBarra =
+    aderenciaNivel === "bom" ? "bg-green-600" : aderenciaNivel === "medio" ? "bg-yellow-400" : "bg-destructive"
+  const aderenciaRotulo = aderenciaNivel === "bom" ? "Bom" : aderenciaNivel === "medio" ? "Médio" : "Baixo"
+
+  // Tendência semanal: compara o nº de itens críticos com o registrado no início da semana
+  useEffect(() => {
+    if (loading || itens.length === 0) return
+    try {
+      const week = getWeekKey()
+      const raw = typeof window !== "undefined" ? window.localStorage.getItem(TREND_KEY) : null
+      const parsed = raw ? JSON.parse(raw) : null
+      if (!parsed || parsed.week !== week) {
+        window.localStorage.setItem(TREND_KEY, JSON.stringify({ week, baseline: totalRepor }))
+        setTrendDelta(0)
+      } else {
+        setTrendDelta(totalRepor - parsed.baseline)
+      }
+    } catch {
+      /* ignora falha de armazenamento */
+    }
+  }, [loading, itens, totalRepor])
 
   const filtrosAtivos = Object.keys(filtros).length > 0 || !!ordenacao
 
@@ -507,30 +630,195 @@ export function EstoqueEstrategico() {
         </Button>
       </div>
 
-      {/* Indicadores */}
-      <div className="grid gap-4 md:grid-cols-3">
+      {/* Faixa de KPIs principais */}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        {/* Aderência ao Estoque */}
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Repor (abaixo do mínimo)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-destructive">{totalRepor}</div>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-muted-foreground">Aderência ao Estoque</p>
+            <p className={`mt-1 text-4xl font-bold ${aderenciaCor}`}>{aderenciaPct}%</p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-muted">
+              <div className={`h-full rounded-full ${aderenciaBarra}`} style={{ width: `${aderenciaPct}%` }} />
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {totalOk} de {totalMonitorados} itens dentro do mínimo
+              </span>
+              <Badge variant="outline" className={aderenciaCor}>
+                {aderenciaRotulo}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Itens Críticos */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Itens Críticos</p>
+                <p className="mt-1 text-4xl font-bold text-destructive">{criticosPct}%</p>
+              </div>
+              <div className="rounded-full bg-destructive/10 p-3">
+                <AlertTriangle className="h-6 w-6 text-destructive" />
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="text-xs text-muted-foreground">
+                {totalRepor} de {totalMonitorados} itens abaixo do mínimo
+              </span>
+              {criticosPct >= 50 && (
+                <Badge variant="destructive" className="gap-1">
+                  <ShieldAlert className="h-3 w-3" /> Alto Risco
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quantidade a Repor */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Quantidade a Repor</p>
+                <p className="mt-1 text-4xl font-bold text-foreground">{qtdRepor}</p>
+                <p className="text-xs text-muted-foreground">peças no total</p>
+              </div>
+              <div className="rounded-full bg-muted p-3">
+                <Package className="h-6 w-6 text-muted-foreground" />
+              </div>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">Diferença total abaixo do mínimo</p>
+          </CardContent>
+        </Card>
+
+        {/* Tendência */}
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium text-muted-foreground">Tendência (vs início da semana)</p>
+            {trendDelta === null || trendDelta === 0 ? (
+              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-muted-foreground">
+                <Minus className="h-7 w-7" /> 0
+              </p>
+            ) : trendDelta > 0 ? (
+              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-destructive">
+                <TrendingUp className="h-7 w-7" /> +{trendDelta}
+              </p>
+            ) : (
+              <p className="mt-1 flex items-center gap-1 text-4xl font-bold text-green-600">
+                <TrendingDown className="h-7 w-7" /> {trendDelta}
+              </p>
+            )}
+            <p className="mt-3 text-xs text-muted-foreground">
+              {trendDelta === null || trendDelta === 0
+                ? "Sem variação no nº de itens críticos"
+                : trendDelta > 0
+                  ? "Piorou — mais itens críticos"
+                  : "Melhorou — menos itens críticos"}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Mini-cards de status */}
+      <div className="grid gap-4 grid-cols-2 xl:grid-cols-4">
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="rounded-full bg-destructive/10 p-2">
+              <ShieldAlert className="h-5 w-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-destructive">{totalRepor}</p>
+              <p className="text-xs text-muted-foreground">Itens Críticos · abaixo do mínimo</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Analisar (fora da Lista Mestre)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-yellow-500">{totalAnalisar}</div>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="rounded-full bg-yellow-400/15 p-2">
+              <AlertTriangle className="h-5 w-5 text-yellow-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-yellow-500">{totalAnalisar}</p>
+              <p className="text-xs text-muted-foreground">Para Analisar · fora da lista mestre</p>
+            </div>
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">OK (dentro do mínimo)</CardTitle>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="rounded-full bg-green-600/10 p-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">{totalOk}</p>
+              <p className="text-xs text-muted-foreground">Estoque Adequado · dentro do mínimo</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-3 pt-6">
+            <div className="rounded-full bg-muted p-2">
+              <ClipboardList className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{totalMonitorados}</p>
+              <p className="text-xs text-muted-foreground">Total monitorados · itens cadastrados</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top 5 críticos + Cobertura média */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Top 5 itens mais críticos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-green-600">{totalOk}</div>
+            {top5Criticos.length === 0 ? (
+              <p className="py-6 text-center text-sm text-muted-foreground">Nenhum item crítico no momento.</p>
+            ) : (
+              <ul className="flex flex-col divide-y">
+                {top5Criticos.map((item, idx) => (
+                  <li key={item.codigo} className="flex items-center gap-3 py-2.5">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-xs font-semibold text-destructive">
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{item.descricao || item.codigo}</p>
+                      <p className="truncate text-xs text-muted-foreground">{item.codigo}</p>
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-destructive">{item.diferenca}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Cobertura média do estoque</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
+            <div>
+              <p
+                className={`text-4xl font-bold ${
+                  coberturaMedia >= 1 ? "text-green-600" : coberturaMedia >= 0.5 ? "text-yellow-500" : "text-destructive"
+                }`}
+              >
+                {coberturaMedia.toFixed(1)}x
+              </p>
+              <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
+                {coberturaMedia >= 1
+                  ? "Dentro do nível recomendado"
+                  : "Abaixo do nível mínimo recomendado"}
+              </p>
+            </div>
+            <div className="flex-1">
+              <GaugeCobertura value={coberturaMedia} />
+            </div>
           </CardContent>
         </Card>
       </div>
