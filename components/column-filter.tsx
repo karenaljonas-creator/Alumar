@@ -4,7 +4,7 @@ import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ArrowDownAZ, ArrowUpAZ, Filter, Search, X } from "lucide-react"
+import { ArrowDown, ArrowDownAZ, ArrowUp, ArrowUpAZ, ArrowUpDown, Filter, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type SortDir = "asc" | "desc"
@@ -36,6 +36,17 @@ export function ColumnFilter({
   const [busca, setBusca] = useState("")
 
   const ativo = selected !== null
+
+  // Ciclo do ícone visível de ordenação: sem ordem → crescente → decrescente → sem ordem.
+  // onSort(dir) com a mesma direção já ativa volta a "sem ordem" (toggle no componente pai).
+  const cicloOrdenacao = () => {
+    if (sortDir === null) onSort("asc")
+    else if (sortDir === "asc") onSort("desc")
+    else onSort("desc")
+  }
+
+  const tituloOrdenacao =
+    sortDir === "asc" ? "Ordenado: crescente" : sortDir === "desc" ? "Ordenado: decrescente" : "Classificar coluna"
 
   // Valores visíveis no dropdown (filtrados pela busca interna)
   const visiveis = useMemo(() => {
@@ -80,21 +91,44 @@ export function ColumnFilter({
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          aria-label="Filtrar coluna"
-          className={cn(
-            "ml-1 inline-flex h-6 w-6 items-center justify-center rounded transition-colors",
-            ativo
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground",
-          )}
-        >
-          <Filter className="h-3.5 w-3.5" fill={ativo ? "currentColor" : "none"} />
-        </button>
-      </PopoverTrigger>
+    <span className="ml-1 inline-flex items-center">
+      {/* Ícone de classificação visível direto no cabeçalho */}
+      <button
+        type="button"
+        aria-label={tituloOrdenacao}
+        title={tituloOrdenacao}
+        onClick={cicloOrdenacao}
+        className={cn(
+          "inline-flex h-6 w-6 items-center justify-center rounded transition-colors",
+          sortDir
+            ? "bg-primary text-primary-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        {sortDir === "asc" ? (
+          <ArrowUp className="h-3.5 w-3.5" />
+        ) : sortDir === "desc" ? (
+          <ArrowDown className="h-3.5 w-3.5" />
+        ) : (
+          <ArrowUpDown className="h-3.5 w-3.5" />
+        )}
+      </button>
+
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label="Filtrar coluna"
+            className={cn(
+              "ml-0.5 inline-flex h-6 w-6 items-center justify-center rounded transition-colors",
+              ativo
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <Filter className="h-3.5 w-3.5" fill={ativo ? "currentColor" : "none"} />
+          </button>
+        </PopoverTrigger>
       <PopoverContent align={align} className="w-64 p-0" onOpenAutoFocus={(e) => e.preventDefault()}>
         {/* Ordenação */}
         <div className="flex gap-1 border-b p-2">
@@ -174,7 +208,8 @@ export function ColumnFilter({
             Fechar
           </Button>
         </div>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </span>
   )
 }

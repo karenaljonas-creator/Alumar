@@ -30,12 +30,11 @@ import {
   Edit,
   Trash2,
   ShieldCheck,
-  ShieldAlert,
   AlertTriangle,
   CheckCircle2,
   Loader2,
   Package,
-  ClipboardList,
+  ArrowDown,
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 
@@ -75,54 +74,33 @@ interface ItemEstrategico {
   listaMestreId?: number
 }
 
-// Ponto na semicircunferência: θ=180° (esquerda) → 0° (direita), varrendo o topo
-function pontoArco(cx: number, cy: number, r: number, deg: number) {
-  const rad = (deg * Math.PI) / 180
-  return { x: cx + r * Math.cos(rad), y: cy - r * Math.sin(rad) }
-}
-
-function arco(cx: number, cy: number, r: number, degIni: number, degFim: number) {
-  const ini = pontoArco(cx, cy, r, degIni)
-  const fim = pontoArco(cx, cy, r, degFim)
-  return `M ${ini.x.toFixed(2)} ${ini.y.toFixed(2)} A ${r} ${r} 0 0 1 ${fim.x.toFixed(2)} ${fim.y.toFixed(2)}`
-}
-
-// Medidor semicircular do % atingido do estoque mínimo (0% → 200%).
-// 100% (centro) = estoque exatamente no nível mínimo recomendado.
-function GaugeCobertura({ value }: { value: number }) {
-  const max = 2 // 2 = 200% do mínimo
-  const v = Math.max(0, Math.min(max, value))
-  const cx = 110
-  const cy = 110
-  const r = 88
-  const ang = (frac: number) => 180 - frac * 180 // fração 0..1 → graus 180..0
-  const needleDeg = ang(v / max)
-  const ponta = pontoArco(cx, cy, r - 18, needleDeg)
+// Donut do percentual de itens abaixo do mínimo: arco vermelho = crítico, verde = restante
+function DonutCritico({ pct }: { pct: number }) {
+  const p = Math.max(0, Math.min(100, pct))
+  const r = 42
+  const c = 2 * Math.PI * r
+  const vermelho = (p / 100) * c
   return (
-    <svg
-      viewBox="0 0 220 130"
-      className="w-full max-w-[260px]"
-      role="img"
-      aria-label={`${Math.round(v * 100)}% do estoque mínimo`}
-    >
-      {/* zonas: vermelho 0–100% (abaixo do mínimo), amarelo 100–150% (no limite), verde 150–200% (confortável) */}
-      <path d={arco(cx, cy, r, 180, 92)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 90, 47)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 45, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
-      {/* ponteiro */}
-      <line x1={cx} y1={cy} x2={ponta.x} y2={ponta.y} stroke="#0f172a" strokeWidth={4} strokeLinecap="round" />
-      <circle cx={cx} cy={cy} r={7} fill="#0f172a" />
-      {/* marcadores */}
-      <text x={14} y={126} className="fill-muted-foreground" fontSize={11}>
-        0%
-      </text>
-      <text x={cx - 12} y={14} className="fill-muted-foreground" fontSize={11}>
-        100%
-      </text>
-      <text x={188} y={126} className="fill-muted-foreground" fontSize={11}>
-        200%
-      </text>
-    </svg>
+    <div className="relative h-32 w-32 shrink-0" role="img" aria-label={`${p}% do estoque abaixo do mínimo`}>
+      <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
+        <circle cx="50" cy="50" r={r} fill="none" stroke="#16a34a" strokeWidth={12} />
+        <circle
+          cx="50"
+          cy="50"
+          r={r}
+          fill="none"
+          stroke="#dc2626"
+          strokeWidth={12}
+          strokeDasharray={`${vermelho.toFixed(2)} ${(c - vermelho).toFixed(2)}`}
+          strokeLinecap="round"
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="rounded-full bg-destructive/10 p-3">
+          <ArrowDown className="h-6 w-6 text-destructive" />
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -539,7 +517,6 @@ export function EstoqueEstrategico() {
 
   // Métricas do painel superior
   const aderenciaPct = totalAvaliaveis ? Math.round((totalOk / totalAvaliaveis) * 100) : 0
-  const criticosPct = totalAvaliaveis ? Math.round((totalRepor / totalAvaliaveis) * 100) : 0
   const qtdRepor = itens.reduce(
     (acc, i) => acc + ((i.diferenca ?? 0) < 0 ? Math.abs(i.diferenca as number) : 0),
     0,
@@ -551,11 +528,10 @@ export function EstoqueEstrategico() {
     .sort((a, b) => (a.diferenca ?? 0) - (b.diferenca ?? 0))
     .slice(0, 5)
 
-  // Cobertura média do estoque (saldo / mínimo), considerando itens com mínimo definido
-  const itensComMinimo = itens.filter((i) => (i.quantidade_minima ?? 0) > 0)
-  const coberturaMedia = itensComMinimo.length
-    ? itensComMinimo.reduce((acc, i) => acc + i.saldo / (i.quantidade_minima as number), 0) / itensComMinimo.length
-    : 0
+  // Percentuais sobre o total de itens monitorados (com 1 casa decimal, formato BR)
+  const pctDoTotal = (valor: number) =>
+    totalMonitorados ? ((valor / totalMonitorados) * 100).toFixed(1).replace(".", ",") : "0,0"
+  const criticosPctTotal = totalMonitorados ? Math.round((totalRepor / totalMonitorados) * 100) : 0
 
   // Faixa de aderência: define cor e rótulo
   const aderenciaNivel =
@@ -624,32 +600,17 @@ export function EstoqueEstrategico() {
           </CardContent>
         </Card>
 
-        {/* Itens Críticos */}
+        {/* Estoque abaixo do mínimo (donut) */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Itens Críticos</p>
-                <p className="mt-1 text-4xl font-bold text-destructive">{criticosPct}%</p>
-              </div>
-              <div className="rounded-full bg-destructive/10 p-3">
-                <AlertTriangle className="h-6 w-6 text-destructive" />
-              </div>
+          <CardContent className="flex items-center justify-between gap-4 pt-6">
+            <div>
+              <p className="text-4xl font-bold text-destructive">{criticosPctTotal}%</p>
+              <p className="mt-1 text-sm text-muted-foreground">do estoque está abaixo do mínimo</p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {totalRepor} de {totalMonitorados} itens
+              </p>
             </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">
-                {totalRepor} de {totalAvaliaveis} itens abaixo do mínimo
-              </span>
-              {criticosPct >= 50 && (
-                <Badge variant="destructive" className="gap-1">
-                  <ShieldAlert className="h-3 w-3" /> Alto Risco
-                </Badge>
-              )}
-            </div>
-            <div className="mt-2 flex items-center gap-1.5 text-xs text-yellow-600">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              <span>Necessitam atenção imediata</span>
-            </div>
+            <DonutCritico pct={criticosPctTotal} />
           </CardContent>
         </Card>
 
@@ -674,44 +635,7 @@ export function EstoqueEstrategico() {
         </Card>
       </div>
 
-      {/* Mini-cards de status */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-full bg-yellow-400/15 p-2">
-              <AlertTriangle className="h-5 w-5 text-yellow-500" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-yellow-500">{totalAnalisar}</p>
-              <p className="text-xs text-muted-foreground">Para Analisar · fora da lista mestre</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-full bg-green-600/10 p-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-600">{totalOk}</p>
-              <p className="text-xs text-muted-foreground">Estoque Adequado · dentro do mínimo</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="flex items-center gap-3 pt-6">
-            <div className="rounded-full bg-muted p-2">
-              <ClipboardList className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-foreground">{totalMonitorados}</p>
-              <p className="text-xs text-muted-foreground">Total monitorados · itens cadastrados</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top 5 críticos + Cobertura média */}
+      {/* Top 5 críticos + Estoque abaixo do mínimo */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
@@ -741,46 +665,47 @@ export function EstoqueEstrategico() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Nível médio do estoque mínimo</CardTitle>
+            <CardTitle className="text-base">Estoque abaixo do mínimo</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
+            <div className="flex items-baseline gap-3">
+              <p className="text-5xl font-bold text-destructive">{totalRepor}</p>
               <div>
-                <p
-                  className={`text-4xl font-bold ${
-                    coberturaMedia >= 1.5 ? "text-green-600" : coberturaMedia >= 1 ? "text-yellow-500" : "text-destructive"
-                  }`}
-                >
-                  {Math.round(coberturaMedia * 100)}%
-                </p>
-                <p className="mt-1 max-w-[190px] text-xs text-muted-foreground">
-                  {coberturaMedia >= 1
-                    ? "Em média, o estoque atinge o nível mínimo recomendado"
-                    : "Em média, o estoque está abaixo do nível mínimo recomendado"}
-                </p>
-              </div>
-              <div className="flex-1">
-                <GaugeCobertura value={coberturaMedia} />
+                <p className="text-sm font-medium text-foreground">itens abaixo do mínimo</p>
+                <p className="text-xs text-muted-foreground">{pctDoTotal(totalRepor)}% do total de itens</p>
               </div>
             </div>
 
-            {/* Legenda de distribuição dos itens por status */}
-            <ul className="mt-4 flex flex-col gap-2 border-t pt-4">
+            {/* Barra de progresso */}
+            <div className="mt-4 h-7 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="flex h-full items-center justify-end rounded-full bg-destructive pr-3 text-xs font-semibold text-destructive-foreground"
+                style={{ width: `${Math.max(criticosPctTotal, 8)}%` }}
+              >
+                {criticosPctTotal}%
+              </div>
+            </div>
+
+            {/* Distribuição por status */}
+            <div className="mt-5 grid grid-cols-3 gap-2 border-t pt-4">
               {[
-                { cor: "bg-green-600", rotulo: "OK (dentro do mínimo)", valor: totalOk },
-                { cor: "bg-yellow-400", rotulo: "Analisar (fora da lista mestre)", valor: totalAnalisar },
+                { cor: "bg-green-600", rotulo: "OK", valor: totalOk },
+                { cor: "bg-yellow-400", rotulo: "Para revisar", valor: totalAnalisar },
                 { cor: "bg-destructive", rotulo: "Abaixo do mínimo", valor: totalRepor },
               ].map((linha) => (
-                <li key={linha.rotulo} className="flex items-center gap-2 text-sm">
-                  <span className={`h-3 w-3 shrink-0 rounded-full ${linha.cor}`} aria-hidden="true" />
-                  <span className="flex-1 text-muted-foreground">{linha.rotulo}</span>
-                  <span className="font-semibold text-foreground">{linha.valor}</span>
-                  <span className="w-16 text-right text-muted-foreground">
-                    ({totalMonitorados ? ((linha.valor / totalMonitorados) * 100).toFixed(1).replace(".", ",") : "0"}%)
+                <div key={linha.rotulo} className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${linha.cor}`} aria-hidden="true" />
+                    <span className="text-lg font-bold text-foreground">{linha.valor}</span>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {linha.rotulo} ({pctDoTotal(linha.valor)}%)
                   </span>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
+
+            <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">Total de itens: {totalMonitorados}</p>
           </CardContent>
         </Card>
       </div>
