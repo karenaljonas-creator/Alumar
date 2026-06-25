@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import type { Machine } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -10,10 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, PackageMinus, ArrowUp, ArrowDown, ArrowUpDown, Check, AlertCircle, FileSearch, Loader2 } from "lucide-react"
+import { Plus, Search, Edit, Trash2, PackageMinus, Check, AlertCircle, FileSearch, Loader2, FilterX } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { formatDateOnly } from "@/lib/utils"
+import { ColumnFilter } from "@/components/column-filter"
+import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
 
 interface SaidaPeca {
   id: string
@@ -28,6 +30,7 @@ interface SaidaPeca {
   utilizacao: string
   observacao: string
   created_at: string
+  updated_at?: string
 }
 
 interface EstoquePeca {
@@ -47,9 +50,6 @@ interface ItensNF {
   selecionado: boolean
 }
 
-type SortKey = "codigo" | "descricao" | "quantidade" | "data_saida" | "ordem_servico" | "area" | "compressor" | "utilizacao" | "data_atualizacao"
-type SortDirection = "asc" | "desc"
-
 const UTILIZACOES = ["Corretiva", "Preventiva"]
 
 interface SaidaPecasProps {
@@ -63,8 +63,6 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingSaida, setEditingSaida] = useState<SaidaPeca | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
-  const [sortKey, setSortKey] = useState<SortKey | null>(null)
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc")
   const [codigoEncontrado, setCodigoEncontrado] = useState<boolean | null>(null)
   const [salvando, setSalvando] = useState(false)
   const { toast } = useToast()
@@ -366,58 +364,71 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     }
   }
 
-  const handleSort = useCallback((key: SortKey) => {
-    if (sortKey === key) {
-      if (sortDirection === "asc") {
-        setSortDirection("desc")
-      } else {
-        setSortKey(null)
-        setSortDirection("asc")
-      }
-    } else {
-      setSortKey(key)
-      setSortDirection("asc")
-    }
-  }, [sortKey, sortDirection])
+  const dataAtualizacaoISO = (s: SaidaPeca) => s.updated_at || s.created_at
 
-  const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
-    if (sortKey !== columnKey) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />
-    if (sortDirection === "asc") return <ArrowUp className="h-3 w-3 ml-1" />
-    return <ArrowDown className="h-3 w-3 ml-1" />
-  }
+  const colunas = useMemo<TableColumnDef<SaidaPeca>[]>(
+    () => [
+      { key: "codigo", value: (s) => s.codigo },
+      { key: "descricao", value: (s) => s.descricao },
+      { key: "quantidade", numeric: true, value: (s) => String(s.quantidade ?? 0) },
+      {
+        key: "data_saida",
+        value: (s) => (s.data_saida ? formatDateOnly(s.data_saida) : "-"),
+        sortValue: (s) => s.data_saida || "",
+      },
+      { key: "ordem_servico", value: (s) => s.ordem_servico || "-" },
+      { key: "area", value: (s) => s.area },
+      { key: "compressor", value: (s) => s.compressor },
+      { key: "utilizacao", value: (s) => s.utilizacao },
+      {
+        key: "data_atualizacao",
+        value: (s) =>
+          new Date(dataAtualizacaoISO(s)).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }),
+        sortValue: (s) => dataAtualizacaoISO(s),
+      },
+    ],
+    [],
+  )
 
-  const filteredSaidas = saidas
-    .filter((s) => {
-      const termo = searchTerm.toLowerCase()
-      return (
-        s.codigo.toLowerCase().includes(termo) ||
-        s.descricao.toLowerCase().includes(termo) ||
-        s.ordem_servico.toLowerCase().includes(termo) ||
-        s.compressor.toLowerCase().includes(termo) ||
-        (s.nota_fiscal || "").toLowerCase().includes(termo)
-      )
-    })
-    .sort((a, b) => {
-      if (!sortKey) return 0
-      let valA: string | number = ""
-      let valB: string | number = ""
+  const searchPredicate = useCallback(
+    (s: SaidaPeca, termo: string) =>
+      s.codigo.toLowerCase().includes(termo) ||
+      s.descricao.toLowerCase().includes(termo) ||
+      s.ordem_servico.toLowerCase().includes(termo) ||
+      s.compressor.toLowerCase().includes(termo) ||
+      (s.nota_fiscal || "").toLowerCase().includes(termo),
+    [],
+  )
 
-      switch (sortKey) {
-        case "codigo": valA = a.codigo.toLowerCase(); valB = b.codigo.toLowerCase(); break
-        case "descricao": valA = a.descricao.toLowerCase(); valB = b.descricao.toLowerCase(); break
-        case "quantidade": valA = a.quantidade; valB = b.quantidade; break
-        case "data_saida": valA = a.data_saida; valB = b.data_saida; break
-        case "ordem_servico": valA = a.ordem_servico.toLowerCase(); valB = b.ordem_servico.toLowerCase(); break
-        case "area": valA = a.area.toLowerCase(); valB = b.area.toLowerCase(); break
-        case "compressor": valA = a.compressor.toLowerCase(); valB = b.compressor.toLowerCase(); break
-        case "utilizacao": valA = a.utilizacao.toLowerCase(); valB = b.utilizacao.toLowerCase(); break
-        case "data_atualizacao": valA = a.updated_at || a.created_at; valB = b.updated_at || b.created_at; break
-      }
+  const {
+    linhas: filteredSaidas,
+    filtros,
+    ordenacao,
+    universoPorColuna,
+    contagensPorColuna,
+    setFiltroColuna,
+    ordenarColuna,
+    limparTudo,
+    filtrosAtivos,
+  } = useTableFilters<SaidaPeca>({
+    rows: saidas,
+    columns: colunas,
+    storageKey: "saida-pecas-filtros-v1",
+    searchTerm,
+    searchPredicate,
+  })
 
-      if (valA < valB) return sortDirection === "asc" ? -1 : 1
-      if (valA > valB) return sortDirection === "asc" ? 1 : -1
-      return 0
-    })
+  const renderFiltro = (key: string, align: "start" | "center" | "end" = "start") => (
+    <ColumnFilter
+      options={universoPorColuna[key] ?? []}
+      counts={contagensPorColuna[key] ?? {}}
+      selected={filtros[key] ?? null}
+      onChange={(sel) => setFiltroColuna(key, sel)}
+      sortDir={ordenacao?.key === key ? ordenacao.dir : null}
+      onSort={(dir) => ordenarColuna(key, dir)}
+      align={align}
+    />
+  )
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -901,14 +912,22 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               <PackageMinus className="h-5 w-5" />
               Registro de Saídas
             </CardTitle>
-            <div className="relative w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
+            <div className="flex items-center gap-2">
+              {filtrosAtivos && (
+                <Button onClick={limparTudo} variant="outline" size="sm" className="gap-1">
+                  <FilterX className="h-4 w-4" />
+                  Limpar filtros
+                </Button>
+              )}
+              <div className="relative w-80">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
                   placeholder="Buscar por código, descrição, OS, NF ou TAG..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -925,49 +944,31 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead>
-                      <button onClick={() => handleSort("codigo")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Código <SortIcon columnKey="codigo" />
-                      </button>
+                      <div className="flex items-center font-medium">Código {renderFiltro("codigo")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("descricao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Descrição <SortIcon columnKey="descricao" />
-                      </button>
+                      <div className="flex items-center font-medium">Descrição {renderFiltro("descricao")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("quantidade")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Qtd <SortIcon columnKey="quantidade" />
-                      </button>
+                      <div className="flex items-center font-medium">Qtd {renderFiltro("quantidade", "center")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("data_saida")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Data <SortIcon columnKey="data_saida" />
-                      </button>
+                      <div className="flex items-center font-medium">Data {renderFiltro("data_saida")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("ordem_servico")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Ordem Serviço <SortIcon columnKey="ordem_servico" />
-                      </button>
+                      <div className="flex items-center font-medium">Ordem Serviço {renderFiltro("ordem_servico")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("area")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Área <SortIcon columnKey="area" />
-                      </button>
+                      <div className="flex items-center font-medium">Área {renderFiltro("area")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("compressor")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Equipamento <SortIcon columnKey="compressor" />
-                      </button>
+                      <div className="flex items-center font-medium">Equipamento {renderFiltro("compressor")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("utilizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Utilização <SortIcon columnKey="utilizacao" />
-                      </button>
+                      <div className="flex items-center font-medium">Utilização {renderFiltro("utilizacao")}</div>
                     </TableHead>
                     <TableHead>
-                      <button onClick={() => handleSort("data_atualizacao")} className="flex items-center font-medium hover:text-foreground cursor-pointer">
-                        Atualizado em <SortIcon columnKey="data_atualizacao" />
-                      </button>
+                      <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
                     <TableHead className="text-center">Ações</TableHead>
                   </TableRow>
