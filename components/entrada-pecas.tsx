@@ -460,7 +460,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -468,7 +468,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -476,7 +476,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -484,7 +484,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
           </CardContent>
         </Card>
       </div>
@@ -511,7 +511,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total em Estoque</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(totalEstoque)}</div>
+            <div className="text-2xl font-bold text-primary">{formatCurrency(totalEstoque)}</div>
           </CardContent>
         </Card>
       </div>

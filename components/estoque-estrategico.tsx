@@ -83,21 +83,21 @@ function DonutCritico({ pct }: { pct: number }) {
   return (
     <div className="relative h-32 w-32 shrink-0" role="img" aria-label={`${p}% do estoque abaixo do mínimo`}>
       <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
-        <circle cx="50" cy="50" r={r} fill="none" stroke="#16a34a" strokeWidth={12} />
+        <circle cx="50" cy="50" r={r} fill="none" stroke="var(--secondary)" strokeWidth={12} />
         <circle
           cx="50"
           cy="50"
           r={r}
           fill="none"
-          stroke="#dc2626"
+          stroke="var(--primary)"
           strokeWidth={12}
           strokeDasharray={`${vermelho.toFixed(2)} ${(c - vermelho).toFixed(2)}`}
           strokeLinecap="round"
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="rounded-full bg-destructive/10 p-3">
-          <ArrowDown className="h-6 w-6 text-destructive" />
+        <div className="rounded-full bg-primary/10 p-3">
+          <ArrowDown className="h-6 w-6 text-primary" />
         </div>
       </div>
     </div>
@@ -536,10 +536,8 @@ export function EstoqueEstrategico() {
   // Faixa de aderência: define cor e rótulo
   const aderenciaNivel =
     aderenciaPct >= 70 ? "bom" : aderenciaPct >= 40 ? "medio" : "baixo"
-  const aderenciaCor =
-    aderenciaNivel === "bom" ? "text-green-600" : aderenciaNivel === "medio" ? "text-yellow-500" : "text-destructive"
-  const aderenciaBarra =
-    aderenciaNivel === "bom" ? "bg-green-600" : aderenciaNivel === "medio" ? "bg-yellow-400" : "bg-destructive"
+  const aderenciaCor = "text-primary"
+  const aderenciaBarra = "bg-primary"
   const aderenciaRotulo = aderenciaNivel === "bom" ? "Bom" : aderenciaNivel === "medio" ? "Médio" : "Baixo"
 
   const filtrosAtivos = Object.keys(filtros).length > 0 || !!ordenacao
@@ -552,20 +550,20 @@ export function EstoqueEstrategico() {
   const StatusBadge = ({ status }: { status: Status }) => {
     if (status === "OK") {
       return (
-        <Badge className="bg-green-600 hover:bg-green-600 text-white gap-1">
+        <Badge className="bg-primary hover:bg-primary text-primary-foreground gap-1">
           <CheckCircle2 className="h-3 w-3" /> OK
         </Badge>
       )
     }
     if (status === "Repor") {
       return (
-        <Badge variant="destructive" className="gap-1">
-          <AlertTriangle className="h-3 w-3" /> Repor
+        <Badge variant="outline" className="gap-1 border-primary text-primary">
+          <AlertTriangle className="h-3 w-3" /> Reportar
         </Badge>
       )
     }
     return (
-      <Badge className="bg-yellow-400 hover:bg-yellow-400 text-yellow-950 gap-1">
+      <Badge variant="secondary" className="gap-1 text-muted-foreground">
         <AlertTriangle className="h-3 w-3" /> Analisar
       </Badge>
     )
@@ -604,7 +602,7 @@ export function EstoqueEstrategico() {
         <Card>
           <CardContent className="flex items-center justify-between gap-4 pt-6">
             <div>
-              <p className="text-4xl font-bold text-destructive">{criticosPctTotal}%</p>
+              <p className="text-4xl font-bold text-primary">{criticosPctTotal}%</p>
               <p className="mt-1 text-sm text-muted-foreground">do estoque está abaixo do mínimo</p>
               <p className="mt-2 text-xs text-muted-foreground">
                 {totalRepor} de {totalMonitorados} itens
@@ -620,14 +618,14 @@ export function EstoqueEstrategico() {
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Qtd. Total em Déficit</p>
-                <p className="mt-1 text-4xl font-bold text-destructive">{qtdRepor > 0 ? `-${qtdRepor}` : 0}</p>
+                <p className="mt-1 text-4xl font-bold text-primary">{qtdRepor > 0 ? `-${qtdRepor}` : 0}</p>
                 <p className="text-xs text-muted-foreground">Unidades abaixo do mínimo</p>
               </div>
-              <div className="rounded-full bg-destructive/10 p-3">
-                <Package className="h-6 w-6 text-destructive" />
+              <div className="rounded-full bg-primary/10 p-3">
+                <Package className="h-6 w-6 text-primary" />
               </div>
             </div>
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-yellow-600">
+            <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>Impacto na operação</span>
             </div>
@@ -648,14 +646,14 @@ export function EstoqueEstrategico() {
               <ul className="flex flex-col divide-y">
                 {top5Criticos.map((item, idx) => (
                   <li key={item.codigo} className="flex items-center gap-3 py-2.5">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-xs font-semibold text-destructive">
-                      {idx + 1}
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                  {idx + 1}
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{item.descricao || item.codigo}</p>
                       <p className="truncate text-xs text-muted-foreground">{item.codigo}</p>
                     </div>
-                    <span className="shrink-0 text-sm font-bold text-destructive">{item.diferenca}</span>
+                    <span className="shrink-0 text-sm font-bold text-primary">{item.diferenca}</span>
                   </li>
                 ))}
               </ul>
@@ -669,7 +667,7 @@ export function EstoqueEstrategico() {
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-3">
-              <p className="text-5xl font-bold text-destructive">{totalRepor}</p>
+              <p className="text-5xl font-bold text-primary">{totalRepor}</p>
               <div>
                 <p className="text-sm font-medium text-foreground">itens abaixo do mínimo</p>
                 <p className="text-xs text-muted-foreground">{pctDoTotal(totalRepor)}% do total de itens</p>
@@ -679,7 +677,7 @@ export function EstoqueEstrategico() {
             {/* Barra de progresso */}
             <div className="mt-4 h-7 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="flex h-full items-center justify-end rounded-full bg-destructive pr-3 text-xs font-semibold text-destructive-foreground"
+                className="flex h-full items-center justify-end rounded-full bg-primary pr-3 text-xs font-semibold text-primary-foreground"
                 style={{ width: `${Math.max(criticosPctTotal, 8)}%` }}
               >
                 {criticosPctTotal}%
@@ -689,9 +687,9 @@ export function EstoqueEstrategico() {
             {/* Distribuição por status */}
             <div className="mt-5 grid grid-cols-3 gap-2 border-t pt-4">
               {[
-                { cor: "bg-green-600", rotulo: "OK", valor: totalOk },
-                { cor: "bg-yellow-400", rotulo: "Para revisar", valor: totalAnalisar },
-                { cor: "bg-destructive", rotulo: "Abaixo do mínimo", valor: totalRepor },
+                { cor: "bg-primary", rotulo: "OK", valor: totalOk },
+                { cor: "bg-muted-foreground/40", rotulo: "Para revisar", valor: totalAnalisar },
+                { cor: "bg-primary", rotulo: "Abaixo do mínimo", valor: totalRepor },
               ].map((linha) => (
                 <div key={linha.rotulo} className="flex flex-col gap-1">
                   <div className="flex items-center gap-1.5">
@@ -766,7 +764,7 @@ export function EstoqueEstrategico() {
                   {itensFiltrados.map((item) => (
                     <TableRow
                       key={item.codigo}
-                      className={item.status === "Analisar" ? "bg-yellow-50 hover:bg-yellow-100" : ""}
+                      className={item.status === "Analisar" ? "bg-accent/40 hover:bg-accent/60" : ""}
                     >
                       <TableCell className="font-mono font-medium">{item.codigo}</TableCell>
                       <TableCell>{item.descricao || "-"}</TableCell>
@@ -776,7 +774,7 @@ export function EstoqueEstrategico() {
                         {item.diferenca === null ? (
                           "-"
                         ) : (
-                          <span className={item.diferenca < 0 ? "text-destructive font-semibold" : "text-green-600"}>
+                          <span className={item.diferenca < 0 ? "text-primary font-semibold" : "text-primary"}>
                             {item.diferenca > 0 ? `+${item.diferenca}` : item.diferenca}
                           </span>
                         )}
@@ -862,7 +860,7 @@ export function EstoqueEstrategico() {
               />
             </div>
             {editItem && !editItem.naListaMestre && (
-              <p className="rounded-md bg-yellow-50 p-3 text-sm text-yellow-800">
+              <p className="rounded-md bg-accent p-3 text-sm text-accent-foreground">
                 Saldo atual: <strong>{editItem.saldo}</strong>. Após incluir, o status passará automaticamente para{" "}
                 <strong>OK</strong> ou <strong>Repor</strong> conforme a quantidade mínima definida.
               </p>

@@ -114,9 +114,9 @@ export default function PersonalizacaoPage() {
                     </ol>
                   </div>
 
-                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-2">Dica: Gerador de Cores OKLCH</h4>
-                    <p className="text-sm text-blue-800">
+                  <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
+                    <h4 className="font-semibold text-primary mb-2">Dica: Gerador de Cores OKLCH</h4>
+                    <p className="text-sm text-foreground">
                       Use ferramentas online como <code className="bg-white px-2 py-1 rounded">oklch.com</code> para
                       gerar cores no formato OKLCH facilmente.
                     </p>
@@ -210,9 +210,9 @@ export default function PersonalizacaoPage() {
                     </div>
                   </div>
 
-                  <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-yellow-900 mb-2">Importante: Backup de Dados</h4>
-                    <p className="text-sm text-yellow-800">
+                  <div className="bg-secondary border border-border p-4 rounded-lg">
+                    <h4 className="font-semibold text-secondary-foreground mb-2">Importante: Backup de Dados</h4>
+                    <p className="text-sm text-foreground">
                       Use o botão <strong>Exportar CSV</strong> regularmente para fazer backup dos seus dados. Os dados
                       são salvos no navegador e podem ser perdidos se você limpar o cache.
                     </p>
@@ -308,9 +308,9 @@ export default function PersonalizacaoPage() {
                     </div>
                   </div>
 
-                  <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                    <h4 className="font-semibold text-green-900 mb-2">Dica: Fluxo Semanal</h4>
-                    <ol className="list-decimal list-inside space-y-1 text-sm text-green-800">
+                  <div className="bg-primary/5 border border-primary/20 p-4 rounded-lg">
+                    <h4 className="font-semibold text-primary mb-2">Dica: Fluxo Semanal</h4>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-foreground">
                       <li>Segunda-feira: Atualize status das máquinas</li>
                       <li>Salve um snapshot semanal (aba Histórico)</li>
                       <li>Exporte CSV como backup</li>

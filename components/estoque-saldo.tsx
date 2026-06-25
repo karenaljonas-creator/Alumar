@@ -296,7 +296,7 @@ export function EstoqueSaldo() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Valor Total em Estoque</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(valorTotalEstoque)}</div>
+            <div className="text-2xl font-bold text-primary">{formatCurrency(valorTotalEstoque)}</div>
           </CardContent>
         </Card>
       </div>
@@ -308,7 +308,7 @@ export function EstoqueSaldo() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-blue-600">{formatCurrency(valoresPorOrigem["Estoque Estratégico"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigem["Estoque Estratégico"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -316,7 +316,7 @@ export function EstoqueSaldo() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-purple-600">{formatCurrency(valoresPorOrigem["Corretiva Contrato"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigem["Corretiva Contrato"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -324,7 +324,7 @@ export function EstoqueSaldo() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-orange-600">{formatCurrency(valoresPorOrigem["Plano Manutenção"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigem["Plano Manutenção"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -332,7 +332,7 @@ export function EstoqueSaldo() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-teal-600">{formatCurrency(valoresPorOrigem["Acordo inicial"])}</div>
+            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigem["Acordo inicial"])}</div>
           </CardContent>
         </Card>
       </div>
@@ -383,13 +383,13 @@ export function EstoqueSaldo() {
                     </TableHead>
                     <TableHead className="text-center">
                       <div className="flex items-center justify-center font-medium">
-                        <TrendingUp className="h-4 w-4 mr-1 text-green-600" />
+                        <TrendingUp className="h-4 w-4 mr-1 text-primary" />
                         Entrada {renderFiltro("totalEntrada", "center")}
                       </div>
                     </TableHead>
                     <TableHead className="text-center">
                       <div className="flex items-center justify-center font-medium">
-                        <TrendingDown className="h-4 w-4 mr-1 text-red-600" />
+                        <TrendingDown className="h-4 w-4 mr-1 text-muted-foreground" />
                         Saída {renderFiltro("totalSaida", "center")}
                       </div>
                     </TableHead>
@@ -406,23 +406,23 @@ export function EstoqueSaldo() {
                 </TableHeader>
                 <TableBody>
                   {filteredEstoque.map((item) => (
-                    <TableRow key={item.codigo} className={item.saldo < 0 ? "bg-red-50" : item.saldo === 0 ? "bg-amber-50" : ""}>
+                    <TableRow key={item.codigo} className={item.saldo < 0 ? "bg-destructive/10" : item.saldo === 0 ? "bg-muted" : ""}>
                       <TableCell className="font-mono font-medium">{item.codigo}</TableCell>
                       <TableCell className="max-w-[250px] truncate">{item.descricao}</TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                           +{item.totalEntrada}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                        <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
                           -{item.totalSaida}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <div className="flex items-center justify-center gap-1">
-                          {item.saldo < 0 && <AlertTriangle className="h-4 w-4 text-red-600" />}
-                          <span className={`font-bold ${item.saldo < 0 ? "text-red-600" : item.saldo === 0 ? "text-amber-600" : "text-foreground"}`}>
+                          {item.saldo < 0 && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                          <span className={`font-bold ${item.saldo < 0 ? "text-destructive" : item.saldo === 0 ? "text-muted-foreground" : "text-foreground"}`}>
                             {item.saldo}
                           </span>
                         </div>
