@@ -741,24 +741,44 @@ export function EstoqueEstrategico() {
           <CardHeader>
             <CardTitle className="text-base">Cobertura média do estoque</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
-            <div>
-              <p
-                className={`text-4xl font-bold ${
-                  coberturaMedia >= 1 ? "text-green-600" : coberturaMedia >= 0.5 ? "text-yellow-500" : "text-destructive"
-                }`}
-              >
-                {coberturaMedia.toFixed(1)}x
-              </p>
-              <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
-                {coberturaMedia >= 1
-                  ? "Dentro do nível recomendado"
-                  : "Abaixo do nível mínimo recomendado"}
-              </p>
+          <CardContent>
+            <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-center sm:gap-6">
+              <div>
+                <p
+                  className={`text-4xl font-bold ${
+                    coberturaMedia >= 1 ? "text-green-600" : coberturaMedia >= 0.5 ? "text-yellow-500" : "text-destructive"
+                  }`}
+                >
+                  {coberturaMedia.toFixed(1)}x
+                </p>
+                <p className="mt-1 max-w-[180px] text-xs text-muted-foreground">
+                  {coberturaMedia >= 1
+                    ? "Dentro do nível recomendado"
+                    : "Abaixo do nível mínimo recomendado"}
+                </p>
+              </div>
+              <div className="flex-1">
+                <GaugeCobertura value={coberturaMedia} />
+              </div>
             </div>
-            <div className="flex-1">
-              <GaugeCobertura value={coberturaMedia} />
-            </div>
+
+            {/* Legenda de distribuição dos itens por status */}
+            <ul className="mt-4 flex flex-col gap-2 border-t pt-4">
+              {[
+                { cor: "bg-green-600", rotulo: "OK (dentro do mínimo)", valor: totalOk },
+                { cor: "bg-yellow-400", rotulo: "Analisar (fora da lista mestre)", valor: totalAnalisar },
+                { cor: "bg-destructive", rotulo: "Abaixo do mínimo", valor: totalRepor },
+              ].map((linha) => (
+                <li key={linha.rotulo} className="flex items-center gap-2 text-sm">
+                  <span className={`h-3 w-3 shrink-0 rounded-full ${linha.cor}`} aria-hidden="true" />
+                  <span className="flex-1 text-muted-foreground">{linha.rotulo}</span>
+                  <span className="font-semibold text-foreground">{linha.valor}</span>
+                  <span className="w-16 text-right text-muted-foreground">
+                    ({totalMonitorados ? ((linha.valor / totalMonitorados) * 100).toFixed(1).replace(".", ",") : "0"}%)
+                  </span>
+                </li>
+              ))}
+            </ul>
           </CardContent>
         </Card>
       </div>
