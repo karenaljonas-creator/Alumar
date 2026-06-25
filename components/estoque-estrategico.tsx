@@ -99,10 +99,10 @@ function GaugeCobertura({ value }: { value: number }) {
   const ponta = pontoArco(cx, cy, r - 18, needleDeg)
   return (
     <svg viewBox="0 0 220 130" className="w-full max-w-[260px]" role="img" aria-label={`Cobertura média ${v.toFixed(1)}x`}>
-      {/* zonas */}
-      <path d={arco(cx, cy, r, 180, 135)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 133, 92)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
-      <path d={arco(cx, cy, r, 90, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
+      {/* zonas: vermelho 0–1x (abaixo do mínimo), amarelo 1–1,5x (no limite), verde 1,5–2x (confortável) */}
+      <path d={arco(cx, cy, r, 180, 92)} fill="none" stroke="#dc2626" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 90, 47)} fill="none" stroke="#facc15" strokeWidth={16} strokeLinecap="round" />
+      <path d={arco(cx, cy, r, 45, 0)} fill="none" stroke="#16a34a" strokeWidth={16} strokeLinecap="round" />
       {/* ponteiro */}
       <line x1={cx} y1={cy} x2={ponta.x} y2={ponta.y} stroke="#0f172a" strokeWidth={4} strokeLinecap="round" />
       <circle cx={cx} cy={cy} r={7} fill="#0f172a" />
@@ -742,7 +742,7 @@ export function EstoqueEstrategico() {
               <div>
                 <p
                   className={`text-4xl font-bold ${
-                    coberturaMedia >= 1 ? "text-green-600" : coberturaMedia >= 0.5 ? "text-yellow-500" : "text-destructive"
+                    coberturaMedia >= 1.5 ? "text-green-600" : coberturaMedia >= 1 ? "text-yellow-500" : "text-destructive"
                   }`}
                 >
                   {coberturaMedia.toFixed(1)}x
