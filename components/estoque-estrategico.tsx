@@ -558,7 +558,7 @@ export function EstoqueEstrategico() {
     if (status === "Repor") {
       return (
         <Badge variant="outline" className="gap-1 border-primary text-primary">
-          <AlertTriangle className="h-3 w-3" /> Reportar
+          <AlertTriangle className="h-3 w-3" /> Repor
         </Badge>
       )
     }
