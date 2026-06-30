@@ -2,6 +2,25 @@ export type MachineStatus = "operacional" | "parada" | "manutencao" | "v0"
 export type AcaoResponsavel = "Vale" | "Atlas" | "Outro"
 export type StatusPreventiva = "OK" | "Em Planejamento" | "Em Atraso"
 
+export type CategoriaParada =
+  | "Aguardando Peça"
+  | "Aguardando Cliente"
+  | "Aguardando Programação / Recurso"
+  | "Instalação / Start-up"
+  | "Manutenção Corretiva"
+  | "Melhoria / Engenharia"
+  | "Logística / Transporte"
+
+export const CATEGORIAS_PARADA: CategoriaParada[] = [
+  "Aguardando Peça",
+  "Aguardando Cliente",
+  "Aguardando Programação / Recurso",
+  "Instalação / Start-up",
+  "Manutenção Corretiva",
+  "Melhoria / Engenharia",
+  "Logística / Transporte",
+]
+
 export interface Machine {
   id: string
   nome: string // TAG
@@ -9,6 +28,7 @@ export interface Machine {
   numeroSerie?: string // Adicionando número de série
   data: string
   status: MachineStatus
+  categoriaParada?: CategoriaParada // Categoria da parada (preenchida quando status = parada)
   motivoParada?: string
   descricaoDetalhada?: string
   acaoResponsavel?: AcaoResponsavel
