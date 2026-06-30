@@ -913,8 +913,16 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               Registro de Saídas
             </CardTitle>
             <div className="flex items-center gap-2">
-              {filtrosAtivos && (
-                <Button onClick={limparTudo} variant="outline" size="sm" className="gap-1">
+              {(filtrosAtivos || searchTerm) && (
+                <Button
+                  onClick={() => {
+                    limparTudo()
+                    setSearchTerm("")
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-1"
+                >
                   <FilterX className="h-4 w-4" />
                   Limpar filtros
                 </Button>
