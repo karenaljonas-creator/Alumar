@@ -465,13 +465,13 @@ export function EntradaPecas() {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Estoque Estratégico</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
+            <div className="text-xl font-bold text-primary break-words">{formatCurrency(valoresPorOrigemEntrada["Estoque Estratégico"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -479,7 +479,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Corretivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
+            <div className="text-xl font-bold text-primary break-words">{formatCurrency(valoresPorOrigemEntrada["Itens Corretivos"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -487,7 +487,7 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Itens Preventivos</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
+            <div className="text-xl font-bold text-primary break-words">{formatCurrency(valoresPorOrigemEntrada["Itens Preventivos"])}</div>
           </CardContent>
         </Card>
         <Card>
@@ -495,12 +495,12 @@ export function EntradaPecas() {
             <CardTitle className="text-sm font-medium text-muted-foreground">Acordo Inicial</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-xl font-bold text-primary">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
+            <div className="text-xl font-bold text-primary break-words">{formatCurrency(valoresPorOrigemEntrada["Acordo Inicial"])}</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total de Itens</CardTitle>
@@ -580,7 +580,7 @@ export function EntradaPecas() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <Table className="table-fixed w-full">
+              <Table className="w-full min-w-[1100px]">
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead className="w-[8%]">

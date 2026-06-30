@@ -442,7 +442,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
-          <Table className="w-full table-fixed">
+            <Table className="w-full min-w-[1100px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold w-[3%] px-2"></TableHead>
