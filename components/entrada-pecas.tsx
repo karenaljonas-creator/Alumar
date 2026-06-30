@@ -115,6 +115,17 @@ export function EntradaPecas() {
     loadPecas()
   }
 
+  // Limpa TODOS os filtros de uma vez: colunas, ordenação, busca de texto e busca por NF,
+  // recarregando a listagem completa (a busca por NF substitui o dataset, então recarregamos).
+  const handleLimparTudo = () => {
+    limparTudo()
+    setSearchTerm("")
+    if (buscaNF) {
+      setBuscaNF("")
+      loadPecas()
+    }
+  }
+
   const formatCurrencyVal = (value: number) =>
     new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value || 0)
 
@@ -542,8 +553,8 @@ export function EntradaPecas() {
                   </Button>
                 )}
               </div>
-              {filtrosAtivos && (
-                <Button onClick={limparTudo} variant="outline" size="sm" className="gap-1">
+              {(filtrosAtivos || searchTerm) && (
+                <Button onClick={handleLimparTudo} variant="outline" size="sm" className="gap-1">
                   <FilterX className="h-4 w-4" />
                   Limpar filtros
                 </Button>
