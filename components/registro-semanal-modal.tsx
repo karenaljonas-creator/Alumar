@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { Machine } from "@/lib/types"
+import { CATEGORIAS_PARADA } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -60,8 +61,18 @@ export function RegistroSemanalModal({
     setEditedMachine((prev) => ({ ...prev, [field]: value }))
   }
 
+  const isCategoriaInvalida = editedMachine.status === "parada" && !editedMachine.categoriaParada
+
   const handleSave = async () => {
     if (isSaving) return
+    if (isCategoriaInvalida) {
+      toast({
+        title: "Categoria obrigatória",
+        description: "Selecione a categoria da parada antes de salvar.",
+        variant: "destructive",
+      })
+      return
+    }
     setIsSaving(true)
 
     try {
@@ -90,6 +101,14 @@ export function RegistroSemanalModal({
 
   const handleSaveAndNext = async () => {
     if (isSaving) return
+    if (isCategoriaInvalida) {
+      toast({
+        title: "Categoria obrigatória",
+        description: "Selecione a categoria da parada antes de salvar.",
+        variant: "destructive",
+      })
+      return
+    }
     setIsSaving(true)
 
     try {
@@ -186,6 +205,34 @@ export function RegistroSemanalModal({
                 </SelectContent>
               </Select>
             </div>
+
+            {editedMachine.status === "parada" && (
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="categoria">
+                  Categoria <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={editedMachine.categoriaParada || ""}
+                  onValueChange={(v) => updateField("categoriaParada", v)}
+                >
+                  <SelectTrigger id="categoria">
+                    <SelectValue placeholder="Selecione a categoria da parada" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIAS_PARADA.map((categoria) => (
+                      <SelectItem key={categoria} value={categoria}>
+                        {categoria}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {!editedMachine.categoriaParada && (
+                  <p className="text-xs text-destructive">
+                    Obrigatório quando o status é Parada.
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="contrato">Contrato</Label>

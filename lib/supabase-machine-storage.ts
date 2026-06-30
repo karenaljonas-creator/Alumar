@@ -47,6 +47,7 @@ export async function saveMachines(machines: Machine[]): Promise<void> {
       temContrato: m.temContrato,
       numeroSerie: m.numeroSerie,
       prazoDados: m.prazoDados,
+      categoriaParada: m.categoriaParada,
     }),
     acao_responsavel: m.acaoResponsavel || null,
     updated_at: m.updated_at || new Date().toISOString(),
@@ -102,6 +103,7 @@ export async function loadMachines(): Promise<Machine[]> {
         data: new Date().toISOString().split("T")[0],
         dataParada: row.data_ultima_manutencao?.split("T")[0],
         status: row.status_operacional as Machine["status"],
+        categoriaParada: parsedData.categoriaParada || undefined,
         motivoParada: parsedData.motivoParada || undefined,
         manutencaoPreventiva: parsedData.manutencaoPreventiva || undefined,
         localizacao: row.localizacao,
@@ -158,6 +160,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
     updates.statusPreventiva ||
     updates.manutencaoPreventiva ||
     updates.responsavel ||
+    updates.categoriaParada !== undefined ||
     updates.temContrato !== undefined
   ) {
     record.observacoes = JSON.stringify({
@@ -167,6 +170,7 @@ export async function updateMachine(id: string, updates: Partial<Machine>): Prom
       ...(updates.statusPreventiva !== undefined && { statusPreventiva: updates.statusPreventiva }),
       ...(updates.manutencaoPreventiva !== undefined && { manutencaoPreventiva: updates.manutencaoPreventiva }),
       ...(updates.responsavel !== undefined && { responsavel: updates.responsavel }),
+      ...(updates.categoriaParada !== undefined && { categoriaParada: updates.categoriaParada }),
       ...(updates.temContrato !== undefined && { temContrato: updates.temContrato }),
     })
   }

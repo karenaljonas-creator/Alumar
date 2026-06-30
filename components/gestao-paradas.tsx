@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import type { Machine } from "@/lib/types"
+import { CATEGORIAS_PARADA } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -17,7 +18,7 @@ import { saveMachines } from "@/lib/supabase-machine-storage"
 import { gerarRelatorioParadas } from "@/lib/gerar-relatorio-paradas"
 import { useToast } from "@/hooks/use-toast"
 
-type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
+type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "categoria" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
 
 interface GestaoParadasProps {
@@ -100,6 +101,29 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     setEditingState(null)
   }
 
+  const handleCategoriaChange = async (machineId: string, value: string) => {
+    setIsSaving(true)
+    try {
+      const updatedMachines = machines.map((m) =>
+        m.id === machineId
+          ? { ...m, categoriaParada: value as Machine["categoriaParada"], updated_at: new Date().toISOString() }
+          : m,
+      )
+      await saveMachines(updatedMachines)
+      if (onUpdate) onUpdate(updatedMachines)
+      toast({ title: "Sucesso!", description: "Categoria atualizada com sucesso" })
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Houve um erro ao salvar a categoria",
+        variant: "destructive",
+      })
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const isEditing = (machineId: string, field: string) => {
     return editingState?.machineId === machineId && editingState?.field === field
   }
@@ -143,6 +167,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
       const dateKeys = new Set<SortKey>(["prazo", "dataAtualizacao", "dataParada"])
       const getSortValue = (m: any): string | number => {
         switch (sortKey) {
+          case "categoria":
+            return m.categoriaParada ?? ""
           case "acao":
             return m.acaoResponsavel ?? ""
           case "observacoes":
@@ -365,9 +391,14 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[10%]">
+                  <TableHead className="w-[8%]">
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
+                    </button>
+                  </TableHead>
+                  <TableHead className="w-[12%] min-w-[180px]">
+                    <button onClick={() => handleSort("categoria")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                      Categoria <SortIcon columnKey="categoria" />
                     </button>
                   </TableHead>
                   <TableHead className="w-[10%] text-center">
@@ -421,6 +452,24 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
+                      </TableCell>
+                      <TableCell className="text-sm py-3 px-4 align-middle">
+                        <Select
+                          value={maquina.categoriaParada || ""}
+                          onValueChange={(v) => handleCategoriaChange(maquina.id, v)}
+                          disabled={isSaving}
+                        >
+                          <SelectTrigger className="h-8 text-sm w-full min-w-[160px]">
+                            <SelectValue placeholder="Selecionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {CATEGORIAS_PARADA.map((categoria) => (
+                              <SelectItem key={categoria} value={categoria}>
+                                {categoria}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
                         {getDiasParadaNum(maquina.dataParada)} dias
@@ -634,7 +683,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
