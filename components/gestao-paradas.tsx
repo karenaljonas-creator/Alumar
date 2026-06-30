@@ -138,15 +138,42 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
 
     // Sort
     if (sortKey) {
-      result.sort((a, b) => {
-        let aVal: any = a[sortKey as keyof typeof a]
-        let bVal: any = b[sortKey as keyof typeof b]
+      // Mapeia cada chave de ordenação para o valor real do objeto (os nomes da coluna
+      // nem sempre batem com o nome do campo armazenado na máquina).
+      const dateKeys = new Set<SortKey>(["prazo", "dataAtualizacao", "dataParada"])
+      const getSortValue = (m: any): string | number => {
+        switch (sortKey) {
+          case "acao":
+            return m.acaoResponsavel ?? ""
+          case "observacoes":
+            return m.motivoParada ?? ""
+          case "prazo":
+            return m.prazoDados || m.contratoConfig?.dataFim || ""
+          case "dataAtualizacao":
+            return m.updated_at || m.dataParada || ""
+          default:
+            return m[sortKey as keyof typeof m] ?? ""
+        }
+      }
 
-        if (aVal === undefined || aVal === null) aVal = ""
-        if (bVal === undefined || bVal === null) bVal = ""
+      result.sort((a, b) => {
+        let aVal: any = getSortValue(a)
+        let bVal: any = getSortValue(b)
+
+        // Datas: comparar por timestamp (string vazia vai para o fim)
+        if (dateKeys.has(sortKey)) {
+          const aTime = aVal ? new Date(aVal).getTime() : Number.NaN
+          const bTime = bVal ? new Date(bVal).getTime() : Number.NaN
+          const aMissing = Number.isNaN(aTime)
+          const bMissing = Number.isNaN(bTime)
+          if (aMissing && bMissing) return 0
+          if (aMissing) return 1
+          if (bMissing) return -1
+          return sortDirection === "asc" ? aTime - bTime : bTime - aTime
+        }
 
         if (typeof aVal === "string" && typeof bVal === "string") {
-          const comparison = aVal.localeCompare(bVal)
+          const comparison = aVal.localeCompare(bVal, "pt-BR", { numeric: true, sensitivity: "base" })
           return sortDirection === "asc" ? comparison : -comparison
         }
 
