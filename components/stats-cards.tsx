@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card"
 import type { MachineStats } from "@/lib/types"
-import { Activity, AlertTriangle, Truck, ShieldCheck, ArrowUp, ArrowDown } from "lucide-react"
+import { Activity, AlertTriangle, Cog, ShieldCheck, ArrowUp, ArrowDown } from "lucide-react"
 
 interface PreventivasResumo {
   ok: number
@@ -96,7 +96,7 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
             <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Truck className="h-5 w-5 text-primary" />
+              <Cog className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
