@@ -719,13 +719,13 @@ export default function Home() {
       <aside className="w-64 bg-primary text-primary-foreground flex flex-col fixed h-screen">
         {/* Logo/Header */}
         <div className="p-4 border-b border-primary-foreground/15">
-          <div className="mb-4 flex items-center justify-center rounded-md bg-primary-foreground p-3">
+          <div className="mb-4 flex items-center justify-center">
             <Image
               src="/images/atlas-copco-logo.png"
               alt="Atlas Copco"
-              width={180}
-              height={60}
-              className="h-auto w-full max-w-[160px] object-contain"
+              width={200}
+              height={180}
+              className="h-auto w-full max-w-[180px] object-contain"
               priority
             />
           </div>
