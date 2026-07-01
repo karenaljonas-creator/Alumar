@@ -36,6 +36,11 @@ import { GraficoLocalizacao } from "@/components/grafico-localizacao"
 import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
+import { CausaParadasChart } from "@/components/causa-paradas-chart"
+import { ResponsabilidadeChart } from "@/components/responsabilidade-chart"
+import { TopMaquinasCriticas } from "@/components/top-maquinas-criticas"
+import { TendenciaDisponibilidadeChart } from "@/components/tendencia-disponibilidade-chart"
+import { ParadasPorSemanaChart } from "@/components/paradas-por-semana-chart"
 import { GestaoParadas } from "@/components/gestao-paradas"
 import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
@@ -692,16 +697,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-border bg-card flex flex-col fixed h-screen">
+      <aside className="w-64 bg-primary text-primary-foreground flex flex-col fixed h-screen">
         {/* Logo/Header */}
-        <div className="p-4 border-b border-border">
-          <h1 className="text-lg font-bold text-foreground">Gestão de Máquinas</h1>
-          <div className="mt-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-primary font-medium">
+        <div className="p-4 border-b border-primary-foreground/15">
+          <h1 className="text-lg font-bold text-primary-foreground">Gestão de Máquinas</h1>
+          <div className="mt-2 text-xs">
+            <span className="inline-flex items-center rounded bg-primary-foreground/15 px-1.5 py-0.5 text-primary-foreground font-medium">
               {contrato.numero}
             </span>
-            <span className="mx-1">|</span>
-            <span className="text-muted-foreground">{contrato.localizacao}</span>
+            <span className="mx-1 text-primary-foreground/60">|</span>
+            <span className="text-primary-foreground/80">{contrato.localizacao}</span>
           </div>
         </div>
 
@@ -716,8 +721,8 @@ export default function Home() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary-foreground text-primary"
+                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -728,7 +733,7 @@ export default function Home() {
 
           {/* Gestão de Materiais Section */}
           <div className="mt-6">
-            <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+            <div className="px-3 py-2 text-xs font-semibold text-primary-foreground/60 uppercase tracking-wider">
               Gestão de Materiais
             </div>
             <div className="mt-1 space-y-1 pl-2">
@@ -739,8 +744,8 @@ export default function Home() {
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                     activeSection === item.id
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      ? "bg-primary-foreground text-primary"
+                      : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                   )}
                 >
                   <item.icon className="h-4 w-4" />
@@ -751,7 +756,7 @@ export default function Home() {
           </div>
 
           {/* Divider */}
-          <div className="my-6 border-t border-border" />
+          <div className="my-6 border-t border-primary-foreground/15" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -762,8 +767,8 @@ export default function Home() {
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-primary/10 text-primary"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    ? "bg-primary-foreground text-primary"
+                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
                 )}
               >
                 <item.icon className="h-4 w-4" />
@@ -774,19 +779,29 @@ export default function Home() {
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-border">
-          <p className="text-xs text-muted-foreground mb-2 text-center">
+        <div className="p-3 border-t border-primary-foreground/15">
+          <p className="text-xs text-primary-foreground/70 mb-2 text-center">
             {activeSection === "entrada" ? "Entrada de Peças" : 
              activeSection === "saida" ? "Saída de Peças" :
              activeSection === "estoque" ? "Estoque" : 
   activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleImport} className="flex-1 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleImport}
+              className="flex-1 text-xs bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
               <Upload className="h-3 w-3 mr-1" />
               Importar
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExport} className="flex-1 text-xs">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="flex-1 text-xs bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+            >
               <Download className="h-3 w-3 mr-1" />
               Exportar
             </Button>
@@ -833,12 +848,32 @@ export default function Home() {
 
               <StatsCards stats={stats} />
 
-              <div className="grid gap-6 md:grid-cols-3">
+              {/* Linha 1: Disponibilidade (gauge) + Disponibilidade Semanal + Preventivas */}
+              <div className="grid gap-6 lg:grid-cols-3">
                 <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
                 <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
                 <PreventivasChart preventivas={preventivas} />
               </div>
 
+              {/* Linha 2: Tendência (linha) + Paradas por Semana */}
+              <div className="grid gap-6 lg:grid-cols-2">
+                <TendenciaDisponibilidadeChart history={history} contratoFilter={contratoFilter} />
+                <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
+              </div>
+
+              {/* Linha 3: Top 5 Críticas + Causa + Responsabilidade */}
+              <div className="grid gap-6 lg:grid-cols-3">
+                <div className="lg:col-span-1">
+                  <TopMaquinasCriticas
+                    machines={maquinasParadasFiltradas}
+                    onVerTodas={() => setActiveSection("paradas")}
+                  />
+                </div>
+                <CausaParadasChart machines={maquinasParadasFiltradas} />
+                <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
+              </div>
+
+              {/* Linha 4: Análise detalhada das paradas */}
               <div className="space-y-4">
                 <div>
                   <h3 className="text-xl font-semibold">Análise de Máquinas Paradas</h3>
@@ -846,10 +881,10 @@ export default function Home() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
                   <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
-                  <GraficoTipoEquipamento data={porTipo} />
                   <GraficoLocalizacao data={porLocalizacao} />
+                  <GraficoTipoEquipamento data={porTipo} />
+                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
                 </div>
               </div>
             </div>
