@@ -37,7 +37,6 @@ import { CausaParadasChart } from "@/components/causa-paradas-chart"
 import { ResponsabilidadeChart } from "@/components/responsabilidade-chart"
 import { TopMaquinasCriticas } from "@/components/top-maquinas-criticas"
 import { ParadasPorSemanaChart } from "@/components/paradas-por-semana-chart"
-import { ImpactoContrato } from "@/components/impacto-contrato"
 import { GestaoParadas } from "@/components/gestao-paradas"
 import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
@@ -885,12 +884,11 @@ export default function Home() {
                 <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
               </div>
 
-              {/* Linha 3: Período Inoperante + Paradas por Semana + Localização + Impacto no Contrato */}
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 [&>*]:min-w-0">
+              {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
                 <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
                 <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
                 <GraficoLocalizacao data={porLocalizacao} />
-                <ImpactoContrato machines={maquinasParadasFiltradas} onVerDetalhes={() => setActiveSection("paradas")} />
               </div>
             </div>
           )}
