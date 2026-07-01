@@ -721,11 +721,11 @@ export default function Home() {
         <div className="p-4 border-b border-primary-foreground/15">
           <div className="mb-4 flex items-center justify-center">
             <Image
-              src="/images/atlas-copco-logo.png"
+              src="/images/atlas-copco-logo-clean.png"
               alt="Atlas Copco"
               width={200}
-              height={180}
-              className="h-auto w-full max-w-[180px] object-contain"
+              height={200}
+              className="h-auto w-full max-w-[170px] object-contain"
               priority
             />
           </div>
