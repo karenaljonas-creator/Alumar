@@ -1,6 +1,7 @@
 "use client"
 
 // Sistema de Gestão de Máquinas - v1.0
+import Image from "next/image"
 import { useState, useEffect, useMemo } from "react"
 import type { Machine, WeeklySnapshot } from "@/lib/types"
 import { loadMachines, saveMachines, downloadCSV, importFromCSV } from "@/lib/supabase-machine-storage"
@@ -718,6 +719,16 @@ export default function Home() {
       <aside className="w-64 bg-primary text-primary-foreground flex flex-col fixed h-screen">
         {/* Logo/Header */}
         <div className="p-4 border-b border-primary-foreground/15">
+          <div className="mb-4 flex items-center justify-center rounded-md bg-primary-foreground p-3">
+            <Image
+              src="/images/atlas-copco-logo.png"
+              alt="Atlas Copco"
+              width={180}
+              height={60}
+              className="h-auto w-full max-w-[160px] object-contain"
+              priority
+            />
+          </div>
           <h1 className="text-lg font-bold text-primary-foreground">Gestão de Máquinas</h1>
           <div className="mt-2 text-xs">
             <span className="inline-flex items-center rounded bg-primary-foreground/15 px-1.5 py-0.5 text-primary-foreground font-medium">
