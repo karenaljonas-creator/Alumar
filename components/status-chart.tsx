@@ -10,78 +10,70 @@ interface StatusChartProps {
   contratoFilter?: string
 }
 
-export function StatusChart({ stats, machines = [], contratoFilter = "todos" }: StatusChartProps) {
-  const data = [
-    { name: "Operacionais", value: stats.operacionais, color: "#1e5a8e" },
-    { name: "Paradas", value: stats.paradas, color: "#9ca3af" },
+export function StatusChart({ stats, machines = [] }: StatusChartProps) {
+  const disponibilidade = Number(stats.disponibilidade.toFixed(1))
+
+  // Gauge semicircular: preenchido = disponibilidade, restante = cinza
+  const gaugeData = [
+    { name: "Disponível", value: disponibilidade, color: "var(--chart-1)" },
+    { name: "Indisponível", value: 100 - disponibilidade, color: "var(--muted)" },
   ]
 
   const maquinasParadas = machines.filter((m) => m.status === "parada")
-
   let paradasVale = 0
   let paradasAtlas = 0
-
   maquinasParadas.forEach((m) => {
-    if (m.acaoResponsavel === "Atlas") {
-      paradasAtlas++
-    } else {
-      // All non-Atlas machines are counted as Vale (including undefined)
-      paradasVale++
-    }
+    if (m.acaoResponsavel === "Atlas") paradasAtlas++
+    else paradasVale++
   })
 
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 pt-6 px-6">
-        <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade</CardTitle>
+      <CardHeader className="pb-2 pt-5 px-5">
+        <CardTitle className="text-base font-semibold uppercase tracking-wide text-foreground">
+          Disponibilidade
+        </CardTitle>
       </CardHeader>
-      <CardContent className="px-6 pb-6">
-        <div className="flex items-center gap-8">
-          <div className="flex-shrink-0 relative">
-            <ResponsiveContainer width={240} height={240}>
+      <CardContent className="px-5 pb-5">
+        <div className="flex flex-col items-center">
+          <div className="relative w-full max-w-[280px]">
+            <ResponsiveContainer width="100%" height={160}>
               <PieChart>
                 <Pie
-                  data={data}
+                  data={gaugeData}
                   cx="50%"
-                  cy="50%"
-                  innerRadius={80}
-                  outerRadius={110}
-                  fill="#8884d8"
+                  cy="100%"
+                  startAngle={180}
+                  endAngle={0}
+                  innerRadius={90}
+                  outerRadius={130}
                   dataKey="value"
                   strokeWidth={0}
                 >
-                  {data.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  {gaugeData.map((entry) => (
+                    <Cell key={entry.name} fill={entry.color} />
                   ))}
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <p className="text-5xl font-bold text-foreground">{stats.disponibilidade.toFixed(1)}%</p>
+            <div className="absolute inset-x-0 bottom-0 flex flex-col items-center">
+              <span className="text-4xl font-bold text-foreground">{disponibilidade}%</span>
+              <span className="text-xs text-muted-foreground">Meta: 90%</span>
             </div>
           </div>
 
-          <div className="flex-1 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="h-1 w-12 bg-[#991b1b] rounded-full"></div>
-              <div>
-                <p className="text-3xl font-bold text-foreground">{paradasVale}</p>
-                <p className="text-base font-medium text-muted-foreground">Máquinas Paradas</p>
-                <p className="text-sm font-medium text-foreground bg-muted px-2 py-0.5 rounded inline-block mt-1">
-                  Ação Vale
-                </p>
-              </div>
+          <div className="mt-4 grid grid-cols-2 gap-4 w-full">
+            <div className="flex flex-col items-center">
+              <div className="h-1 w-12 bg-[var(--chart-1)] rounded-full mb-1" />
+              <p className="text-2xl font-bold text-foreground">{paradasVale}</p>
+              <p className="text-xs text-muted-foreground text-center">Máquinas paradas</p>
+              <p className="text-xs font-medium text-primary">Ação Vale</p>
             </div>
-
-            <div className="flex items-center gap-3">
-              <div className="h-1 w-12 bg-[#9ca3af] rounded-full"></div>
-              <div>
-                <p className="text-3xl font-bold text-foreground">{paradasAtlas}</p>
-                <p className="text-base font-medium text-muted-foreground">Máquinas Paradas</p>
-                <p className="text-sm font-medium text-foreground bg-muted px-2 py-0.5 rounded inline-block mt-1">
-                  Ação Atlas
-                </p>
-              </div>
+            <div className="flex flex-col items-center">
+              <div className="h-1 w-12 bg-[var(--muted-foreground)] rounded-full mb-1" />
+              <p className="text-2xl font-bold text-foreground">{paradasAtlas}</p>
+              <p className="text-xs text-muted-foreground text-center">Máquinas paradas</p>
+              <p className="text-xs font-medium text-muted-foreground">Ação Atlas</p>
             </div>
           </div>
         </div>

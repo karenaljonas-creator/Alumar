@@ -106,23 +106,23 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
             config={{
               disponibilidade: {
                 label: "Disponibilidade (%)",
-                color: "#1e5a8e",
+                color: "var(--chart-1)",
               },
             }}
             className="h-[280px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData.data} margin={{ left: 40, right: 40, top: 20, bottom: 60 }} barGap={16}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="semana" tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} tickMargin={10} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} tickMargin={10} />
-                <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "rgba(0, 0, 0, 0.05)" }} />
-                <Bar dataKey="disponibilidade" fill="#1e5a8e" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="semana" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickMargin={10} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickMargin={10} />
+                <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--muted)" }} />
+                <Bar dataKey="disponibilidade" fill="var(--color-disponibilidade)" radius={[4, 4, 0, 0]} maxBarSize={60}>
                   <LabelList
                     dataKey="disponibilidade"
                     position="top"
                     formatter={(value: number) => `${value}%`}
-                    style={{ fontSize: 12, fontWeight: 600, fill: "hsl(var(--foreground))" }}
+                    style={{ fontSize: 12, fontWeight: 600, fill: "var(--foreground)" }}
                   />
                 </Bar>
               </BarChart>
