@@ -62,15 +62,15 @@ export function TopMaquinasCriticas({ machines, onVerTodas }: TopMaquinasCritica
                     const responsavel = m.acaoResponsavel === "Atlas" ? "Atlas" : "Cliente (Vale)"
                     return (
                       <tr key={m.id} className="border-b border-border/50 last:border-0">
-                        <td className="py-2 font-semibold text-foreground">{m.nome}</td>
-                        <td className="py-2 text-muted-foreground">{m.localizacao}</td>
-                        <td className={`py-2 font-semibold ${critico ? "text-destructive" : "text-foreground"}`}>
+                        <td className="py-4 font-semibold text-foreground">{m.nome}</td>
+                        <td className="py-4 text-muted-foreground">{m.localizacao}</td>
+                        <td className={`py-4 font-semibold ${critico ? "text-destructive" : "text-foreground"}`}>
                           {m.dias >= 90 ? "91+ dias" : `${m.dias} dias`}
                         </td>
-                        <td className={`py-2 font-medium ${m.acaoResponsavel === "Atlas" ? "text-foreground" : "text-primary"}`}>
+                        <td className={`py-4 font-medium ${m.acaoResponsavel === "Atlas" ? "text-foreground" : "text-primary"}`}>
                           {responsavel}
                         </td>
-                        <td className="py-2 text-muted-foreground">{formatData(m.updated_at || m.dataParada)}</td>
+                        <td className="py-4 text-muted-foreground">{formatData(m.updated_at || m.dataParada)}</td>
                       </tr>
                     )
                   })}

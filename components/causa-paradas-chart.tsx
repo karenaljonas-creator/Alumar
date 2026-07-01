@@ -54,14 +54,14 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
         ) : (
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0 relative">
-              <ResponsiveContainer width={130} height={130}>
+              <ResponsiveContainer width={150} height={150}>
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={42}
-                    outerRadius={63}
+                    innerRadius={48}
+                    outerRadius={72}
                     dataKey="quantidade"
                     strokeWidth={0}
                     paddingAngle={2}
@@ -84,7 +84,7 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
                 return (
                   <div key={entry.nome} className="flex items-start gap-2 text-xs">
                     <span
-                      className="mt-0.5 h-3 w-3 rounded-sm flex-shrink-0"
+                      className="mt-0.5 h-2.5 w-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                     />
                     <span className="text-foreground flex-1 leading-tight">{entry.nome}</span>

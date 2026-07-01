@@ -73,7 +73,7 @@ export function ResponsabilidadeChart({ machines }: ResponsabilidadeChartProps) 
                   const pct = total > 0 ? Math.round((entry.valor / total) * 100) : 0
                   return (
                     <div key={entry.nome} className="flex items-center gap-2 text-sm">
-                      <span className="h-3 w-3 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.cor }} />
+                      <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.cor }} />
                       <span className="text-foreground flex-1 truncate">{entry.nome}</span>
                       <span className="font-semibold text-foreground tabular-nums">
                         {entry.valor}{" "}
