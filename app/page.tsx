@@ -129,6 +129,26 @@ export default function Home() {
     return calculateStats(dashboardFilteredMachines)
   }, [dashboardFilteredMachines])
 
+  // Variação vs. semana passada, a partir do penúltimo snapshot do histórico
+  const statsTrend = useMemo(() => {
+    if (!history || history.length < 2) return undefined
+    const sorted = [...history].sort(
+      (a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime(),
+    )
+    const previousSnapshot = sorted[1]
+    if (!previousSnapshot?.machines?.length) return undefined
+
+    let previousMachines = previousSnapshot.machines
+    if (contratoFilter === "com-contrato") previousMachines = previousMachines.filter((m) => m.temContrato === true)
+    if (contratoFilter === "sem-contrato") previousMachines = previousMachines.filter((m) => m.temContrato === false)
+    const previousStats = calculateStats(filtrarMaquinasPrincipais(previousMachines))
+
+    return {
+      disponibilidadeDelta: stats.disponibilidadeContrato - previousStats.disponibilidadeContrato,
+      paradasDelta: stats.paradas - previousStats.paradas,
+    }
+  }, [history, contratoFilter, stats])
+
   const maquinasParadasFiltradas = useMemo(() => {
     let filtered = machines.filter((m) => m.status === "parada")
     if (contratoFilter === "com-contrato") filtered = filtered.filter((m) => m.temContrato === true)
@@ -846,7 +866,11 @@ export default function Home() {
                 </div>
               </div>
 
-              <StatsCards stats={stats} />
+              <StatsCards
+                stats={stats}
+                preventivas={{ ok: preventivas.ok, total: preventivas.total }}
+                trend={statsTrend}
+              />
 
               {/* Linha 1: Disponibilidade (gauge) + Disponibilidade Semanal + Preventivas */}
               <div className="grid gap-6 lg:grid-cols-3">
