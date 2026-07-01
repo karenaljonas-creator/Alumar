@@ -874,14 +874,18 @@ export default function Home() {
                 <PreventivasChart preventivas={preventivas} />
               </div>
 
-              {/* Linha 2: Top 5 Críticas + Causa + Responsabilidade */}
+              {/* Linha 2: Top 5 Críticas (largo) + coluna de donuts empilhados */}
               <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
-                <TopMaquinasCriticas
-                  machines={maquinasParadasFiltradas}
-                  onVerTodas={() => setActiveSection("paradas")}
-                />
-                <CausaParadasChart machines={maquinasParadasFiltradas} />
-                <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
+                <div className="lg:col-span-2">
+                  <TopMaquinasCriticas
+                    machines={maquinasParadasFiltradas}
+                    onVerTodas={() => setActiveSection("paradas")}
+                  />
+                </div>
+                <div className="flex flex-col gap-6">
+                  <CausaParadasChart machines={maquinasParadasFiltradas} />
+                  <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
+                </div>
               </div>
 
               {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}
