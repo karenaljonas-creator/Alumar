@@ -740,7 +740,7 @@ export default function Home() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 overflow-y-auto">
+        <nav className="flex-1 p-3 overflow-y-auto sidebar-scroll">
           {/* Main Menu Items */}
           <div className="space-y-1">
             {menuItems.map((item) => (
