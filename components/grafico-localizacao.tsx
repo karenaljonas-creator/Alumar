@@ -26,7 +26,7 @@ export function GraficoLocalizacao({ data }: GraficoLocalizacaoProps) {
           config={{
             quantidade: {
               label: "Quantidade",
-              color: "#1e5a8e",
+              color: "#0091bb",
             },
           }}
           className="h-[280px] w-full"
@@ -36,7 +36,7 @@ export function GraficoLocalizacao({ data }: GraficoLocalizacaoProps) {
             <XAxis type="number" stroke="#64748b" tick={{ fontSize: 12 }} />
             <YAxis dataKey="nome" type="category" width={110} stroke="#0f172a" tick={{ fontSize: 11 }} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="quantidade" fill="#1e5a8e" radius={[0, 6, 6, 0]}>
+            <Bar dataKey="quantidade" fill="#0091bb" radius={[0, 6, 6, 0]}>
               <LabelList
                 dataKey="quantidade"
                 position="right"
