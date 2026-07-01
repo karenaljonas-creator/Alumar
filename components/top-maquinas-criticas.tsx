@@ -45,8 +45,8 @@ export function TopMaquinasCriticas({ machines, onVerTodas }: TopMaquinasCritica
           </div>
         ) : (
           <div className="flex flex-col flex-1">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[440px]">
+            <div className="overflow-x-auto flex-1">
+              <table className="w-full h-full text-sm min-w-[440px]">
                 <thead>
                   <tr className="text-left text-xs text-muted-foreground border-b border-border">
                     <th className="pb-2 font-medium">Equipamento</th>
@@ -79,7 +79,7 @@ export function TopMaquinasCriticas({ machines, onVerTodas }: TopMaquinasCritica
             </div>
 
             {onVerTodas && (
-              <div className="flex justify-center pt-4 mt-auto">
+              <div className="flex justify-center pt-4">
                 <Button variant="outline" size="sm" onClick={onVerTodas} className="gap-2">
                   Ver todas as máquinas paradas
                   <ArrowRight className="h-4 w-4" />
