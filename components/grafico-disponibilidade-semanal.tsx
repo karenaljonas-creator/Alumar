@@ -63,8 +63,10 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
   if (loading) {
     return (
       <Card className="border-border shadow-sm">
-        <CardHeader className="pb-2 pt-5 px-5 text-center">
-          <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
+        <CardHeader className="pb-2 pt-5 px-5">
+          <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
+          Disponibilidade Semanal
+        </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
@@ -79,8 +81,10 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
   if (chartData.data.length === 0) {
     return (
       <Card className="border-border shadow-sm">
-        <CardHeader className="pb-2 pt-5 px-5 text-center">
-          <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
+        <CardHeader className="pb-2 pt-5 px-5">
+          <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
+          Disponibilidade Semanal
+        </CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
@@ -94,8 +98,10 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
 
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 pt-5 px-5 text-center">
-        <CardTitle className="text-xl font-semibold text-foreground">Disponibilidade Semanal</CardTitle>
+      <CardHeader className="pb-3 pt-5 px-5">
+        <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
+          Disponibilidade Semanal
+        </CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Evolução da disponibilidade ao longo das semanas (Meta: 90%)
         </CardDescription>

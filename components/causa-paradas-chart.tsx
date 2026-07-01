@@ -54,14 +54,14 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
         ) : (
           <div className="flex items-center gap-4">
             <div className="flex-shrink-0 relative">
-              <ResponsiveContainer width={160} height={160}>
+              <ResponsiveContainer width={130} height={130}>
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={52}
-                    outerRadius={78}
+                    innerRadius={42}
+                    outerRadius={63}
                     dataKey="quantidade"
                     strokeWidth={0}
                     paddingAngle={2}
@@ -82,12 +82,12 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
               {data.map((entry, index) => {
                 const pct = total > 0 ? Math.round((entry.quantidade / total) * 100) : 0
                 return (
-                  <div key={entry.nome} className="flex items-center gap-2 text-sm">
+                  <div key={entry.nome} className="flex items-start gap-2 text-xs">
                     <span
-                      className="h-3 w-3 rounded-sm flex-shrink-0"
+                      className="mt-0.5 h-3 w-3 rounded-sm flex-shrink-0"
                       style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                     />
-                    <span className="text-foreground truncate flex-1">{entry.nome}</span>
+                    <span className="text-foreground flex-1 leading-tight">{entry.nome}</span>
                     <span className="font-semibold text-foreground tabular-nums">{pct}%</span>
                   </div>
                 )

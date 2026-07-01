@@ -31,7 +31,7 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
   return (
     <Card className="border-border shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg font-semibold">Período Inoperante</CardTitle>
+        <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">Período Inoperante</CardTitle>
         <CardDescription>Distribuição de máquinas paradas por tempo de inatividade</CardDescription>
       </CardHeader>
       <CardContent>
