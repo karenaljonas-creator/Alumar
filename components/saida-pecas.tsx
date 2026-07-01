@@ -380,6 +380,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       { key: "area", value: (s) => s.area },
       { key: "compressor", value: (s) => s.compressor },
       { key: "utilizacao", value: (s) => s.utilizacao },
+      { key: "nota_fiscal", value: (s) => s.nota_fiscal || "-" },
       {
         key: "data_atualizacao",
         value: (s) =>
@@ -976,6 +977,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <div className="flex items-center font-medium">Utilização {renderFiltro("utilizacao")}</div>
                     </TableHead>
                     <TableHead>
+                      <div className="flex items-center font-medium">NF {renderFiltro("nota_fiscal")}</div>
+                    </TableHead>
+                    <TableHead>
                       <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
                     <TableHead className="text-center">Ações</TableHead>
@@ -1001,6 +1005,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                           {saida.utilizacao}
                         </Badge>
                       </TableCell>
+                      <TableCell className="font-mono text-sm">{saida.nota_fiscal || "-"}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {saida.updated_at ? new Date(saida.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(saida.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>

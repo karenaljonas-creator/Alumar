@@ -52,16 +52,16 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
             Nenhuma máquina parada
           </div>
         ) : (
-          <div className="flex items-center gap-4">
-            <div className="flex-shrink-0 relative">
-              <ResponsiveContainer width={150} height={150}>
+          <div className="flex flex-col items-center gap-5">
+            <div className="relative">
+              <ResponsiveContainer width={160} height={160}>
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={48}
-                    outerRadius={72}
+                    innerRadius={52}
+                    outerRadius={78}
                     dataKey="quantidade"
                     strokeWidth={0}
                     paddingAngle={2}
@@ -78,16 +78,16 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
               </div>
             </div>
 
-            <div className="flex-1 space-y-2 min-w-0">
+            <div className="w-full space-y-2.5">
               {data.map((entry, index) => {
                 const pct = total > 0 ? Math.round((entry.quantidade / total) * 100) : 0
                 return (
-                  <div key={entry.nome} className="flex items-start gap-2 text-xs">
+                  <div key={entry.nome} className="flex items-center gap-2.5 text-sm">
                     <span
-                      className="mt-0.5 h-2.5 w-2.5 rounded-full flex-shrink-0"
+                      className="h-2.5 w-2.5 rounded-full flex-shrink-0"
                       style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                     />
-                    <span className="text-foreground flex-1 leading-tight">{entry.nome}</span>
+                    <span className="text-foreground flex-1">{entry.nome}</span>
                     <span className="font-semibold text-foreground tabular-nums">{pct}%</span>
                   </div>
                 )

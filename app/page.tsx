@@ -34,7 +34,6 @@ import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
 import { PreventivasChart } from "@/components/preventivas-chart"
 import { CausaParadasChart } from "@/components/causa-paradas-chart"
-import { ResponsabilidadeChart } from "@/components/responsabilidade-chart"
 import { TopMaquinasCriticas } from "@/components/top-maquinas-criticas"
 import { ParadasPorSemanaChart } from "@/components/paradas-por-semana-chart"
 import { GestaoParadas } from "@/components/gestao-paradas"
@@ -874,7 +873,7 @@ export default function Home() {
                 <PreventivasChart preventivas={preventivas} />
               </div>
 
-              {/* Linha 2: Top 5 Críticas (largo) + coluna de donuts empilhados */}
+              {/* Linha 2: Top 5 Críticas (largo) + Causa das Paradas */}
               <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
                 <div className="lg:col-span-2">
                   <TopMaquinasCriticas
@@ -882,10 +881,7 @@ export default function Home() {
                     onVerTodas={() => setActiveSection("paradas")}
                   />
                 </div>
-                <div className="flex flex-col gap-6">
-                  <CausaParadasChart machines={maquinasParadasFiltradas} />
-                  <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
-                </div>
+                <CausaParadasChart machines={maquinasParadasFiltradas} />
               </div>
 
               {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}

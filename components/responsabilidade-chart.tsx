@@ -42,8 +42,8 @@ export function ResponsabilidadeChart({ machines }: ResponsabilidadeChartProps) 
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-4">
-              <div className="flex-shrink-0 relative">
+            <div className="flex flex-col items-center gap-5">
+              <div className="relative">
                 <ResponsiveContainer width={160} height={160}>
                   <PieChart>
                     <Pie
@@ -68,13 +68,13 @@ export function ResponsabilidadeChart({ machines }: ResponsabilidadeChartProps) 
                 </div>
               </div>
 
-              <div className="flex-1 space-y-3 min-w-0">
+              <div className="w-full space-y-3">
                 {data.map((entry) => {
                   const pct = total > 0 ? Math.round((entry.valor / total) * 100) : 0
                   return (
-                    <div key={entry.nome} className="flex items-center gap-2 text-sm">
+                    <div key={entry.nome} className="flex items-center gap-2.5 text-sm">
                       <span className="h-2.5 w-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.cor }} />
-                      <span className="text-foreground flex-1 truncate">{entry.nome}</span>
+                      <span className="text-foreground flex-1">{entry.nome}</span>
                       <span className="font-semibold text-foreground tabular-nums">
                         {entry.valor}{" "}
                         <span className="font-normal text-muted-foreground">({pct}%)</span>
