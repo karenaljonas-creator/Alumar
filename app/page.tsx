@@ -124,13 +124,17 @@ export default function Home() {
     return calculateStats(dashboardFilteredMachines)
   }, [dashboardFilteredMachines])
 
-  // Variação vs. semana passada, a partir do penúltimo snapshot do histórico
+  // Variação vs. semana passada: compara com o snapshot da semana anterior DISTINTA
   const statsTrend = useMemo(() => {
-    if (!history || history.length < 2) return undefined
+    if (!history || history.length < 1) return undefined
+    // Mais recentes primeiro
     const sorted = [...history].sort(
       (a, b) => new Date(b.dataRegistro).getTime() - new Date(a.dataRegistro).getTime(),
     )
-    const previousSnapshot = sorted[1]
+    // Semana do registro mais recente (é a semana "atual" exibida)
+    const semanaAtual = sorted[0]?.semana
+    // Primeiro snapshot de uma semana diferente (a semana passada de fato)
+    const previousSnapshot = sorted.find((s) => s.semana !== semanaAtual && s.machines?.length)
     if (!previousSnapshot?.machines?.length) return undefined
 
     let previousMachines = previousSnapshot.machines
