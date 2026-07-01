@@ -10,7 +10,6 @@ import { saveWeeklySnapshot, loadHistory, deleteSnapshot, getHistoryTrends } fro
 import {
   calculateStats,
   analisarPeriodoInoperante,
-  analisarPorTipo,
   analisarPorLocalizacao,
   analisarAcaoResponsavel,
   analisarPreventivas,
@@ -30,8 +29,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { HistoricoMaquinas } from "@/components/historico-maquinas"
 import { ImportHistoricalButton } from "@/components/import-historical-button"
 import { GraficoPeriodoInoperante } from "@/components/grafico-periodo-inoperante"
-import { GraficoTipoEquipamento } from "@/components/grafico-tipo-equipamento"
-import { GraficoIndisponibilidadeSemanal } from "@/components/grafico-indisponibilidade-semanal"
 import { GraficoLocalizacao } from "@/components/grafico-localizacao"
 import { StatsCards } from "@/components/stats-cards"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
@@ -39,8 +36,8 @@ import { PreventivasChart } from "@/components/preventivas-chart"
 import { CausaParadasChart } from "@/components/causa-paradas-chart"
 import { ResponsabilidadeChart } from "@/components/responsabilidade-chart"
 import { TopMaquinasCriticas } from "@/components/top-maquinas-criticas"
-import { TendenciaDisponibilidadeChart } from "@/components/tendencia-disponibilidade-chart"
 import { ParadasPorSemanaChart } from "@/components/paradas-por-semana-chart"
+import { ImpactoContrato } from "@/components/impacto-contrato"
 import { GestaoParadas } from "@/components/gestao-paradas"
 import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
@@ -156,7 +153,6 @@ export default function Home() {
     return filtered
   }, [machines, contratoFilter])
 
-  const porTipo = useMemo(() => analisarPorTipo(maquinasParadasFiltradas), [maquinasParadasFiltradas])
   const porLocalizacao = useMemo(() => analisarPorLocalizacao(maquinasParadasFiltradas), [maquinasParadasFiltradas])
   const preventivas = useMemo(() => analisarPreventivas(dashboardFilteredMachines), [dashboardFilteredMachines])
 
@@ -879,37 +875,22 @@ export default function Home() {
                 <PreventivasChart preventivas={preventivas} />
               </div>
 
-              {/* Linha 2: Tendência (linha) + Paradas por Semana */}
-              <div className="grid gap-6 lg:grid-cols-2">
-                <TendenciaDisponibilidadeChart history={history} contratoFilter={contratoFilter} />
-                <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
-              </div>
-
-              {/* Linha 3: Top 5 Críticas + Causa + Responsabilidade */}
-              <div className="grid gap-6 lg:grid-cols-3">
-                <div className="lg:col-span-1">
-                  <TopMaquinasCriticas
-                    machines={maquinasParadasFiltradas}
-                    onVerTodas={() => setActiveSection("paradas")}
-                  />
-                </div>
+              {/* Linha 2: Top 5 Críticas + Causa + Responsabilidade */}
+              <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
+                <TopMaquinasCriticas
+                  machines={maquinasParadasFiltradas}
+                  onVerTodas={() => setActiveSection("paradas")}
+                />
                 <CausaParadasChart machines={maquinasParadasFiltradas} />
                 <ResponsabilidadeChart machines={maquinasParadasFiltradas} />
               </div>
 
-              {/* Linha 4: Análise detalhada das paradas */}
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-xl font-semibold">Análise de Máquinas Paradas</h3>
-                  <p className="text-sm text-muted-foreground">Visualização detalhada das máquinas inoperantes</p>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2">
-                  <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
-                  <GraficoLocalizacao data={porLocalizacao} />
-                  <GraficoTipoEquipamento data={porTipo} />
-                  <GraficoIndisponibilidadeSemanal contratoFilter={contratoFilter} />
-                </div>
+              {/* Linha 3: Período Inoperante + Paradas por Semana + Localização + Impacto no Contrato */}
+              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4 [&>*]:min-w-0">
+                <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
+                <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
+                <GraficoLocalizacao data={porLocalizacao} />
+                <ImpactoContrato machines={maquinasParadasFiltradas} onVerDetalhes={() => setActiveSection("paradas")} />
               </div>
             </div>
           )}
