@@ -474,7 +474,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   <TableHead className="w-[10%] text-center">
                     <span className="font-medium">Tempo de Parada</span>
                   </TableHead>
-                  <TableHead className="w-[10%] text-center bg-primary/5">
+                  <TableHead className="w-[10%] text-center">
                     <span className="font-medium">Nesta Categoria</span>
                   </TableHead>
                   <TableHead className="w-[28%] min-w-[400px]">
@@ -572,7 +572,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
                         {getDiasParadaNum(maquina.dataParada)} dias
                       </TableCell>
-                      <TableCell className="w-[10%] text-sm text-center py-3 px-4 align-middle bg-primary/5">
+                        <TableCell className="w-[10%] text-sm text-center py-3 px-4 align-middle">
                         {(() => {
                           const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina, registros)
                           const d = ind.diasNaCategoriaAtual
