@@ -239,7 +239,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
 
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={10} className="bg-muted/20 p-0">
+                          <TableCell colSpan={11} className="bg-muted/20 p-0">
                             <div className="p-6">
                               <h4 className="text-sm font-semibold mb-4">
                                 Detalhamento - {maquinasDaSemana.length} máquinas
@@ -261,6 +261,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       <TableHead>Contrato</TableHead>
                                       <TableHead>Tipo</TableHead>
                                       <TableHead>Status</TableHead>
+                                      <TableHead>Categoria</TableHead>
                                       <TableHead>Preventiva</TableHead>
                                       <TableHead>Ação</TableHead>
                                       <TableHead className="text-center">Responsável</TableHead>
@@ -314,6 +315,22 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                                     : "Manutenção"}
                                             </Badge>
                                           </TableCell>
+                                          <TableCell className="text-sm">
+                                            {maquina.status === "parada" ? (
+                                              maquina.categoriaParada ? (
+                                                <Badge
+                                                  variant="outline"
+                                                  className="bg-red-50 text-red-700 border-red-200 whitespace-nowrap"
+                                                >
+                                                  {maquina.categoriaParada}
+                                                </Badge>
+                                              ) : (
+                                                "-"
+                                              )
+                                            ) : (
+                                              "-"
+                                            )}
+                                          </TableCell>
                                           <TableCell>
                                             <Badge
                                               variant={
@@ -341,7 +358,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       ))
                                     ) : (
                                       <TableRow>
-                                        <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                                           Nenhuma máquina encontrada com os filtros aplicados
                                         </TableCell>
                                       </TableRow>
