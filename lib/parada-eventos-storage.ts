@@ -132,12 +132,22 @@ function inferirCategoria(texto?: string): string | undefined {
   return undefined
 }
 
-// Duas etapas só são a mesma se categoria + ação + responsável forem iguais.
+// Normaliza texto para comparação: remove espaços nas pontas, colapsa espaços
+// internos e ignora diferenças de maiúsculas/minúsculas. Assim, valores vindos
+// de registros semanais distintos como "Vale ", "vale" ou "VALE" são tratados
+// como iguais, evitando que etapas idênticas apareçam separadas na linha do tempo.
+function normalizar(valor?: string): string {
+  return (valor ?? "").trim().replace(/\s+/g, " ").toLowerCase()
+}
+
+// Duas etapas só são a mesma se categoria + ação + responsável forem iguais
+// (comparação tolerante a espaços/caixa). Isso também agrupa corretamente
+// etapas consecutivas "Sem categoria" com a mesma ação e responsável.
 function mesmaEtapa(a: EstadoSnapshot, b: EstadoSnapshot): boolean {
   return (
-    (a.categoria ?? "") === (b.categoria ?? "") &&
-    (a.acao ?? "") === (b.acao ?? "") &&
-    (a.responsavel ?? "") === (b.responsavel ?? "")
+    normalizar(a.categoria) === normalizar(b.categoria) &&
+    normalizar(a.acao) === normalizar(b.acao) &&
+    normalizar(a.responsavel) === normalizar(b.responsavel)
   )
 }
 
