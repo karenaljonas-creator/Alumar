@@ -5,7 +5,7 @@ import type { Machine, ParadaEvento, RegistroSemanal, ParadaEtapa } from "@/lib/
 import { computeIndicadores } from "@/lib/parada-eventos-storage"
 import { Card, CardContent } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
-import { Package, Wrench, User, Pause, Truck, Settings, Clock, ArrowRight } from "lucide-react"
+import { Package, Wrench, User, Pause, Truck, Settings, Clock, ArrowRight, Lightbulb, PhoneCall } from "lucide-react"
 
 interface ParadaDetalheConteudoProps {
   machine: Machine
@@ -26,13 +26,25 @@ function corCategoria(index: number) {
   return CORES_ETAPA[index % CORES_ETAPA.length]
 }
 
+// Constrói um mapa estável categoria -> cor, para que a MESMA categoria use
+// sempre a MESMA cor no donut e na linha do tempo, e categorias diferentes
+// nunca compartilhem a mesma cor.
+function buildCategoriaColorMap(categorias: string[]) {
+  const map = new Map<string, string>()
+  categorias.forEach((nome, i) => {
+    if (!map.has(nome)) map.set(nome, corCategoria(map.size))
+  })
+  return map
+}
+
 function iconePorCategoria(categoria?: string) {
   const c = (categoria || "").toLowerCase()
   if (c.includes("peça") || c.includes("peca")) return Package
-  if (c.includes("cliente")) return User
+  if (c.includes("cliente")) return PhoneCall
+  if (c.includes("melhoria") || c.includes("engenharia")) return Lightbulb
   if (c.includes("programação") || c.includes("programacao") || c.includes("recurso")) return Settings
-  if (c.includes("instalação") || c.includes("instalacao") || c.includes("start")) return Wrench
   if (c.includes("manutenção") || c.includes("manutencao") || c.includes("corretiva")) return Wrench
+  if (c.includes("instalação") || c.includes("instalacao") || c.includes("start")) return Wrench
   if (c.includes("logística") || c.includes("logistica") || c.includes("transporte")) return Truck
   return Pause
 }
@@ -61,11 +73,17 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
     ultimaAlteracao,
   } = indicadores
 
-  const donutCategoria = porCategoria.map((c, i) => ({
+  // Mapa estável categoria -> cor, compartilhado entre donut e linha do tempo.
+  const categoriaColorMap = useMemo(
+    () => buildCategoriaColorMap(porCategoria.map((c) => c.nome)),
+    [porCategoria],
+  )
+
+  const donutCategoria = porCategoria.map((c) => ({
     name: c.nome,
     value: c.dias,
     percentual: c.percentual,
-    color: corCategoria(i),
+    color: categoriaColorMap.get(c.nome) ?? "var(--muted-foreground)",
   }))
 
   const donutResponsavel = porResponsavel.map((r) => ({
@@ -159,13 +177,13 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
           <div className="overflow-x-auto pb-2">
             <div className="flex items-stretch gap-2 min-w-min">
               {etapas
-                .map((etapa, i) => ({ etapa, colorIndex: i }))
+                .slice()
                 .reverse()
-                .map(({ etapa, colorIndex }, i, arr) => (
+                .map((etapa, i, arr) => (
                   <TimelineEtapa
                     key={etapa.evento.id}
                     etapa={etapa}
-                    index={colorIndex}
+                    cor={categoriaColorMap.get(etapa.evento.categoria ?? "") ?? "var(--muted-foreground)"}
                     isLast={i === arr.length - 1}
                   />
                 ))}
@@ -179,15 +197,15 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
 
 function TimelineEtapa({
   etapa,
-  index,
+  cor,
   isLast,
 }: {
   etapa: ParadaEtapa
-  index: number
+  cor: string
   isLast: boolean
 }) {
-  const cor = etapa.atual ? "#dc2626" : corCategoria(index)
-  const Icone = etapa.atual ? Pause : iconePorCategoria(etapa.evento.categoria)
+  // Cor e ícone SEMPRE derivados da categoria (consistentes com o donut).
+  const Icone = iconePorCategoria(etapa.evento.categoria)
 
   return (
     <div className="flex items-stretch">
@@ -196,7 +214,10 @@ function TimelineEtapa({
         <div className="flex items-start gap-2 mb-2">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-full text-white shrink-0"
-            style={{ backgroundColor: cor }}
+            style={{
+              backgroundColor: cor,
+              boxShadow: etapa.atual ? `0 0 0 2px var(--background), 0 0 0 4px ${cor}` : undefined,
+            }}
           >
             <Icone className="h-4 w-4" />
           </div>
@@ -223,7 +244,7 @@ function TimelineEtapa({
           {etapa.evento.observacao && (
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Observação</p>
-              <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">
+              <p className="text-xs text-muted-foreground leading-snug line-clamp-2 break-words whitespace-normal">
                 {etapa.evento.observacao}
               </p>
             </div>
