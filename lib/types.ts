@@ -113,3 +113,40 @@ export interface RegistroSemanal {
   dataRegistro: string
   maquinas: Machine[]
 }
+
+// Evento imutável do histórico de uma máquina parada.
+// Cada mudança em categoria / ação / responsável / observação / prazo gera um novo evento.
+export interface ParadaEvento {
+  id: string
+  machineId: string
+  machineTag: string
+  contrato?: string
+  categoria?: string
+  acao?: string
+  responsavel?: string
+  observacao?: string
+  prazo?: string
+  dataEvento: string // ISO - momento em que este estado passou a valer
+  createdAt?: string
+}
+
+// Etapa consolidada da linha do tempo (evento + duração calculada).
+export interface ParadaEtapa {
+  evento: ParadaEvento
+  dataInicio: string
+  dataFim: string | null // null = etapa atual (em andamento)
+  dias: number
+  atual: boolean
+}
+
+// Indicadores calculados a partir do histórico de uma máquina.
+export interface ParadaIndicadores {
+  diasTotais: number
+  categoriaAtual?: string
+  diasNaCategoriaAtual: number
+  etapas: ParadaEtapa[]
+  porCategoria: { nome: string; dias: number; percentual: number }[]
+  porResponsavel: { nome: string; dias: number; percentual: number }[]
+  totalMudancas: number
+  ultimaAlteracao?: string
+}
