@@ -114,6 +114,24 @@ interface EstadoSnapshot {
   prazo?: string
 }
 
+// Quando o registro semanal não guardou a categoria, inferimos a partir do
+// texto da observação (dado real) para enriquecer a linha do tempo do passado.
+function inferirCategoria(texto?: string): string | undefined {
+  const t = (texto || "").toLowerCase()
+  if (!t) return undefined
+  if (t.includes("aguardando peça") || t.includes("aguardando peca") || t.includes("envio de peça") || t.includes("envio de peca") || t.includes("envio das peça") || t.includes("envio das peca") || t.includes("peças") || t.includes("pecas") || t.includes("inversor") || t.includes("motor"))
+    return "Aguardando Peça"
+  if (t.includes("cliente") || t.includes("cotaç") || t.includes("cotac") || t.includes("adquirir") || t.includes("aditivo"))
+    return "Aguardando Cliente"
+  if (t.includes("programaç") || t.includes("programac") || t.includes("montagem") || t.includes("execução") || t.includes("execucao") || t.includes("recurso"))
+    return "Aguardando Programação / Recurso"
+  if (t.includes("corretiva") || t.includes("manutenç") || t.includes("manutenc") || t.includes("revisão") || t.includes("revisao") || t.includes("oficina"))
+    return "Manutenção Corretiva"
+  if (t.includes("logíst") || t.includes("logist") || t.includes("transporte") || t.includes("coletad"))
+    return "Aguardando Logística"
+  return undefined
+}
+
 // Duas etapas só são a mesma se categoria + ação + responsável forem iguais.
 function mesmaEtapa(a: EstadoSnapshot, b: EstadoSnapshot): boolean {
   return (
@@ -143,7 +161,7 @@ export function computeIndicadores(
     if (!m) continue
     snapshots.push({
       data: new Date(reg.dataRegistro).toISOString(),
-      categoria: (m as any).categoriaParada,
+      categoria: (m as any).categoriaParada || inferirCategoria(m.motivoParada),
       acao: m.acaoResponsavel,
       responsavel: m.responsavel,
       observacao: m.motivoParada,

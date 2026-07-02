@@ -57,6 +57,8 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
     etapas,
     porCategoria,
     porResponsavel,
+    totalMudancas,
+    ultimaAlteracao,
   } = indicadores
 
   const donutCategoria = porCategoria.map((c, i) => ({
@@ -76,9 +78,19 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
   return (
     <div className="space-y-5 p-5 bg-muted/30 rounded-lg border border-border">
       {/* Cabeçalho */}
-      <h3 className="text-base font-bold text-foreground">
-        {machine.nome} <span className="font-normal text-muted-foreground">— {machine.tipo} | {machine.localizacao}</span>
-      </h3>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-base font-bold text-foreground">
+          {machine.nome} <span className="font-normal text-muted-foreground">— {machine.tipo} | {machine.localizacao}</span>
+        </h3>
+        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+          <span>
+            Mudanças de status: <span className="font-semibold text-foreground">{totalMudancas}</span>
+          </span>
+          <span>
+            Última alteração: <span className="font-semibold text-foreground">{formatDate(ultimaAlteracao)}</span>
+          </span>
+        </div>
+      </div>
 
       {/* Linha de resumo: cartões + donuts */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
@@ -282,7 +294,7 @@ function DonutCard({
                   <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                   <span className="truncate flex-1">{d.name}</span>
                   <span className="text-muted-foreground shrink-0">
-                    {d.dias}d ({d.percentual}%)
+                    {d.value}d ({d.percentual}%)
                   </span>
                 </div>
               ))}

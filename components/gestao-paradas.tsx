@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, Fragment } from "react"
 import useSWR from "swr"
 import type { Machine, ParadaEvento, RegistroSemanal } from "@/lib/types"
 import { CATEGORIAS_PARADA } from "@/lib/types"
@@ -106,7 +106,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           } else if (editingState.field === "responsavel") {
             updated.responsavel = editingState.value
           } else if (editingState.field === "acaoResponsavel") {
-            updated.acaoResponsavel = editingState.value
+            updated.acaoResponsavel = editingState.value as Machine["acaoResponsavel"]
           }
           
           updated.updated_at = new Date().toISOString()
@@ -183,7 +183,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
       const term = searchTerm.toLowerCase()
       result = result.filter(
         (m) =>
-          m.tag?.toLowerCase().includes(term) ||
+          m.nome?.toLowerCase().includes(term) ||
           m.tipo?.toLowerCase().includes(term) ||
           m.responsavel?.toLowerCase().includes(term)
       )
@@ -419,7 +419,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Clique no <span className="font-semibold text-primary">TAG</span> para ver o histórico completo da parada.
+            Clique na seta <span className="font-semibold text-primary">›</span> (ou no TAG) para expandir o histórico completo da parada logo abaixo da linha.
           </p>
 
           <div className="w-full overflow-x-auto rounded-lg border border-border">
@@ -490,11 +490,28 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
               </TableHeader>
               <TableBody>
                 {filteredMachines.length > 0 ? (
-                  filteredMachines.map((maquina) => (
-                    <TableRow key={maquina.id} className="group border-b">
+                  filteredMachines.map((maquina) => {
+                    const isExpanded = expandedId === maquina.id
+                    const toggleExpand = () =>
+                      setExpandedId((prev) => (prev === maquina.id ? null : maquina.id))
+                    return (
+                    <Fragment key={maquina.id}>
+                    <TableRow className="group border-b">
+                      <TableCell className="py-3 px-2 align-middle text-center">
+                        <button
+                          onClick={toggleExpand}
+                          className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-muted text-primary cursor-pointer"
+                          aria-label={isExpanded ? "Recolher histórico" : "Expandir histórico"}
+                          aria-expanded={isExpanded}
+                        >
+                          <ChevronRight
+                            className={`h-4 w-4 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                          />
+                        </button>
+                      </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle font-medium">
                         <button
-                          onClick={() => setDetalheMachineId(maquina.id)}
+                          onClick={toggleExpand}
                           className="text-primary font-semibold hover:underline underline-offset-2 cursor-pointer text-left"
                           title="Ver histórico completo"
                         >
@@ -538,7 +555,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       </TableCell>
                       <TableCell className="w-[10%] text-sm text-center py-3 px-4 align-middle bg-primary/5">
                         {(() => {
-                          const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina)
+                          const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina, registros)
                           const d = ind.diasNaCategoriaAtual
                           const cor =
                             d >= 60
@@ -763,10 +780,25 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </Button>
                       </TableCell>
                     </TableRow>
-                  ))
+                    {isExpanded && (
+                      <TableRow className="bg-muted/30 hover:bg-muted/30">
+                        <TableCell colSpan={14} className="p-0">
+                          <div className="p-4">
+                            <ParadaDetalheConteudo
+                              machine={maquina}
+                              eventos={eventosPorMaquina.get(maquina.id) || []}
+                              registros={registros}
+                            />
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    </Fragment>
+                    )
+                  })
               ) : (
                 <TableRow>
-                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={14} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
@@ -776,15 +808,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
         </CardContent>
       </Card>
-
-      <ParadaDetalheDialog
-        machine={detalheMachine}
-        eventos={detalheMachine ? eventosPorMaquina.get(detalheMachine.id) || [] : []}
-        open={detalheMachineId !== null}
-        onOpenChange={(open) => {
-          if (!open) setDetalheMachineId(null)
-        }}
-      />
     </div>
   )
 }
