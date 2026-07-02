@@ -1,8 +1,11 @@
 "use client"
 
 import { useState, useMemo, useCallback } from "react"
-import type { Machine } from "@/lib/types"
+import useSWR from "swr"
+import type { Machine, ParadaEvento } from "@/lib/types"
 import { CATEGORIAS_PARADA } from "@/lib/types"
+import { loadParadaEventos, logParadaEvento, computeIndicadores } from "@/lib/parada-eventos-storage"
+import { ParadaDetalheDialog } from "@/components/parada-detalhe-dialog"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -42,7 +45,44 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [openDatePicker, setOpenDatePicker] = useState<string | null>(null)
+  const [detalheMachineId, setDetalheMachineId] = useState<string | null>(null)
   const { toast } = useToast()
+
+  // Carrega todo o histórico de eventos do contrato atual.
+  const { data: eventos = [], mutate: mutateEventos } = useSWR<ParadaEvento[]>(
+    "parada-eventos",
+    loadParadaEventos,
+    { revalidateOnFocus: false },
+  )
+
+  // Agrupa eventos por máquina para consultas rápidas.
+  const eventosPorMaquina = useMemo(() => {
+    const map = new Map<string, ParadaEvento[]>()
+    for (const ev of eventos) {
+      const arr = map.get(ev.machineId)
+      if (arr) arr.push(ev)
+      else map.set(ev.machineId, [ev])
+    }
+    return map
+  }, [eventos])
+
+  // Registra um evento imutável no histórico e revalida o cache.
+  const registrarEvento = useCallback(
+    async (updatedMachine: Machine) => {
+      try {
+        await logParadaEvento(updatedMachine)
+        await mutateEventos()
+      } catch (error) {
+        console.error("[v0] Falha ao registrar evento de histórico:", error)
+      }
+    },
+    [mutateEventos],
+  )
+
+  const detalheMachine = useMemo(
+    () => machines.find((m) => m.id === detalheMachineId) || null,
+    [machines, detalheMachineId],
+  )
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
     setEditingState({ machineId, field, value })
@@ -82,6 +122,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
       if (onUpdate) {
         onUpdate(updatedMachines)
       }
+
+      // Registrar evento no histórico imutável
+      const updatedMachine = updatedMachines.find((m) => m.id === machineId)
+      if (updatedMachine) await registrarEvento(updatedMachine)
       
       setEditingState(null)
       toast({ title: "Sucesso!", description: "Alteração salva com sucesso" })
@@ -111,6 +155,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
       )
       await saveMachines(updatedMachines)
       if (onUpdate) onUpdate(updatedMachines)
+      const updatedMachine = updatedMachines.find((m) => m.id === machineId)
+      if (updatedMachine) await registrarEvento(updatedMachine)
       toast({ title: "Sucesso!", description: "Categoria atualizada com sucesso" })
     } catch (error) {
       toast({
@@ -372,6 +418,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             </div>
           </div>
 
+          <p className="text-xs text-muted-foreground">
+            Clique no <span className="font-semibold text-primary">TAG</span> para ver o histórico completo da parada.
+          </p>
+
           <div className="w-full overflow-x-auto rounded-lg border border-border">
             <Table className="w-full border-collapse">
                 <TableHeader>
@@ -403,6 +453,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   </TableHead>
                   <TableHead className="w-[10%] text-center">
                     <span className="font-medium">Tempo de Parada</span>
+                  </TableHead>
+                  <TableHead className="w-[10%] text-center bg-primary/5">
+                    <span className="font-medium">Nesta Categoria</span>
                   </TableHead>
                   <TableHead className="w-[28%] min-w-[400px]">
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
@@ -438,7 +491,15 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                 {filteredMachines.length > 0 ? (
                   filteredMachines.map((maquina) => (
                     <TableRow key={maquina.id} className="group border-b">
-                      <TableCell className="text-sm py-3 px-4 align-middle font-medium">{maquina.nome}</TableCell>
+                      <TableCell className="text-sm py-3 px-4 align-middle font-medium">
+                        <button
+                          onClick={() => setDetalheMachineId(maquina.id)}
+                          className="text-primary font-semibold hover:underline underline-offset-2 cursor-pointer text-left"
+                          title="Ver histórico completo"
+                        >
+                          {maquina.nome}
+                        </button>
+                      </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">{maquina.tipo}</TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle">{maquina.localizacao}</TableCell>
                       <TableCell className="py-3 px-4 align-middle">
@@ -473,6 +534,23 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       </TableCell>
                       <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
                         {getDiasParadaNum(maquina.dataParada)} dias
+                      </TableCell>
+                      <TableCell className="w-[10%] text-sm text-center py-3 px-4 align-middle bg-primary/5">
+                        {(() => {
+                          const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina)
+                          const d = ind.diasNaCategoriaAtual
+                          const cor =
+                            d >= 60
+                              ? "bg-destructive/15 text-destructive"
+                              : d >= 30
+                                ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+                                : "bg-primary/10 text-primary"
+                          return (
+                            <span className={`inline-block rounded-full px-2.5 py-0.5 font-semibold ${cor}`}>
+                              {d} dias
+                            </span>
+                          )
+                        })()}
                       </TableCell>
                       <TableCell className="text-sm py-3 px-4 align-middle whitespace-normal break-words max-w-[400px]">
                         {isEditing(maquina.id, "motivoParada") ? (
@@ -567,6 +645,8 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                     onUpdate(updatedMachines)
                                   }
                                   await saveMachines(updatedMachines)
+                                  const updatedMachine = updatedMachines.find((m) => m.id === maquina.id)
+                                  if (updatedMachine) await registrarEvento(updatedMachine)
                                   setOpenDatePicker(null)
                                   toast({ title: "Prazo salvo", description: `Data ${day}/${month}/${year} salva com sucesso.` })
                                 }
@@ -582,12 +662,14 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             value={editingState?.value || maquina.acaoResponsavel || "Vale"}
                             onValueChange={async (value) => {
                               const updatedMachines = machines.map(m => 
-                                m.id === maquina.id ? { ...m, acaoResponsavel: value, updated_at: new Date().toISOString() } : m
+                                m.id === maquina.id ? { ...m, acaoResponsavel: value as Machine["acaoResponsavel"], updated_at: new Date().toISOString() } : m
                               )
                               if (onUpdate) {
                                 onUpdate(updatedMachines)
                               }
                               await saveMachines(updatedMachines)
+                              const updatedMachine = updatedMachines.find((m) => m.id === maquina.id)
+                              if (updatedMachine) await registrarEvento(updatedMachine)
                               setEditingState(null)
                               toast({ title: "Ação salva", description: `Ação alterada para ${value}.` })
                             }}
@@ -683,7 +765,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                   ))
               ) : (
                 <TableRow>
-                    <TableCell colSpan={15} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={13} className="text-center py-8 text-muted-foreground">
                     Nenhuma máquina parada encontrada com os filtros aplicados
                   </TableCell>
                 </TableRow>
@@ -693,6 +775,15 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
           </div>
         </CardContent>
       </Card>
+
+      <ParadaDetalheDialog
+        machine={detalheMachine}
+        eventos={detalheMachine ? eventosPorMaquina.get(detalheMachine.id) || [] : []}
+        open={detalheMachineId !== null}
+        onOpenChange={(open) => {
+          if (!open) setDetalheMachineId(null)
+        }}
+      />
     </div>
   )
 }
