@@ -158,14 +158,17 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
           </p>
           <div className="overflow-x-auto pb-2">
             <div className="flex items-stretch gap-2 min-w-min">
-              {etapas.map((etapa, i) => (
-                <TimelineEtapa
-                  key={etapa.evento.id}
-                  etapa={etapa}
-                  index={i}
-                  isLast={i === etapas.length - 1}
-                />
-              ))}
+              {etapas
+                .map((etapa, i) => ({ etapa, colorIndex: i }))
+                .reverse()
+                .map(({ etapa, colorIndex }, i, arr) => (
+                  <TimelineEtapa
+                    key={etapa.evento.id}
+                    etapa={etapa}
+                    index={colorIndex}
+                    isLast={i === arr.length - 1}
+                  />
+                ))}
             </div>
           </div>
         </CardContent>
