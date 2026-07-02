@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { loadHistory } from "@/lib/supabase-history-storage"
+import { dedupeHistoryPorSemana } from "@/lib/machine-utils"
 import { useMemo, useEffect, useState } from "react"
 
 interface GraficoIndisponibilidadeSemanalProps {
@@ -29,9 +30,7 @@ export function GraficoIndisponibilidadeSemanal({ contratoFilter }: GraficoIndis
       return []
     }
 
-    const last7Weeks = history
-      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
-      .slice(-7)
+    const last7Weeks = dedupeHistoryPorSemana(history).slice(-7)
 
     return last7Weeks.map((snapshot) => {
       let paradas: number
