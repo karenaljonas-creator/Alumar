@@ -1,6 +1,6 @@
 "use client"
 
-import type { Machine, WeeklySnapshot, HistoryTrend } from "./types"
+import type { Machine, WeeklySnapshot, HistoryTrend, CategoriaParada, AcaoResponsavel } from "./types"
 import { calculateStats, filtrarMaquinasPrincipais } from "./machine-utils"
 import { createClient } from "./supabase/client"
 import { loadContrato } from "./contrato-storage"
@@ -134,6 +134,29 @@ export async function getHistoryTrends(): Promise<HistoryTrend[]> {
     console.error("Erro ao carregar tendências:", error)
     return []
   }
+}
+
+export async function updateSnapshotMachine(
+  snapshot: WeeklySnapshot,
+  machineId: string,
+  updates: { categoriaParada?: CategoriaParada; acaoResponsavel?: AcaoResponsavel },
+): Promise<WeeklySnapshot> {
+  const updatedMachines = snapshot.machines.map((m) => (m.id === machineId ? { ...m, ...updates } : m))
+  const updatedSnapshot: WeeklySnapshot = { ...snapshot, machines: updatedMachines }
+
+  const supabase = getSupabaseClient()
+
+  const { error } = await supabase
+    .from("weekly_snapshots")
+    .update({ snapshot: updatedSnapshot })
+    .eq("week", snapshot.semana)
+    .eq("date", snapshot.dataRegistro)
+
+  if (error) {
+    throw new Error(`Erro ao atualizar registro: ${error.message}`)
+  }
+
+  return updatedSnapshot
 }
 
 export async function deleteSnapshot(id: string): Promise<void> {
