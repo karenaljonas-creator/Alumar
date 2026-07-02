@@ -63,7 +63,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   // tempo reflita exatamente o que aparece no Histórico de Registros.
   const { data: historySnapshots = [] } = useSWR(
     "history-snapshots-timeline",
-    loadHistoryFromSupabase,
+    loadHistory,
     { revalidateOnFocus: false },
   )
   const registros = useMemo<RegistroSemanal[]>(

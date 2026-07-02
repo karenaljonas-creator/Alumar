@@ -194,17 +194,35 @@ export function computeIndicadores(
   // Ordena cronologicamente
   snapshots.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
 
-  // Ancora o início da linha do tempo na data real da parada
+  // Ancora o início da linha do tempo na DATA DE PARADA real da máquina.
+  // Este é o campo canônico do tempo de parada (ex.: 27/01/2026 -> 157 dias).
   const inicioParada = machine.dataParada
     ? new Date(machine.dataParada).toISOString()
     : snapshots[0]?.data ?? nowIso
-  if (snapshots.length > 0) {
-    snapshots[0] = { ...snapshots[0], data: inicioParada }
+
+  // O tempo total de parada é SEMPRE dataParada -> hoje, igual à coluna
+  // "Tempo de Parada" e ao Registro Semanal. As etapas apenas repartem esse total.
+  const diasTotais = diffDias(inicioParada, nowIso)
+
+  // Descarta pontos anteriores à data de parada e reancora o primeiro ponto.
+  const inicioMs = new Date(inicioParada).getTime()
+  const relevantes = snapshots.filter((s) => new Date(s.data).getTime() >= inicioMs)
+  if (relevantes.length === 0) {
+    relevantes.push({
+      data: inicioParada,
+      categoria: machine.categoriaParada,
+      acao: machine.acaoResponsavel,
+      responsavel: machine.responsavel,
+      observacao: machine.motivoParada,
+      prazo: machine.prazoDados,
+    })
+  } else {
+    relevantes[0] = { ...relevantes[0], data: inicioParada }
   }
 
-  // Colapsa snapshots consecutivos que representam a mesma etapa
+  // Colapsa pontos consecutivos que representam a mesma etapa
   const colapsados: EstadoSnapshot[] = []
-  for (const s of snapshots) {
+  for (const s of relevantes) {
     const ultimo = colapsados[colapsados.length - 1]
     if (ultimo && mesmaEtapa(ultimo, s)) {
       // mantém a observação mais recente dentro da mesma etapa
@@ -227,10 +245,20 @@ export function computeIndicadores(
     dataEvento: s.data,
   }))
 
+  // Offset (em dias) de cada etapa a partir da data de parada, limitado a [0, diasTotais].
+  // A duração de cada etapa é a diferença entre offsets consecutivos, o que garante
+  // que a soma das etapas seja EXATAMENTE igual ao tempo total de parada.
+  const offset = (iso: string) => {
+    const d = diffDias(inicioParada, new Date(iso).toISOString())
+    return Math.min(Math.max(d, 0), diasTotais)
+  }
+
   const etapas: ParadaEtapa[] = ordered.map((evento, i) => {
     const dataInicio = evento.dataEvento
     const dataFim = i < ordered.length - 1 ? ordered[i + 1].dataEvento : null
-    const dias = dataFim ? diffDias(dataInicio, dataFim) : diffDias(dataInicio, nowIso)
+    const offInicio = offset(dataInicio)
+    const offFim = dataFim ? offset(dataFim) : diasTotais
+    const dias = Math.max(0, offFim - offInicio)
     return {
       evento,
       dataInicio,
@@ -239,8 +267,6 @@ export function computeIndicadores(
       atual: dataFim === null,
     }
   })
-
-  const diasTotais = etapas.reduce((acc, e) => acc + e.dias, 0)
 
   // Agrupamento por categoria
   const catMap = new Map<string, number>()
