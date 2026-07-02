@@ -5,7 +5,7 @@ import useSWR from "swr"
 import type { Machine, ParadaEvento, RegistroSemanal } from "@/lib/types"
 import { CATEGORIAS_PARADA } from "@/lib/types"
 import { loadParadaEventos, logParadaEvento, computeIndicadores } from "@/lib/parada-eventos-storage"
-import { loadRegistrosSemanais } from "@/lib/registro-semanal-storage"
+import { loadHistory } from "@/lib/supabase-history-storage"
 import { ParadaDetalheConteudo } from "@/components/parada-detalhe-conteudo"
 import { ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,8 +57,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     { revalidateOnFocus: false },
   )
 
-  // Histórico semanal (fonte real do passado para a linha do tempo).
-  const registros = useMemo<RegistroSemanal[]>(() => loadRegistrosSemanais(), [])
+  // Histórico semanal REAL (mesma fonte da tela de Histórico: snapshots salvos).
+  // Cada snapshot já contém os objetos Machine completos, com categoria,
+  // responsável, ação e observação preenchidos — o que garante que a linha do
+  // tempo reflita exatamente o que aparece no Histórico de Registros.
+  const { data: historySnapshots = [] } = useSWR(
+    "history-snapshots-timeline",
+    loadHistoryFromSupabase,
+    { revalidateOnFocus: false },
+  )
+  const registros = useMemo<RegistroSemanal[]>(
+    () =>
+      [...historySnapshots]
+        .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
+        .map((s) => ({
+          id: s.id,
+          semana: s.semana,
+          dataRegistro: s.dataRegistro,
+          maquinas: s.machines || [],
+        })),
+    [historySnapshots],
+  )
 
   // Agrupa eventos por máquina para consultas rápidas.
   const eventosPorMaquina = useMemo(() => {
