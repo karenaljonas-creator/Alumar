@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Bar, BarChart, XAxis, YAxis, CartesianGrid, LabelList } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import type { WeeklySnapshot } from "@/lib/types"
+import { dedupeHistoryPorSemana } from "@/lib/machine-utils"
 
 interface ParadasPorSemanaChartProps {
   history: WeeklySnapshot[]
@@ -15,9 +16,7 @@ export function ParadasPorSemanaChart({ history, contratoFilter }: ParadasPorSem
   const data = useMemo(() => {
     if (!history || history.length === 0) return []
 
-    const last8 = [...history]
-      .sort((a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime())
-      .slice(-8)
+    const last8 = dedupeHistoryPorSemana(history).slice(-8)
 
     return last8.map((snapshot) => {
       let paradas: number

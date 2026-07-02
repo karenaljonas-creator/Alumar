@@ -1,5 +1,27 @@
 import type { Machine, MachineStats } from "./types"
 
+/**
+ * Remove semanas duplicadas do histórico, mantendo apenas o registro mais
+ * recente (maior dataRegistro) de cada semana. Retorna ordenado por data asc.
+ * Usado nos gráficos de evolução semanal para que a mesma semana não se repita.
+ */
+export function dedupeHistoryPorSemana<T extends { semana?: string; dataRegistro: string }>(history: T[]): T[] {
+  if (!history || history.length === 0) return []
+
+  const maisRecentePorSemana = new Map<string, T>()
+  for (const snapshot of history) {
+    const chave = snapshot.semana || snapshot.dataRegistro
+    const existente = maisRecentePorSemana.get(chave)
+    if (!existente || new Date(snapshot.dataRegistro).getTime() > new Date(existente.dataRegistro).getTime()) {
+      maisRecentePorSemana.set(chave, snapshot)
+    }
+  }
+
+  return Array.from(maisRecentePorSemana.values()).sort(
+    (a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime(),
+  )
+}
+
 export function filtrarMaquinasPrincipais(machines: Machine[]): Machine[] {
   const tiposPrincipais = ["Compressor", "Secador", "Soprador"]
   return machines.filter((m) => tiposPrincipais.includes(m.tipo))
