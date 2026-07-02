@@ -2,10 +2,12 @@
 
 import { useState, useMemo, useCallback } from "react"
 import useSWR from "swr"
-import type { Machine, ParadaEvento } from "@/lib/types"
+import type { Machine, ParadaEvento, RegistroSemanal } from "@/lib/types"
 import { CATEGORIAS_PARADA } from "@/lib/types"
 import { loadParadaEventos, logParadaEvento, computeIndicadores } from "@/lib/parada-eventos-storage"
-import { ParadaDetalheDialog } from "@/components/parada-detalhe-dialog"
+import { loadRegistrosSemanais } from "@/lib/registro-semanal-storage"
+import { ParadaDetalheConteudo } from "@/components/parada-detalhe-conteudo"
+import { ChevronRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -45,7 +47,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   const [editingState, setEditingState] = useState<EditingState | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [openDatePicker, setOpenDatePicker] = useState<string | null>(null)
-  const [detalheMachineId, setDetalheMachineId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
   const { toast } = useToast()
 
   // Carrega todo o histórico de eventos do contrato atual.
@@ -54,6 +56,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     loadParadaEventos,
     { revalidateOnFocus: false },
   )
+
+  // Histórico semanal (fonte real do passado para a linha do tempo).
+  const registros = useMemo<RegistroSemanal[]>(() => loadRegistrosSemanais(), [])
 
   // Agrupa eventos por máquina para consultas rápidas.
   const eventosPorMaquina = useMemo(() => {
@@ -77,11 +82,6 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
       }
     },
     [mutateEventos],
-  )
-
-  const detalheMachine = useMemo(
-    () => machines.find((m) => m.id === detalheMachineId) || null,
-    [machines, detalheMachineId],
   )
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
@@ -426,6 +426,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             <Table className="w-full border-collapse">
                 <TableHeader>
                 <TableRow className="bg-muted">
+                  <TableHead className="w-[3%]" />
                   <TableHead className="w-[10%]">
                     <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       TAG <SortIcon columnKey="nome" />

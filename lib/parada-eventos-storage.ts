@@ -1,6 +1,6 @@
 "use client"
 
-import type { Machine, ParadaEvento, ParadaEtapa, ParadaIndicadores } from "./types"
+import type { Machine, ParadaEvento, ParadaEtapa, ParadaIndicadores, RegistroSemanal } from "./types"
 import { createClient } from "./supabase/client"
 import { loadContrato } from "./contrato-storage"
 
@@ -103,38 +103,111 @@ function diffDias(inicio: string, fim: string): number {
   return Math.max(0, Math.ceil((b - a) / (1000 * 60 * 60 * 24)))
 }
 
-// Constrói a linha do tempo e os indicadores a partir dos eventos da máquina.
-// Se não houver eventos, gera uma etapa sintética a partir do estado atual da máquina.
+// Estado consolidado num instante do tempo (vindo de um registro semanal,
+// de um evento ao vivo ou do estado atual da máquina).
+interface EstadoSnapshot {
+  data: string
+  categoria?: string
+  acao?: string
+  responsavel?: string
+  observacao?: string
+  prazo?: string
+}
+
+// Duas etapas só são a mesma se categoria + ação + responsável forem iguais.
+function mesmaEtapa(a: EstadoSnapshot, b: EstadoSnapshot): boolean {
+  return (
+    (a.categoria ?? "") === (b.categoria ?? "") &&
+    (a.acao ?? "") === (b.acao ?? "") &&
+    (a.responsavel ?? "") === (b.responsavel ?? "")
+  )
+}
+
+// Constrói a linha do tempo e os indicadores combinando:
+// 1) o histórico dos registros semanais (fonte real do passado)
+// 2) os eventos ao vivo registrados na tela de Paradas
+// 3) o estado atual da máquina (garante a etapa atual correta)
 export function computeIndicadores(
   eventos: ParadaEvento[],
   machine: Machine,
+  registros: RegistroSemanal[] = [],
   now: Date = new Date(),
 ): ParadaIndicadores {
   const nowIso = now.toISOString()
 
-  let ordered = [...eventos].sort(
-    (a, b) => new Date(a.dataEvento).getTime() - new Date(b.dataEvento).getTime(),
-  )
+  const snapshots: EstadoSnapshot[] = []
 
-  // Fallback: nenhuma alteração registrada ainda -> usa o estado atual como etapa única.
-  if (ordered.length === 0) {
-    const inicio = machine.dataParada
-      ? new Date(machine.dataParada).toISOString()
-      : machine.updated_at || nowIso
-    ordered = [
-      {
-        id: "sintetico",
-        machineId: machine.id,
-        machineTag: machine.nome,
-        categoria: machine.categoriaParada,
-        acao: machine.acaoResponsavel,
-        responsavel: machine.responsavel,
-        observacao: machine.motivoParada,
-        prazo: machine.prazoDados,
-        dataEvento: inicio,
-      },
-    ]
+  // 1) Registros semanais que contêm esta máquina
+  for (const reg of registros) {
+    const m = reg.maquinas.find((x) => x.id === machine.id)
+    if (!m) continue
+    snapshots.push({
+      data: new Date(reg.dataRegistro).toISOString(),
+      categoria: (m as any).categoriaParada,
+      acao: m.acaoResponsavel,
+      responsavel: m.responsavel,
+      observacao: m.motivoParada,
+      prazo: (m as any).prazoDados,
+    })
   }
+
+  // 2) Eventos ao vivo
+  for (const ev of eventos) {
+    snapshots.push({
+      data: new Date(ev.dataEvento).toISOString(),
+      categoria: ev.categoria,
+      acao: ev.acao,
+      responsavel: ev.responsavel,
+      observacao: ev.observacao,
+      prazo: ev.prazo,
+    })
+  }
+
+  // 3) Estado atual da máquina
+  snapshots.push({
+    data: machine.updated_at ? new Date(machine.updated_at).toISOString() : nowIso,
+    categoria: machine.categoriaParada,
+    acao: machine.acaoResponsavel,
+    responsavel: machine.responsavel,
+    observacao: machine.motivoParada,
+    prazo: machine.prazoDados,
+  })
+
+  // Ordena cronologicamente
+  snapshots.sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+
+  // Ancora o início da linha do tempo na data real da parada
+  const inicioParada = machine.dataParada
+    ? new Date(machine.dataParada).toISOString()
+    : snapshots[0]?.data ?? nowIso
+  if (snapshots.length > 0) {
+    snapshots[0] = { ...snapshots[0], data: inicioParada }
+  }
+
+  // Colapsa snapshots consecutivos que representam a mesma etapa
+  const colapsados: EstadoSnapshot[] = []
+  for (const s of snapshots) {
+    const ultimo = colapsados[colapsados.length - 1]
+    if (ultimo && mesmaEtapa(ultimo, s)) {
+      // mantém a observação mais recente dentro da mesma etapa
+      if (s.observacao) ultimo.observacao = s.observacao
+      if (s.prazo) ultimo.prazo = s.prazo
+      continue
+    }
+    colapsados.push({ ...s })
+  }
+
+  const ordered: ParadaEvento[] = colapsados.map((s, i) => ({
+    id: `etapa-${i}`,
+    machineId: machine.id,
+    machineTag: machine.nome,
+    categoria: s.categoria,
+    acao: s.acao,
+    responsavel: s.responsavel,
+    observacao: s.observacao,
+    prazo: s.prazo,
+    dataEvento: s.data,
+  }))
 
   const etapas: ParadaEtapa[] = ordered.map((evento, i) => {
     const dataInicio = evento.dataEvento
