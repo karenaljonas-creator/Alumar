@@ -49,7 +49,7 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
                   fontSize: "12px",
                 }}
               />
-              <Bar dataKey="quantidade" fill="#0091bb" radius={[0, 6, 6, 0]}>
+              <Bar dataKey="quantidade" fill="#0092bc" radius={[0, 6, 6, 0]}>
                 <LabelList
                   dataKey="quantidade"
                   position="right"
