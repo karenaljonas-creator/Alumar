@@ -10,6 +10,8 @@ export type CategoriaParada =
   | "Manutenção Corretiva"
   | "Melhoria / Engenharia"
   | "Logística / Transporte"
+  | "Em execução"
+  | "Programado"
 
 export const CATEGORIAS_PARADA: CategoriaParada[] = [
   "Aguardando Peça",
@@ -19,6 +21,8 @@ export const CATEGORIAS_PARADA: CategoriaParada[] = [
   "Manutenção Corretiva",
   "Melhoria / Engenharia",
   "Logística / Transporte",
+  "Em execução",
+  "Programado",
 ]
 
 export interface Machine {
