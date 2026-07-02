@@ -1,19 +1,28 @@
 "use client"
 
 import { useState, useMemo, useEffect, useCallback } from "react"
-import type { Machine, WeeklySnapshot } from "@/lib/types"
+import type { Machine, WeeklySnapshot, CategoriaParada, AcaoResponsavel } from "@/lib/types"
+import { CATEGORIAS_PARADA } from "@/lib/types"
 import { Card } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronRight, Trash2 } from "@/lib/lucide-react"
-import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react"
+import { ArrowUp, ArrowDown, ArrowUpDown, Pencil } from "lucide-react"
 
 type DetailSortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "preventiva" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
-import { loadHistory, deleteSnapshot } from "@/lib/supabase-history-storage"
+import { loadHistory, deleteSnapshot, updateSnapshotMachine } from "@/lib/supabase-history-storage"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 
 interface HistoricoMaquinasProps {
@@ -29,6 +38,44 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
   const [history, setHistory] = useState<WeeklySnapshot[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+
+  const [editContext, setEditContext] = useState<{ snapshot: WeeklySnapshot; machine: Machine } | null>(null)
+  const [editCategoria, setEditCategoria] = useState<string>("nenhuma")
+  const [editAcao, setEditAcao] = useState<string>("Vale")
+  const [saving, setSaving] = useState(false)
+
+  const openEdit = (snapshot: WeeklySnapshot, machine: Machine) => {
+    setEditContext({ snapshot, machine })
+    setEditCategoria(machine.categoriaParada ?? "nenhuma")
+    setEditAcao(machine.acaoResponsavel ?? "Vale")
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editContext) return
+    setSaving(true)
+    try {
+      const updates = {
+        categoriaParada: editCategoria === "nenhuma" ? undefined : (editCategoria as CategoriaParada),
+        acaoResponsavel: editAcao as AcaoResponsavel,
+      }
+      const updatedSnapshot = await updateSnapshotMachine(editContext.snapshot, editContext.machine.id, updates)
+      setHistory((prev) => prev.map((h) => (h.id === updatedSnapshot.id ? updatedSnapshot : h)))
+      toast({
+        title: "Registro atualizado",
+        description: `${editContext.machine.nome}: categoria e ação atualizadas.`,
+      })
+      setEditContext(null)
+    } catch (error) {
+      console.error("[v0] Error updating snapshot machine:", error)
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível salvar as alterações. Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   useEffect(() => {
     const fetchHistory = async () => {
@@ -239,7 +286,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
 
                       {isExpanded && (
                         <TableRow>
-                          <TableCell colSpan={11} className="bg-muted/20 p-0">
+                          <TableCell colSpan={12} className="bg-muted/20 p-0">
                             <div className="p-6">
                               <h4 className="text-sm font-semibold mb-4">
                                 Detalhamento - {maquinasDaSemana.length} máquinas
@@ -266,6 +313,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       <TableHead>Ação</TableHead>
                                       <TableHead className="text-center">Responsável</TableHead>
                                       <TableHead className="min-w-[300px]">Observações</TableHead>
+                                      <TableHead className="text-center">Ações</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -354,11 +402,22 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                           <TableCell className="text-sm min-w-[300px] whitespace-normal">
                                             {maquina.motivoParada || "-"}
                                           </TableCell>
+                                          <TableCell className="text-center">
+                                            <Button
+                                              variant="ghost"
+                                              size="sm"
+                                              onClick={() => openEdit(snapshot, maquina)}
+                                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                                              title="Editar categoria e ação"
+                                            >
+                                              <Pencil className="h-4 w-4" />
+                                            </Button>
+                                          </TableCell>
                                         </TableRow>
                                       ))
                                     ) : (
                                       <TableRow>
-                                        <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
+                                        <TableCell colSpan={12} className="text-center text-muted-foreground py-8">
                                           Nenhuma máquina encontrada com os filtros aplicados
                                         </TableCell>
                                       </TableRow>
@@ -385,6 +444,61 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
           )}
         </div>
       </Card>
+
+      <Dialog open={editContext !== null} onOpenChange={(open) => !open && setEditContext(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar registro</DialogTitle>
+            <DialogDescription>
+              {editContext
+                ? `${editContext.machine.nome} — semana ${editContext.snapshot.semana}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="edit-categoria">Categoria da parada</Label>
+              <Select value={editCategoria} onValueChange={setEditCategoria}>
+                <SelectTrigger id="edit-categoria">
+                  <SelectValue placeholder="Selecione a categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="nenhuma">Nenhuma</SelectItem>
+                  {CATEGORIAS_PARADA.map((categoria) => (
+                    <SelectItem key={categoria} value={categoria}>
+                      {categoria}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-acao">Ação (responsável)</Label>
+              <Select value={editAcao} onValueChange={setEditAcao}>
+                <SelectTrigger id="edit-acao">
+                  <SelectValue placeholder="Selecione a ação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Vale">Vale</SelectItem>
+                  <SelectItem value="Atlas">Atlas</SelectItem>
+                  <SelectItem value="Outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditContext(null)} disabled={saving}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
