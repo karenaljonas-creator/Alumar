@@ -111,9 +111,9 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
       </div>
 
       {/* Linha de resumo: cartões + donuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+      <div className="flex flex-wrap gap-3">
         {/* Tempo total + nesta categoria */}
-        <Card className="border-border">
+        <Card className="border-border w-full sm:w-[260px] shrink-0">
           <CardContent className="p-3 grid grid-cols-2 gap-2">
             <div className="text-center border-r border-border pr-2">
               <p className="text-[11px] text-muted-foreground leading-tight">Tempo Total de Parada</p>
@@ -133,7 +133,7 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
         </Card>
 
         {/* Responsabilidade acumulada */}
-        <Card className="border-border">
+        <Card className="border-border w-full sm:w-[320px] shrink-0">
           <CardContent className="p-3">
             <p className="text-xs font-semibold text-foreground mb-2">Responsabilidade Acumulada</p>
             {porResponsavel.length === 0 ? (
@@ -282,7 +282,7 @@ function DonutCard({
 }) {
   const total = data.reduce((acc, d) => acc + d.value, 0)
   return (
-    <Card className="border-border">
+    <Card className="border-border w-full sm:w-[280px] shrink-0">
       <CardContent className="p-3">
         <p className="text-xs font-semibold text-foreground mb-2">{titulo}</p>
         {total === 0 ? (
