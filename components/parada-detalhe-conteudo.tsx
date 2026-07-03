@@ -227,7 +227,7 @@ function TimelineEtapa({
           {etapa.evento.observacao && (
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Observação</p>
-              <p className="text-xs text-muted-foreground leading-snug line-clamp-2 break-words whitespace-normal">
+              <p className="text-xs text-muted-foreground leading-snug break-words whitespace-normal">
                 {etapa.evento.observacao}
               </p>
             </div>
