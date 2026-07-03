@@ -34,10 +34,10 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {/* Disponibilidade */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Activity className="h-5 w-5 text-primary" />
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Activity className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -46,7 +46,7 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
                   Contrato
                 </span>
               </div>
-              <p className="text-3xl font-bold text-foreground mt-1 leading-none">
+              <p className="text-2xl font-bold text-foreground mt-1 leading-none">
                 {stats.disponibilidadeContrato.toFixed(1)}%
               </p>
               {trend && (
@@ -54,7 +54,7 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
               )}
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
               <span>Meta: {META_DISPONIBILIDADE}%</span>
             </div>
@@ -67,10 +67,10 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
 
       {/* Máquinas Paradas */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+            <div className="h-9 w-9 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -81,7 +81,7 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
                   </span>
                 )}
               </div>
-              <p className="text-3xl font-bold text-foreground mt-1 leading-none">{stats.paradas}</p>
+              <p className="text-2xl font-bold text-foreground mt-1 leading-none">{stats.paradas}</p>
               {trend && <DeltaLine value={trend.paradasDelta} positiveIsGood={false} unit="vs semana passada" />}
             </div>
           </div>
@@ -93,16 +93,16 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
 
       {/* Máquinas Operacionais */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <Cog className="h-5 w-5 text-primary" />
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <Cog className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Máquinas Operacionais
               </p>
-              <p className="text-3xl font-bold text-foreground mt-1 leading-none">{stats.operacionais}</p>
+              <p className="text-2xl font-bold text-foreground mt-1 leading-none">{stats.operacionais}</p>
               <p className="text-xs text-muted-foreground mt-2">de {stats.total}</p>
             </div>
           </div>
@@ -112,16 +112,16 @@ export function StatsCards({ stats, preventivas, trend }: StatsCardsProps) {
 
       {/* Preventivas Concluídas */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-5">
+        <CardContent className="p-4">
           <div className="flex items-start gap-3">
-            <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-              <ShieldCheck className="h-5 w-5 text-primary" />
+            <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <ShieldCheck className="h-4 w-4 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Preventivas Concluídas
               </p>
-              <p className="text-3xl font-bold text-foreground mt-1 leading-none">{preventivasPct.toFixed(1)}%</p>
+              <p className="text-2xl font-bold text-foreground mt-1 leading-none">{preventivasPct.toFixed(1)}%</p>
               {preventivas && (
                 <p className="text-xs text-muted-foreground mt-2">
                   {preventivas.ok} de {preventivas.total} concluídas

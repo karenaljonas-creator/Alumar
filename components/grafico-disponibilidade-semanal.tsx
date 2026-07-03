@@ -70,7 +70,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-5 flex items-center justify-center h-[280px]">
+        <CardContent className="p-5 flex items-center justify-center h-[220px]">
           <div className="text-sm text-muted-foreground">Carregando dados...</div>
         </CardContent>
       </Card>
@@ -88,7 +88,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-5 flex items-center justify-center h-[280px]">
+        <CardContent className="p-5 flex items-center justify-center h-[220px]">
           <div className="text-sm text-muted-foreground">Nenhum dado histórico disponível</div>
         </CardContent>
       </Card>
@@ -97,15 +97,15 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
 
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 pt-5 px-5">
+      <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
           Disponibilidade Semanal
         </CardTitle>
-        <CardDescription className="text-sm text-muted-foreground">
+        <CardDescription className="text-xs text-muted-foreground">
           Evolução da disponibilidade ao longo das semanas (Meta: 90%)
         </CardDescription>
       </CardHeader>
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="w-full max-w-full overflow-hidden">
           <ChartContainer
             config={{
@@ -114,7 +114,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[280px] w-full"
+            className="h-[220px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData.data} margin={{ left: 40, right: 40, top: 20, bottom: 60 }} barGap={16}>

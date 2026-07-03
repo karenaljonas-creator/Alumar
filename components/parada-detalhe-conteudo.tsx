@@ -94,7 +94,7 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
   }))
 
   return (
-    <div className="space-y-5 p-5 bg-muted/30 rounded-lg border border-border">
+    <div className="space-y-4 p-4 bg-muted/30 rounded-lg border border-border">
       {/* Cabeçalho */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-base font-bold text-foreground">
@@ -111,10 +111,10 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
       </div>
 
       {/* Linha de resumo: cartões + donuts */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
         {/* Tempo total + nesta categoria */}
         <Card className="border-border">
-          <CardContent className="p-4 grid grid-cols-2 gap-2">
+          <CardContent className="p-3 grid grid-cols-2 gap-2">
             <div className="text-center border-r border-border pr-2">
               <p className="text-[11px] text-muted-foreground leading-tight">Tempo Total de Parada</p>
               <p className="text-2xl font-bold text-destructive mt-1">{diasTotais}</p>
@@ -134,8 +134,8 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
 
         {/* Responsabilidade acumulada */}
         <Card className="border-border">
-          <CardContent className="p-4">
-            <p className="text-xs font-semibold text-foreground mb-3">Responsabilidade Acumulada</p>
+          <CardContent className="p-3">
+            <p className="text-xs font-semibold text-foreground mb-2">Responsabilidade Acumulada</p>
             {porResponsavel.length === 0 ? (
               <p className="text-xs text-muted-foreground">Sem dados.</p>
             ) : (
@@ -170,8 +170,8 @@ export function ParadaDetalheConteudo({ machine, eventos, registros }: ParadaDet
 
       {/* Linha do tempo horizontal */}
       <Card className="border-border">
-        <CardContent className="p-4">
-          <p className="text-sm font-semibold text-foreground mb-4">
+        <CardContent className="p-3">
+          <p className="text-sm font-semibold text-foreground mb-3">
             Histórico da Parada <span className="text-muted-foreground font-normal">(Linha do Tempo)</span>
           </p>
           <div className="overflow-x-auto pb-2">
@@ -209,11 +209,11 @@ function TimelineEtapa({
 
   return (
     <div className="flex items-stretch">
-      <div className="flex flex-col w-[220px] shrink-0">
+      <div className="flex flex-col w-[190px] shrink-0">
         {/* Cabeçalho: ícone + data/categoria */}
         <div className="flex items-start gap-2 mb-2">
           <div
-            className="flex h-9 w-9 items-center justify-center rounded-full text-white shrink-0"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-white shrink-0"
             style={{
               backgroundColor: cor,
               boxShadow: etapa.atual ? `0 0 0 2px var(--background), 0 0 0 4px ${cor}` : undefined,
@@ -233,7 +233,7 @@ function TimelineEtapa({
         </div>
 
         {/* Corpo */}
-        <div className="pl-11 space-y-2 flex-1">
+        <div className="pl-10 space-y-1.5 flex-1">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Ação / Responsável</p>
             <p className="text-xs text-foreground">
@@ -252,7 +252,7 @@ function TimelineEtapa({
         </div>
 
         {/* Barra de dias */}
-        <div className="pl-11 mt-3">
+        <div className="pl-10 mt-2">
           <span
             className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white"
             style={{ backgroundColor: cor }}

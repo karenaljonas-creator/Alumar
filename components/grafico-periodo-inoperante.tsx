@@ -35,7 +35,7 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
         <CardDescription>Distribuição de máquinas paradas por tempo de inatividade</CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="h-[280px] w-full">
+        <div className="h-[220px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical" margin={{ left: 80, right: 40, top: 10, bottom: 10 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
