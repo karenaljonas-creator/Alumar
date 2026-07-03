@@ -3,6 +3,7 @@ import { ATLAS_COPCO_LOGO_DATA_URI } from "@/lib/atlas-copco-logo"
 import { ROBOTO_400, ROBOTO_500, ROBOTO_700, ROBOTO_900 } from "@/lib/roboto-font"
 import { computeIndicadores } from "@/lib/parada-eventos-storage"
 import { loadContrato } from "@/lib/contrato-storage"
+import { buildCategoriaColorMap } from "@/lib/categoria-cores"
 
 /* ------------------------------------------------------------------ */
 /* Utilidades                                                          */
@@ -43,17 +44,6 @@ function getDiasParada(dateStr?: string): number {
 
 function getDias(m: Machine): number {
   return m.tempoParada ?? getDiasParada(m.dataParada)
-}
-
-// Paleta de cores das categorias (igual à usada na tela de Paradas).
-const CORES_CATEGORIA = ["#16a34a", "#2563eb", "#f59e0b", "#dc2626", "#0891b2", "#7c3aed", "#0d9488", "#db2777"]
-
-function buildCategoriaColorMap(nomes: string[]): Map<string, string> {
-  const map = new Map<string, string>()
-  nomes.forEach((nome) => {
-    if (!map.has(nome)) map.set(nome, CORES_CATEGORIA[map.size % CORES_CATEGORIA.length])
-  })
-  return map
 }
 
 function corResponsavel(nome: string): string {
@@ -639,12 +629,14 @@ function dadoLinha(label: string, value: string): string {
 
 function timelineHtml(ind: ParadaIndicadores, catColor: Map<string, string>): string {
   if (ind.etapas.length === 0) return `<p style="font-size:12px;color:#5b7083;">Sem histórico registrado.</p>`
-  const nodes = ind.etapas
+  // Ordem igual à do app: do mais atual (esquerda) ao mais antigo (direita).
+  const etapasOrdenadas = ind.etapas.slice().reverse()
+  const nodes = etapasOrdenadas
     .map((e, i) => {
       const nomeCat = e.evento.categoria || "Sem categoria"
       const cor = catColor.get(nomeCat) || "#64748b"
       const arrow =
-        i < ind.etapas.length - 1
+        i < etapasOrdenadas.length - 1
           ? `<div style="display:flex;align-items:center;padding-top:8px;color:#94a3b8;flex:none;">${ARROW_SVG}</div>`
           : ""
       return `<div style="display:flex;align-items:flex-start;">
