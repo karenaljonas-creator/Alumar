@@ -716,20 +716,20 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-primary text-primary-foreground flex flex-col fixed h-screen">
+      <aside className="w-56 bg-primary text-primary-foreground flex flex-col fixed h-screen">
         {/* Logo/Header */}
-        <div className="p-4 border-b border-primary-foreground/15">
-          <div className="mb-4 flex items-center justify-center">
+        <div className="p-3 border-b border-primary-foreground/15">
+          <div className="mb-3 flex items-center justify-center">
             <Image
               src="/images/atlas-copco-oficial.png"
               alt="Atlas Copco"
               width={4167}
               height={2775}
-              className="h-auto w-full max-w-[190px] object-contain"
+              className="h-auto w-full max-w-[150px] object-contain"
               priority
             />
           </div>
-          <h1 className="text-lg font-bold text-primary-foreground">Gestão de Máquinas</h1>
+          <h1 className="text-base font-bold text-primary-foreground">Gestão de Máquinas</h1>
           <div className="mt-2 text-xs">
             <span className="inline-flex items-center rounded bg-primary-foreground/15 px-1.5 py-0.5 text-primary-foreground font-medium">
               {contrato.numero}
@@ -748,7 +748,7 @@ export default function Home() {
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-primary-foreground text-primary"
                     : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
@@ -761,7 +761,7 @@ export default function Home() {
           </div>
 
           {/* Gestão de Materiais Section */}
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="px-3 py-2 text-xs font-semibold text-primary-foreground/60 uppercase tracking-wider">
               Gestão de Materiais
             </div>
@@ -785,7 +785,7 @@ export default function Home() {
           </div>
 
           {/* Divider */}
-          <div className="my-6 border-t border-primary-foreground/15" />
+          <div className="my-4 border-t border-primary-foreground/15" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -794,7 +794,7 @@ export default function Home() {
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
+                  "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-primary-foreground text-primary"
                     : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
@@ -839,14 +839,14 @@ export default function Home() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-64 overflow-hidden">
-        <div className="h-screen overflow-y-auto p-6 w-full">
+      <main className="flex-1 ml-56 overflow-hidden">
+        <div className="h-screen overflow-y-auto p-4 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold">Painel de Controle</h2>
+                  <h2 className="text-xl font-semibold">Painel de Controle</h2>
                   <p className="text-sm text-muted-foreground">
                     {new Date()
                       .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
@@ -882,14 +882,14 @@ export default function Home() {
               />
 
               {/* Linha 1: Disponibilidade (gauge) + Disponibilidade Semanal + Preventivas */}
-              <div className="grid gap-6 lg:grid-cols-3">
+              <div className="grid gap-4 lg:grid-cols-3">
                 <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
                 <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
                 <PreventivasChart preventivas={preventivas} />
               </div>
 
               {/* Linha 2: Top 5 Críticas (largo) + Causa das Paradas */}
-              <div className="grid gap-6 lg:grid-cols-3 [&>*]:min-w-0">
+              <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
                 <div className="lg:col-span-2">
                   <TopMaquinasCriticas
                     machines={maquinasParadasFiltradas}
@@ -900,7 +900,7 @@ export default function Home() {
               </div>
 
               {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
                 <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
                 <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
                 <GraficoLocalizacao data={porLocalizacao} />
@@ -910,9 +910,9 @@ export default function Home() {
 
           {/* Registro Semanal */}
           {activeSection === "registro" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-2xl font-semibold">Registro Semanal</h2>
+                <h2 className="text-xl font-semibold">Registro Semanal</h2>
                 <p className="text-sm text-muted-foreground">
                   Preencha os dados de todas as máquinas semanalmente - Formato planilha
                 </p>
@@ -923,10 +923,10 @@ export default function Home() {
 
           {/* Histórico */}
           {activeSection === "historico" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold">Histórico de Máquinas</h2>
+                  <h2 className="text-xl font-semibold">Histórico de Máquinas</h2>
                   <p className="text-sm text-muted-foreground">
                     Visualize a evolução completa semana a semana de todas as máquinas
                   </p>
@@ -939,9 +939,9 @@ export default function Home() {
 
           {/* Paradas */}
           {activeSection === "paradas" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-2xl font-semibold">Gestão de Máquinas Paradas</h2>
+                <h2 className="text-xl font-semibold">Gestão de Máquinas Paradas</h2>
                 <p className="text-sm text-muted-foreground">
                   Acompanhe todas as máquinas paradas com dados do último registro semanal
                 </p>
@@ -952,30 +952,30 @@ export default function Home() {
 
           {/* Entrada */}
           {activeSection === "entrada" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <EntradaPecas />
             </div>
           )}
 
           {/* Saída */}
           {activeSection === "saida" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <SaidaPecas machines={machines} />
             </div>
           )}
 
           {/* Estoque */}
           {activeSection === "estoque" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <EstoqueSaldo />
             </div>
           )}
 
           {/* Estoque Estratégico */}
           {activeSection === "estoque-estrategico" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-2xl font-semibold">Estoque Estratégico</h2>
+                <h2 className="text-xl font-semibold">Estoque Estratégico</h2>
                 <p className="text-sm text-muted-foreground">Controle de estoque mínimo para peças críticas</p>
               </div>
               <EstoqueEstrategico />
@@ -984,10 +984,10 @@ export default function Home() {
 
           {/* Gerenciar */}
           {activeSection === "gerenciar" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold">Gerenciar Máquinas</h2>
+                  <h2 className="text-xl font-semibold">Gerenciar Máquinas</h2>
                   <p className="text-sm text-muted-foreground">Adicione, edite ou remova máquinas do sistema</p>
                 </div>
                 <Button onClick={handleAddNew} className="gap-2 bg-primary">
@@ -1017,9 +1017,9 @@ export default function Home() {
 
           {/* Configurações */}
           {activeSection === "config" && (
-            <div className="space-y-8">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-2xl font-semibold">Configurações</h2>
+                <h2 className="text-xl font-semibold">Configurações</h2>
                 <p className="text-sm text-muted-foreground">Edite as informações do contrato e configurações gerais</p>
               </div>
               <Configuracoes />

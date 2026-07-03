@@ -41,18 +41,18 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
 
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 pt-5 px-5">
-        <CardTitle className="text-base font-semibold uppercase tracking-wide text-foreground">
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
           Causa das Paradas
         </CardTitle>
       </CardHeader>
-      <CardContent className="px-5 pb-5">
+      <CardContent className="px-4 pb-4">
         {total === 0 ? (
-          <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+          <div className="flex items-center justify-center h-[160px] text-sm text-muted-foreground">
             Nenhuma máquina parada
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-5">
+          <div className="flex flex-col items-center gap-3">
             <div className="relative">
               <ResponsiveContainer width={160} height={160}>
                 <PieChart>

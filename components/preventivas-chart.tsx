@@ -18,20 +18,20 @@ export function PreventivasChart({ preventivas }: PreventivasChartProps) {
 
   return (
     <Card className="border-border shadow-sm">
-      <CardHeader className="pb-3 pt-6 px-6">
-        <CardTitle className="text-xl font-semibold text-foreground">Execução - Preventivas</CardTitle>
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-base font-semibold text-foreground">Execução - Preventivas</CardTitle>
       </CardHeader>
-      <CardContent className="px-6 pb-6">
-        <div className="space-y-4">
-          <div className="text-center py-2">
-            <p className="text-6xl font-bold text-primary">{percentualConcluidas}%</p>
-            <p className="text-base text-muted-foreground mt-2">Estão com Preventivas Concluídas</p>
+      <CardContent className="px-4 pb-4">
+        <div className="space-y-3">
+          <div className="text-center py-1">
+            <p className="text-4xl font-bold text-primary leading-none">{percentualConcluidas}%</p>
+            <p className="text-sm text-muted-foreground mt-2">Estão com Preventivas Concluídas</p>
           </div>
 
-          <div className="space-y-3 text-base pt-2">
+          <div className="space-y-2 text-sm pt-1">
             <div className="flex justify-between items-center gap-3">
               <span className="flex items-center gap-2 text-foreground">
-                <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />
                 Preventivas em dia
               </span>
               <span className="font-bold text-foreground whitespace-nowrap">
@@ -43,7 +43,7 @@ export function PreventivasChart({ preventivas }: PreventivasChartProps) {
             </div>
             <div className="flex justify-between items-center gap-3">
               <span className="flex items-center gap-2 text-foreground">
-                <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0" />
+                <AlertCircle className="h-4 w-4 text-amber-500 flex-shrink-0" />
                 Em andamento / execução
               </span>
               <span className="font-bold text-foreground whitespace-nowrap">
@@ -55,7 +55,7 @@ export function PreventivasChart({ preventivas }: PreventivasChartProps) {
             </div>
             <div className="flex justify-between items-center gap-3">
               <span className="flex items-center gap-2 text-foreground">
-                <XCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
                 Preventivas atrasadas
               </span>
               <span className="font-bold text-foreground whitespace-nowrap">

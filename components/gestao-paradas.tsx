@@ -516,7 +516,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     return (
                     <Fragment key={maquina.id}>
                     <TableRow className="group border-b">
-                      <TableCell className="py-3 px-2 align-middle text-center">
+                      <TableCell className="py-2 px-2 align-middle text-center">
                         <button
                           onClick={toggleExpand}
                           className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-muted text-primary cursor-pointer"
@@ -528,7 +528,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           />
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle font-medium">
+                      <TableCell className="text-sm py-2 px-4 align-middle font-medium">
                         <button
                           onClick={toggleExpand}
                           className="text-primary font-semibold hover:underline underline-offset-2 cursor-pointer text-left"
@@ -537,9 +537,9 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           {maquina.nome}
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">{maquina.tipo}</TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">{maquina.localizacao}</TableCell>
-                      <TableCell className="py-3 px-4 align-middle">
+                      <TableCell className="text-sm py-2 px-4 align-middle">{maquina.tipo}</TableCell>
+                      <TableCell className="text-sm py-2 px-4 align-middle">{maquina.localizacao}</TableCell>
+                      <TableCell className="py-2 px-4 align-middle">
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
                           className={
@@ -551,7 +551,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">
+                      <TableCell className="text-sm py-2 px-4 align-middle">
                         <Select
                           value={maquina.categoriaParada || ""}
                           onValueChange={(v) => handleCategoriaChange(maquina.id, v)}
@@ -569,10 +569,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="w-[10%] text-sm text-center font-medium py-3 px-4 align-middle">
+                      <TableCell className="w-[10%] text-sm text-center font-medium py-2 px-4 align-middle">
                         {getDiasParadaNum(maquina.dataParada)} dias
                       </TableCell>
-                        <TableCell className="w-[10%] text-sm text-center py-3 px-4 align-middle">
+                        <TableCell className="w-[10%] text-sm text-center py-2 px-4 align-middle">
                         {(() => {
                           const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina, registros)
                           const d = ind.diasNaCategoriaAtual
@@ -589,7 +589,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle whitespace-normal break-words max-w-[400px]">
+                      <TableCell className="text-sm py-2 px-4 align-middle whitespace-normal break-words max-w-[400px]">
                         {isEditing(maquina.id, "motivoParada") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -638,7 +638,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">
+                      <TableCell className="text-sm py-2 px-4 align-middle">
                         <Popover open={openDatePicker === maquina.id} onOpenChange={(open) => setOpenDatePicker(open ? maquina.id : null)}>
                           <PopoverTrigger asChild>
                             <Button
@@ -693,7 +693,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </PopoverContent>
                         </Popover>
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">
+                      <TableCell className="text-sm py-2 px-4 align-middle">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <Select
                             value={editingState?.value || maquina.acaoResponsavel || "Vale"}
@@ -735,7 +735,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm py-3 px-4 align-middle">
+                      <TableCell className="text-sm py-2 px-4 align-middle">
                         {isEditing(maquina.id, "responsavel") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -783,10 +783,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground py-3 px-4 align-middle">
+                      <TableCell className="text-sm text-muted-foreground py-2 px-4 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="text-center py-3 px-4 align-middle">
+                      <TableCell className="text-center py-2 px-4 align-middle">
                         <Button
                           variant="ghost"
                           size="sm"

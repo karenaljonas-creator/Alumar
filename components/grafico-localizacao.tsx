@@ -29,7 +29,7 @@ export function GraficoLocalizacao({ data }: GraficoLocalizacaoProps) {
               color: "#0092bc",
             },
           }}
-          className="h-[280px] w-full"
+          className="h-[220px] w-full"
         >
           <BarChart data={data} layout="vertical" margin={{ left: 20, right: 40, top: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
