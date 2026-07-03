@@ -151,6 +151,22 @@ function mesmaEtapa(a: EstadoSnapshot, b: EstadoSnapshot): boolean {
   )
 }
 
+// Um snapshot só entra na linha do tempo se tiver report real. Semanas em que a
+// máquina foi apenas arrastada (sem categoria, ação, responsável nem observação
+// preenchidos) NÃO viram etapa — o reporte não é obrigatório toda semana.
+function temConteudo(s: EstadoSnapshot): boolean {
+  const semValor = (v?: string) => {
+    const t = normalizar(v)
+    return t === "" || t === "-"
+  }
+  return !(
+    semValor(s.categoria) &&
+    semValor(s.acao) &&
+    semValor(s.responsavel) &&
+    semValor(s.observacao)
+  )
+}
+
 // Constrói a linha do tempo e os indicadores combinando:
 // 1) o histórico dos registros semanais (fonte real do passado)
 // 2) os eventos ao vivo registrados na tela de Paradas
@@ -216,7 +232,7 @@ export function computeIndicadores(
 
   // Descarta pontos anteriores à data de parada e reancora o primeiro ponto.
   const inicioMs = new Date(inicioParada).getTime()
-  const relevantes = snapshots.filter((s) => new Date(s.data).getTime() >= inicioMs)
+  const relevantes = snapshots.filter((s) => new Date(s.data).getTime() >= inicioMs && temConteudo(s))
   if (relevantes.length === 0) {
     relevantes.push({
       data: inicioParada,
