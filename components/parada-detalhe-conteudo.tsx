@@ -205,11 +205,11 @@ function TimelineEtapa({
             <Icone className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-semibold" style={{ color: cor }}>
+            <p className="text-xs font-semibold whitespace-normal break-words" style={{ color: cor }}>
               {etapa.atual ? "Atual - Desde " : ""}
               {formatDate(etapa.dataInicio)}
             </p>
-            <p className="text-sm font-bold text-foreground leading-tight">
+            <p className="text-sm font-bold text-foreground leading-tight whitespace-normal break-words">
               {etapa.evento.categoria || "Sem categoria"}
             </p>
           </div>
@@ -219,7 +219,7 @@ function TimelineEtapa({
         <div className="pl-10 space-y-1.5 flex-1">
           <div>
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Ação / Responsável</p>
-            <p className="text-xs text-foreground">
+            <p className="text-xs text-foreground whitespace-normal break-words">
               {etapa.evento.acao || "-"}
               {etapa.evento.responsavel ? ` / ${etapa.evento.responsavel}` : ""}
             </p>
