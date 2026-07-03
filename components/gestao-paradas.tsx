@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { pt } from "date-fns/locale"
 import { saveMachines } from "@/lib/supabase-machine-storage"
-import { gerarRelatorioParadas } from "@/lib/gerar-relatorio-paradas"
+import { gerarRelatorioExecutivo, gerarRelatorioDetalhado } from "@/lib/gerar-relatorio-paradas"
 import { useToast } from "@/hooks/use-toast"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "categoria" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
@@ -323,11 +323,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     }
   }
 
-  const handleGerarRelatorio = () => {
-    const sucesso = gerarRelatorioParadas(filteredMachines, {
-      localizacao: localizacaoFilter,
-      contrato: contratoFilter,
-    })
+  const handleGerarRelatorio = (tipo: "executivo" | "detalhado") => {
+    const options = { localizacao: localizacaoFilter, contrato: contratoFilter }
+    const sucesso =
+      tipo === "executivo"
+        ? gerarRelatorioExecutivo(filteredMachines, eventos, registros, options)
+        : gerarRelatorioDetalhado(filteredMachines, eventos, registros, options)
     if (!sucesso) {
       toast({
         title: "Não foi possível abrir o relatório",
@@ -367,11 +368,19 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
             </div>
             <div className="flex items-center gap-3">
               <Button
-                onClick={handleGerarRelatorio}
+                onClick={() => handleGerarRelatorio("executivo")}
+                variant="outline"
+                className="gap-2 border-[#0c2c44] text-[#0c2c44] hover:bg-[#0c2c44] hover:text-white"
+              >
+                <FileDown className="h-4 w-4" />
+                Relatório Executivo
+              </Button>
+              <Button
+                onClick={() => handleGerarRelatorio("detalhado")}
                 className="gap-2 bg-[#0c2c44] hover:bg-[#0c2c44]/90 text-white"
               >
                 <FileDown className="h-4 w-4" />
-                Gerar Relatório PDF
+                Relatório Detalhado
               </Button>
               <Badge variant="destructive" className="text-base px-3 py-1">
                 {filteredMachines.length} parada{filteredMachines.length !== 1 ? "s" : ""}
