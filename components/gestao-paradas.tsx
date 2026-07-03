@@ -471,13 +471,13 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Categoria <SortIcon columnKey="categoria" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[7%] text-center">
+                  <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
                     <span className="font-medium">Tempo de Parada</span>
                   </TableHead>
-                  <TableHead className="w-[7%] text-center">
+                  <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
                     <span className="font-medium">Nesta Categoria</span>
                   </TableHead>
-                  <TableHead className="w-[22%] min-w-[240px]">
+                  <TableHead className="w-[30%] min-w-[360px]">
                     <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
@@ -589,7 +589,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="text-sm py-1.5 px-2.5 align-top break-words max-w-[280px]">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-top whitespace-normal break-words min-w-[360px] max-w-[420px]">
                         {isEditing(maquina.id, "motivoParada") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -634,7 +634,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             }
                             title={maquina.motivoParada || "-"}
                           >
-                            <span className="text-xs leading-snug flex-1 line-clamp-2">{maquina.motivoParada || "-"}</span>
+                            <span className="text-sm leading-snug flex-1 line-clamp-2">{maquina.motivoParada || "-"}</span>
                             <Edit2 className="h-3 w-3 mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                           </div>
                         )}
