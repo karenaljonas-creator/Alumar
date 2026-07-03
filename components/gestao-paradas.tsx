@@ -467,18 +467,18 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead className="w-[11%] min-w-[150px]">
-                    <button onClick={() => handleSort("categoria")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                    <button onClick={() => handleSort("categoria")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Categoria <SortIcon columnKey="categoria" />
                     </button>
                   </TableHead>
                   <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
-                    <span className="font-medium">Tempo de Parada</span>
+                    <span className="font-medium">Dias Parado</span>
                   </TableHead>
                   <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
                     <span className="font-medium">Nesta Categoria</span>
                   </TableHead>
                   <TableHead className="w-[30%] min-w-[360px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
@@ -493,7 +493,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     </button>
                   </TableHead>
                   <TableHead className="w-[9%]">
-                    <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                    <button onClick={() => handleSort("responsavel")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
