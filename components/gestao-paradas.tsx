@@ -446,12 +446,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                 <TableHeader>
                 <TableRow className="bg-muted">
                   <TableHead className="w-[3%]" />
-                  <TableHead className="w-[10%]">
+                  <TableHead className="w-[7%]">
                     <button onClick={() => handleSort("nome")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       TAG <SortIcon columnKey="nome" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[12%]">
+                  <TableHead className="w-[8%]">
                     <button onClick={() => handleSort("tipo")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Modelo <SortIcon columnKey="tipo" />
                     </button>
@@ -461,24 +461,24 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Localizacao <SortIcon columnKey="localizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[8%]">
+                  <TableHead className="w-[5%]">
                     <button onClick={() => handleSort("status")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Status <SortIcon columnKey="status" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[12%] min-w-[180px]">
-                    <button onClick={() => handleSort("categoria")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                  <TableHead className="w-[11%] min-w-[150px]">
+                    <button onClick={() => handleSort("categoria")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Categoria <SortIcon columnKey="categoria" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[10%] text-center">
-                    <span className="font-medium">Tempo de Parada</span>
+                  <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
+                    <span className="font-medium">Dias Parado</span>
                   </TableHead>
-                  <TableHead className="w-[10%] text-center">
+                  <TableHead className="w-[6%] text-center whitespace-normal leading-tight">
                     <span className="font-medium">Nesta Categoria</span>
                   </TableHead>
-                  <TableHead className="w-[28%] min-w-[400px]">
-                    <button onClick={() => handleSort("observacoes")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                  <TableHead className="w-[30%] min-w-[360px]">
+                    <button onClick={() => handleSort("observacoes")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Observacoes <SortIcon columnKey="observacoes" />
                     </button>
                   </TableHead>
@@ -487,22 +487,22 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       Prazo <SortIcon columnKey="prazo" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[10%]">
+                  <TableHead className="w-[6%]">
                     <button onClick={() => handleSort("acao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Acao <SortIcon columnKey="acao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[12%]">
-                    <button onClick={() => handleSort("responsavel")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
+                  <TableHead className="w-[9%]">
+                    <button onClick={() => handleSort("responsavel")} className="flex items-center justify-center w-full font-medium hover:text-foreground transition-colors cursor-pointer">
                       Responsavel <SortIcon columnKey="responsavel" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[10%]">
+                  <TableHead className="w-[7%]">
                     <button onClick={() => handleSort("dataAtualizacao")} className="flex items-center font-medium hover:text-foreground transition-colors cursor-pointer">
                       Atualizado em <SortIcon columnKey="dataAtualizacao" />
                     </button>
                   </TableHead>
-                  <TableHead className="w-[6%] text-center">
+                  <TableHead className="w-[4%] text-center">
                     <span className="font-medium">Editar</span>
                   </TableHead>
                 </TableRow>
@@ -516,10 +516,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                     return (
                     <Fragment key={maquina.id}>
                     <TableRow className="group border-b">
-                      <TableCell className="py-2 px-2 align-middle text-center">
+                      <TableCell className="py-1.5 px-1.5 align-middle text-center">
                         <button
                           onClick={toggleExpand}
-                          className="inline-flex items-center justify-center h-6 w-6 rounded hover:bg-muted text-primary cursor-pointer"
+                          className="inline-flex items-center justify-center h-5 w-5 rounded hover:bg-muted text-primary cursor-pointer"
                           aria-label={isExpanded ? "Recolher histórico" : "Expandir histórico"}
                           aria-expanded={isExpanded}
                         >
@@ -528,7 +528,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           />
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle font-medium">
+                      <TableCell className="text-xs py-1.5 px-2.5 align-middle font-medium">
                         <button
                           onClick={toggleExpand}
                           className="text-primary font-semibold hover:underline underline-offset-2 cursor-pointer text-left"
@@ -537,27 +537,27 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           {maquina.nome}
                         </button>
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">{maquina.tipo}</TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">{maquina.localizacao}</TableCell>
-                      <TableCell className="py-2 px-4 align-middle">
+                      <TableCell className="text-xs py-1.5 px-2.5 align-middle">{maquina.tipo}</TableCell>
+                      <TableCell className="text-xs py-1.5 px-2.5 align-middle whitespace-normal break-words">{maquina.localizacao}</TableCell>
+                      <TableCell className="py-1.5 px-2.5 align-middle">
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
-                          className={
+                          className={`text-xs px-1.5 py-0 ${
                                   maquina.status === "v0"
                                     ? "bg-muted text-muted-foreground hover:bg-muted"
                                     : ""
-                          }
+                          }`}
                         >
                           {maquina.status === "parada" ? "Parada" : "V0"}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-middle">
                         <Select
                           value={maquina.categoriaParada || ""}
                           onValueChange={(v) => handleCategoriaChange(maquina.id, v)}
                           disabled={isSaving}
                         >
-                          <SelectTrigger className="h-8 text-sm w-full min-w-[160px]">
+                          <SelectTrigger className="h-7 text-xs w-full min-w-[140px]">
                             <SelectValue placeholder="Selecionar" />
                           </SelectTrigger>
                           <SelectContent>
@@ -569,10 +569,10 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className="w-[10%] text-sm text-center font-medium py-2 px-4 align-middle">
+                      <TableCell className="w-[7%] text-xs text-center font-medium py-1.5 px-2 align-middle">
                         {getDiasParadaNum(maquina.dataParada)} dias
                       </TableCell>
-                        <TableCell className="w-[10%] text-sm text-center py-2 px-4 align-middle">
+                        <TableCell className="w-[7%] text-xs text-center py-1.5 px-2 align-middle">
                         {(() => {
                           const ind = computeIndicadores(eventosPorMaquina.get(maquina.id) || [], maquina, registros)
                           const d = ind.diasNaCategoriaAtual
@@ -583,13 +583,13 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                 ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
                                 : "bg-primary/10 text-primary"
                           return (
-                            <span className={`inline-block rounded-full px-2.5 py-0.5 font-semibold ${cor}`}>
+                            <span className={`inline-block rounded-full px-1.5 py-0 text-xs font-semibold ${cor}`}>
                               {d} dias
                             </span>
                           )
                         })()}
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle whitespace-normal break-words max-w-[400px]">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-top whitespace-normal break-words min-w-[360px] max-w-[420px]">
                         {isEditing(maquina.id, "motivoParada") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -624,7 +624,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         ) : (
                           <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            className="flex items-start gap-2 cursor-pointer hover:bg-muted p-1.5 rounded transition-colors"
                             onClick={() =>
                               handleEditStart(
                                 maquina.id,
@@ -632,20 +632,21 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                                 maquina.motivoParada || ""
                               )
                             }
+                            title={maquina.motivoParada || "-"}
                           >
-                            <span className="text-sm leading-relaxed flex-1">{maquina.motivoParada || "-"}</span>
-                            <Edit2 className="h-3 w-3 opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                            <span className="text-sm leading-snug flex-1 whitespace-normal break-words">{maquina.motivoParada || "-"}</span>
+                            <Edit2 className="h-3 w-3 mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-middle">
                         <Popover open={openDatePicker === maquina.id} onOpenChange={(open) => setOpenDatePicker(open ? maquina.id : null)}>
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
-                              className="w-full justify-start text-left font-normal text-sm py-1 h-auto"
+                              className="w-full justify-start text-left font-normal text-xs py-1 h-7 px-2"
                             >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              <CalendarIcon className="mr-1.5 h-3.5 w-3.5" />
                               {maquina.prazoDados || maquina.contratoConfig?.dataFim 
                                 ? (() => {
                                     const dateStr = maquina.prazoDados || maquina.contratoConfig?.dataFim || ""
@@ -693,7 +694,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </PopoverContent>
                         </Popover>
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-middle">
                         {isEditing(maquina.id, "acaoResponsavel") ? (
                           <Select
                             value={editingState?.value || maquina.acaoResponsavel || "Vale"}
@@ -728,14 +729,14 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </Select>
                         ) : (
                           <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1.5 rounded transition-colors"
                             onClick={() => handleEditStart(maquina.id, "acaoResponsavel", maquina.acaoResponsavel || "Vale")}
                           >
-                            <span className="text-sm">{maquina.acaoResponsavel || "-"}</span>
+                            <span className="text-xs">{maquina.acaoResponsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm py-2 px-4 align-middle">
+                      <TableCell className="text-sm py-1.5 px-2.5 align-middle">
                         {isEditing(maquina.id, "responsavel") ? (
                           <div className="flex gap-2 items-center">
                             <Input
@@ -770,7 +771,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                           </div>
                         ) : (
                           <div
-                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-2 rounded transition-colors"
+                            className="flex items-center gap-2 cursor-pointer hover:bg-muted p-1.5 rounded transition-colors"
                             onClick={() =>
                               handleEditStart(
                                 maquina.id,
@@ -779,18 +780,18 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                               )
                             }
                           >
-                            <span className="text-sm">{maquina.responsavel || "-"}</span>
+                            <span className="text-xs">{maquina.responsavel || "-"}</span>
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground py-2 px-4 align-middle">
+                      <TableCell className="text-xs text-muted-foreground py-1.5 px-2.5 align-middle">
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
-                      <TableCell className="text-center py-2 px-4 align-middle">
+                      <TableCell className="text-center py-1.5 px-2.5 align-middle">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted"
+                          className="h-7 w-7 p-0 hover:bg-muted"
                           onClick={() => {
                             handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
                           }}

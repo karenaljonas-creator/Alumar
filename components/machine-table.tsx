@@ -1,11 +1,9 @@
 "use client"
 
 import type { Machine } from "@/lib/types"
-import { getStatusColor, getStatusLabel } from "@/lib/machine-utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Pencil, Trash2 } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
 
 interface MachineTableProps {
   machines: Machine[]
@@ -33,10 +31,6 @@ export function MachineTable({ machines, onEdit, onDelete }: MachineTableProps) 
               <tr>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Máquina</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Tipo</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Data</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Status</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Motivo da Parada</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Manutenção Preventiva</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Localização</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Contrato</th>
                 <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Ações</th>
@@ -47,12 +41,6 @@ export function MachineTable({ machines, onEdit, onDelete }: MachineTableProps) 
                 <tr key={machine.id} className="hover:bg-muted/30 transition-colors">
                   <td className="px-6 py-4 text-sm font-medium text-foreground">{machine.nome}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.tipo}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{machine.data}</td>
-                  <td className="px-6 py-4">
-                    <Badge className={getStatusColor(machine.status)}>{getStatusLabel(machine.status)}</Badge>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{machine.motivoParada || "-"}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{machine.manutencaoPreventiva || "-"}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.localizacao}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.temContrato ? "Sim" : "Não"}</td>
                   <td className="px-6 py-4 text-right">
