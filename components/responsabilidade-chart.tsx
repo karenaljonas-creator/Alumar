@@ -22,8 +22,8 @@ export function ResponsabilidadeChart({ machines }: ResponsabilidadeChartProps) 
     return {
       total: paradas.length,
       data: [
-        { nome: "Cliente (Vale)", valor: vale, cor: "var(--chart-1)" },
-        { nome: "Atlas", valor: atlas, cor: "var(--chart-4)" },
+        { nome: "Cliente (Vale)", valor: vale, cor: "#6b7785" }, // Cinza VALE
+        { nome: "Atlas", valor: atlas, cor: "#0092bc" }, // Azul Atlas Copco oficial
       ],
     }
   }, [machines])

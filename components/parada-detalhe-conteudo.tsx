@@ -17,8 +17,8 @@ interface ParadaDetalheConteudoProps {
 const CORES_ETAPA = ["#16a34a", "#2563eb", "#f59e0b", "#dc2626", "#0891b2", "#7c3aed"]
 
 function corResponsavel(nome: string) {
-  if (nome === "Vale") return "#dc2626"
-  if (nome === "Atlas") return "#2563eb"
+  if (nome === "Vale") return "#6b7785" // Cinza VALE
+  if (nome === "Atlas") return "#0092bc" // Azul Atlas Copco oficial
   return "var(--muted-foreground)"
 }
 
