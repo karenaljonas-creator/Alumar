@@ -282,7 +282,7 @@ function DonutCard({
 }) {
   const total = data.reduce((acc, d) => acc + d.value, 0)
   return (
-    <Card className="border-border w-full sm:w-[320px] shrink-0">
+    <Card className="w-full sm:w-[320px] shrink-0 border-border">
       <CardContent className="p-3">
         <p className="text-xs font-semibold text-foreground mb-2">{titulo}</p>
         {total === 0 ? (
