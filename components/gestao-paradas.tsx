@@ -538,7 +538,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         </button>
                       </TableCell>
                       <TableCell className="text-xs py-1.5 px-2.5 align-middle">{maquina.tipo}</TableCell>
-                      <TableCell className="text-xs py-1.5 px-2.5 align-middle">{maquina.localizacao}</TableCell>
+                      <TableCell className="text-xs py-1.5 px-2.5 align-middle whitespace-normal break-words">{maquina.localizacao}</TableCell>
                       <TableCell className="py-1.5 px-2.5 align-middle">
                         <Badge
                           variant={maquina.status === "parada" ? "destructive" : "secondary"}
@@ -634,7 +634,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             }
                             title={maquina.motivoParada || "-"}
                           >
-                            <span className="text-sm leading-snug flex-1 line-clamp-2">{maquina.motivoParada || "-"}</span>
+                            <span className="text-sm leading-snug flex-1 whitespace-normal break-words">{maquina.motivoParada || "-"}</span>
                             <Edit2 className="h-3 w-3 mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" />
                           </div>
                         )}
