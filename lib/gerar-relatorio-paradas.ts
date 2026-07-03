@@ -639,13 +639,30 @@ function timelineHtml(ind: ParadaIndicadores, catColor: Map<string, string>): st
         i < etapasOrdenadas.length - 1
           ? `<div style="display:flex;align-items:center;padding-top:8px;color:#94a3b8;flex:none;">${ARROW_SVG}</div>`
           : ""
+      const acaoResp = [e.evento.acao, e.evento.responsavel].filter(Boolean).join(" / ") || "-"
+      const observacao = (e.evento.observacao || "").trim()
       return `<div style="display:flex;align-items:flex-start;">
-        <div style="display:flex;flex-direction:column;align-items:center;width:88px;text-align:center;">
-          <span style="width:26px;height:26px;border-radius:50%;background:${cor};display:block;${e.atual ? `box-shadow:0 0 0 2px #fff,0 0 0 4px ${cor};` : ""}"></span>
-          <span style="font-size:10px;color:#5b7083;margin-top:7px;">${formatDate(e.dataInicio)}</span>
-          <span style="font-size:10px;font-weight:800;color:#26333f;line-height:1.2;margin-top:3px;">${escapeHtml(nomeCat)}</span>
-          <span style="font-size:10px;color:#5b7083;margin-top:2px;">${escapeHtml(e.evento.acao || e.evento.responsavel || "-")}</span>
-          <span style="font-size:11px;font-weight:800;color:${cor};margin-top:4px;">${e.dias} dias${e.atual ? " (atual)" : ""}</span>
+        <div style="display:flex;flex-direction:column;width:150px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="width:22px;height:22px;border-radius:50%;background:${cor};display:block;flex:none;${e.atual ? `box-shadow:0 0 0 2px #fff,0 0 0 4px ${cor};` : ""}"></span>
+            <div style="min-width:0;">
+              <div style="font-size:10px;font-weight:700;color:${cor};line-height:1.2;">${e.atual ? "Atual - Desde " : ""}${formatDate(e.dataInicio)}</div>
+              <div style="font-size:10px;font-weight:800;color:#26333f;line-height:1.2;word-break:break-word;">${escapeHtml(nomeCat)}</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;">
+            <div style="font-size:8px;color:#8a97a3;text-transform:uppercase;letter-spacing:.4px;">Ação / Responsável</div>
+            <div style="font-size:10px;color:#26333f;line-height:1.3;word-break:break-word;">${escapeHtml(acaoResp)}</div>
+          </div>
+          ${
+            observacao
+              ? `<div style="margin-top:4px;">
+            <div style="font-size:8px;color:#8a97a3;text-transform:uppercase;letter-spacing:.4px;">Observação</div>
+            <div style="font-size:10px;color:#5b7083;line-height:1.3;word-break:break-word;">${escapeHtml(observacao)}</div>
+          </div>`
+              : ""
+          }
+          <span style="align-self:flex-start;font-size:10px;font-weight:800;color:#fff;background:${cor};border-radius:9px;padding:2px 8px;margin-top:6px;">${e.dias} dias${e.atual ? " (em andamento)" : ""}</span>
         </div>
         ${arrow}
       </div>`
