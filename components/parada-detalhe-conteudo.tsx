@@ -283,21 +283,21 @@ function DonutCard({
   const total = data.reduce((acc, d) => acc + d.value, 0)
   return (
     <Card className="border-border">
-      <CardContent className="p-4">
+      <CardContent className="p-3">
         <p className="text-xs font-semibold text-foreground mb-2">{titulo}</p>
         {total === 0 ? (
-          <p className="text-xs text-muted-foreground py-6 text-center">Sem dados.</p>
+          <p className="text-xs text-muted-foreground py-4 text-center">Sem dados.</p>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="relative w-[90px] h-[90px] shrink-0">
+            <div className="relative w-[68px] h-[68px] shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={data}
                     cx="50%"
                     cy="50%"
-                    innerRadius={28}
-                    outerRadius={44}
+                    innerRadius={20}
+                    outerRadius={33}
                     dataKey="value"
                     strokeWidth={0}
                   >
@@ -308,7 +308,7 @@ function DonutCard({
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-lg font-bold text-foreground">{total}</span>
+                <span className="text-sm font-bold text-foreground leading-none">{total}</span>
                 <span className="text-[9px] text-muted-foreground">dias</span>
               </div>
             </div>
