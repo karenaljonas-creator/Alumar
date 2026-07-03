@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import type { Machine, ParadaEvento, RegistroSemanal, ParadaEtapa } from "@/lib/types"
 import { computeIndicadores } from "@/lib/parada-eventos-storage"
+import { buildCategoriaColorMap } from "@/lib/categoria-cores"
 import { Card, CardContent } from "@/components/ui/card"
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts"
 import { Package, Wrench, User, Pause, Truck, Settings, Clock, ArrowRight, Lightbulb, PhoneCall } from "lucide-react"
@@ -13,28 +14,10 @@ interface ParadaDetalheConteudoProps {
   registros: RegistroSemanal[]
 }
 
-// Paleta fixa para as etapas da linha do tempo (verde, azul, laranja, vermelho, ...)
-const CORES_ETAPA = ["#16a34a", "#2563eb", "#f59e0b", "#dc2626", "#0891b2", "#7c3aed"]
-
 function corResponsavel(nome: string) {
   if (nome === "Vale") return "#6b7785" // Cinza VALE
   if (nome === "Atlas") return "#0092bc" // Azul Atlas Copco oficial
   return "var(--muted-foreground)"
-}
-
-function corCategoria(index: number) {
-  return CORES_ETAPA[index % CORES_ETAPA.length]
-}
-
-// Constrói um mapa estável categoria -> cor, para que a MESMA categoria use
-// sempre a MESMA cor no donut e na linha do tempo, e categorias diferentes
-// nunca compartilhem a mesma cor.
-function buildCategoriaColorMap(categorias: string[]) {
-  const map = new Map<string, string>()
-  categorias.forEach((nome, i) => {
-    if (!map.has(nome)) map.set(nome, corCategoria(map.size))
-  })
-  return map
 }
 
 function iconePorCategoria(categoria?: string) {
