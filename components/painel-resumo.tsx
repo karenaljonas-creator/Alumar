@@ -41,17 +41,21 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
         className="lg:row-span-2 border-0 shadow-sm text-white overflow-hidden"
         style={{ backgroundColor: "#12466b" }}
       >
-        <CardContent className="flex h-full flex-col p-5">
+        <CardContent className="flex h-full flex-col justify-between gap-4 p-5">
           {/* Disponibilidade física */}
-          <p className="text-xs font-semibold uppercase tracking-wide text-white/70 flex items-center gap-2">
-            Disponibilidade da Planta (Física)
-          </p>
-          <p className="mt-2 text-5xl font-bold leading-none">{stats.disponibilidade.toFixed(1).replace(".", ",")}%</p>
-          <div className="mt-2 h-0.5 w-16 rounded-full border-b-2 border-dashed border-amber-400" />
-          <p className="mt-2 text-sm font-medium text-white/80">Meta: {META}%</p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/70 flex items-center gap-2">
+              Disponibilidade da Planta (Física)
+            </p>
+            <p className="mt-2 text-5xl font-bold leading-none">
+              {stats.disponibilidade.toFixed(1).replace(".", ",")}%
+            </p>
+            <div className="mt-2 h-0.5 w-16 rounded-full border-b-2 border-dashed border-amber-400" />
+            <p className="mt-2 text-sm font-medium text-white/80">Meta: {META}%</p>
+          </div>
 
           {/* Responsáveis pela indisponibilidade */}
-          <div className="mt-6 border-t border-white/15 pt-4">
+          <div className="border-t border-white/15 pt-4">
             <p className="text-center text-xs font-medium text-white/70">
               Principais responsáveis pela indisponibilidade
             </p>
@@ -73,7 +77,7 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
           </div>
 
           {/* Disponibilidade contratual Atlas */}
-          <div className="mt-auto flex items-center gap-3 border-t border-white/15 pt-4">
+          <div className="flex items-center gap-3 border-t border-white/15 pt-4">
             <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-white/25">
               <Shield className="h-5 w-5 text-white/80" />
             </div>
