@@ -39,7 +39,7 @@ export function ParadasPorSemanaChart({ history, contratoFilter }: ParadasPorSem
   }, [history, contratoFilter])
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-sm h-full flex flex-col">
       <CardHeader className="pb-2 pt-4 px-4">
         <CardTitle className="text-sm font-semibold uppercase tracking-wide text-foreground">
           Máquinas Paradas por Semana
@@ -48,15 +48,15 @@ export function ParadasPorSemanaChart({ history, contratoFilter }: ParadasPorSem
           Evolução do número de máquinas paradas
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
+      <CardContent className="px-4 pb-4 flex-1">
         {data.length === 0 ? (
-          <div className="flex items-center justify-center h-[190px] text-sm text-muted-foreground">
+          <div className="flex items-center justify-center h-[210px] text-sm text-muted-foreground">
             Nenhum dado histórico disponível
           </div>
         ) : (
           <ChartContainer
             config={{ paradas: { label: "Máquinas paradas", color: "var(--chart-1)" } }}
-            className="h-[190px] w-full"
+            className="h-[210px] w-full"
           >
             <BarChart data={data} margin={{ left: 8, right: 16, top: 24, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
