@@ -126,7 +126,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[300px] w-full"
+            className="h-[210px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 14, bottom: 2 }}>
