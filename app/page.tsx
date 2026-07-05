@@ -713,32 +713,22 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar compacta estilo Atlas Copco SmartLink: rail de ícones que expande no hover */}
-      <aside className="group fixed z-40 flex h-screen w-[76px] flex-col overflow-hidden bg-[#12466b] text-white shadow-lg transition-[width] duration-200 ease-in-out hover:w-64">
-        {/* Logo/Header */}
-        <div className="flex h-16 flex-shrink-0 items-center justify-center border-b border-white/15 px-2">
+      {/* Sidebar fixa e estreita: rail de ícones (64px) */}
+      <aside className="fixed z-40 flex h-screen w-16 flex-col bg-[#12466b] text-white shadow-lg">
+        {/* Logo */}
+        <div className="flex h-14 flex-shrink-0 items-center justify-center border-b border-white/15">
           <Image
             src="/images/atlas-copco-oficial.png"
             alt="Atlas Copco"
             width={4167}
             height={2775}
-            className="h-auto w-10 object-contain transition-all duration-200 group-hover:w-[140px]"
+            className="h-auto w-9 object-contain"
             priority
           />
         </div>
-        <div className="hidden flex-shrink-0 border-b border-white/15 px-3 pb-3 pt-2 group-hover:block">
-          <h1 className="whitespace-nowrap text-sm font-bold text-white">Gestão de Máquinas</h1>
-          <div className="mt-1.5 text-xs">
-            <span className="inline-flex items-center rounded bg-white/15 px-1.5 py-0.5 font-medium text-white">
-              {contrato.numero}
-            </span>
-            <span className="mx-1 text-white/60">|</span>
-            <span className="text-white/80">{contrato.localizacao}</span>
-          </div>
-        </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2 sidebar-scroll">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 sidebar-scroll">
           {/* Main Menu Items */}
           <div className="space-y-1">
             {menuItems.map((item) => (
@@ -747,45 +737,43 @@ export default function Home() {
                 onClick={() => setActiveSection(item.id)}
                 title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
+                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
+                <span className="sr-only">{item.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Gestão de Materiais Section */}
-          <div className="mt-4">
-            <div className="hidden whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 group-hover:block">
-              Gestão de Materiais
-            </div>
-            <div className="mt-1 space-y-1">
-              {materiaisItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveSection(item.id)}
-                  title={item.label}
-                  className={cn(
-                    "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
-                    activeSection === item.id
-                      ? "bg-white text-[#12466b]"
-                      : "text-white/80 hover:bg-white/10 hover:text-white",
-                  )}
-                >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
-                </button>
-              ))}
-            </div>
+          {/* Divider */}
+          <div className="my-3 border-t border-white/15" />
+
+          {/* Gestão de Materiais */}
+          <div className="space-y-1">
+            {materiaisItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                title={item.label}
+                className={cn(
+                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
+                  activeSection === item.id
+                    ? "bg-white text-[#12466b]"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
+                )}
+              >
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="sr-only">{item.label}</span>
+              </button>
+            ))}
           </div>
 
           {/* Divider */}
-          <div className="my-4 border-t border-white/15" />
+          <div className="my-3 border-t border-white/15" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -795,52 +783,42 @@ export default function Home() {
                 onClick={() => setActiveSection(item.id)}
                 title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
+                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
                 <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
+                <span className="sr-only">{item.label}</span>
               </button>
             ))}
           </div>
         </nav>
 
-        {/* Footer */}
-        <div className="hidden flex-shrink-0 border-t border-white/15 p-3 group-hover:block">
-          <p className="mb-2 text-center text-xs text-white/70">
-            {activeSection === "entrada" ? "Entrada de Peças" :
-             activeSection === "saida" ? "Saída de Peças" :
-             activeSection === "estoque" ? "Estoque" :
-             activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImport}
-              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
-            >
-              <Upload className="mr-1 h-3 w-3" />
-              Importar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
-            >
-              <Download className="mr-1 h-3 w-3" />
-              Exportar
-            </Button>
-          </div>
+        {/* Footer: importar / exportar como ícones */}
+        <div className="flex flex-shrink-0 flex-col gap-1 border-t border-white/15 p-1.5">
+          <button
+            onClick={handleImport}
+            title="Importar"
+            className="flex w-full items-center justify-center rounded-md py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Upload className="h-5 w-5" />
+            <span className="sr-only">Importar</span>
+          </button>
+          <button
+            onClick={handleExport}
+            title="Exportar"
+            className="flex w-full items-center justify-center rounded-md py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          >
+            <Download className="h-5 w-5" />
+            <span className="sr-only">Exportar</span>
+          </button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-[76px] overflow-hidden">
+      <main className="flex-1 ml-16 overflow-hidden">
         <div className="h-screen overflow-y-auto p-4 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (
