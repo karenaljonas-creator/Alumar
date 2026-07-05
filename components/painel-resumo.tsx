@@ -35,10 +35,10 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
   const preventivasPct = preventivas.total > 0 ? (preventivas.ok / preventivas.total) * 100 : 0
 
   return (
-    <div className="grid gap-3 lg:grid-cols-4">
+    <div className="grid gap-3 lg:grid-cols-4 lg:items-stretch">
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
-        className="lg:row-span-2 border-0 shadow-sm text-white overflow-hidden"
+        className="border-0 shadow-sm text-white overflow-hidden"
         style={{ backgroundColor: "#12466b" }}
       >
         <CardContent className="flex h-full flex-col justify-between gap-2 p-4">
@@ -94,6 +94,9 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
         </CardContent>
       </Card>
 
+      {/* Coluna direita: KPIs em cima, gráfico preenchendo o resto */}
+      <div className="flex flex-col gap-3 lg:col-span-3">
+      <div className="grid gap-3 sm:grid-cols-3">
       {/* Máquinas Paradas */}
       <Card className="border-border shadow-sm">
         <CardContent className="p-4">
@@ -161,9 +164,11 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
           </div>
         </CardContent>
       </Card>
+      </div>
 
-      {/* Gráfico de disponibilidade semanal ocupa as 3 colunas restantes */}
-      <div className="lg:col-span-3 min-w-0">{chart}</div>
+      {/* Gráfico de disponibilidade semanal */}
+      <div className="min-w-0">{chart}</div>
+      </div>
     </div>
   )
 }
