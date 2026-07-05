@@ -713,67 +713,75 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar fixa e estreita: rail de ícones (64px) */}
-      <aside className="fixed z-40 flex h-screen w-16 flex-col bg-[#12466b] text-white shadow-lg">
-        {/* Logo */}
-        <div className="flex h-14 flex-shrink-0 items-center justify-center border-b border-white/15">
+      {/* Sidebar fixa (224px): ícone + texto */}
+      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-[#12466b] text-white shadow-lg">
+        {/* Header */}
+        <div className="flex-shrink-0 border-b border-white/15 px-3 py-3">
           <Image
             src="/images/atlas-copco-oficial.png"
             alt="Atlas Copco"
             width={4167}
             height={2775}
-            className="h-auto w-9 object-contain"
+            className="h-auto w-[130px] object-contain"
             priority
           />
+          <h1 className="mt-2 text-sm font-bold text-white">Gestão de Máquinas</h1>
+          <div className="mt-1.5 text-xs">
+            <span className="inline-flex items-center rounded bg-white/15 px-1.5 py-0.5 font-medium text-white">
+              {contrato.numero}
+            </span>
+            <span className="mx-1 text-white/60">|</span>
+            <span className="text-white/80">{contrato.localizacao}</span>
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-1.5 sidebar-scroll">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2 sidebar-scroll">
           {/* Main Menu Items */}
           <div className="space-y-1">
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="sr-only">{item.label}</span>
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </div>
-
-          {/* Divider */}
-          <div className="my-3 border-t border-white/15" />
 
           {/* Gestão de Materiais */}
-          <div className="space-y-1">
-            {materiaisItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                title={item.label}
-                className={cn(
-                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
-                  activeSection === item.id
-                    ? "bg-white text-[#12466b]"
-                    : "text-white/80 hover:bg-white/10 hover:text-white",
-                )}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="sr-only">{item.label}</span>
-              </button>
-            ))}
+          <div className="mt-4">
+            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+              Gestão de Materiais
+            </div>
+            <div className="mt-1 space-y-1">
+              {materiaisItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={cn(
+                    "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                    activeSection === item.id
+                      ? "bg-white text-[#12466b]"
+                      : "text-white/80 hover:bg-white/10 hover:text-white",
+                  )}
+                >
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Divider */}
-          <div className="my-3 border-t border-white/15" />
+          <div className="my-4 border-t border-white/15" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -781,44 +789,45 @@ export default function Home() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center rounded-md py-2.5 transition-colors",
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="sr-only">{item.label}</span>
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </div>
         </nav>
 
-        {/* Footer: importar / exportar como ícones */}
-        <div className="flex flex-shrink-0 flex-col gap-1 border-t border-white/15 p-1.5">
-          <button
+        {/* Footer: importar / exportar */}
+        <div className="flex flex-shrink-0 gap-2 border-t border-white/15 p-2">
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleImport}
-            title="Importar"
-            className="flex w-full items-center justify-center rounded-md py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
           >
-            <Upload className="h-5 w-5" />
-            <span className="sr-only">Importar</span>
-          </button>
-          <button
+            <Upload className="mr-1 h-3 w-3" />
+            Importar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleExport}
-            title="Exportar"
-            className="flex w-full items-center justify-center rounded-md py-2.5 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
           >
-            <Download className="h-5 w-5" />
-            <span className="sr-only">Exportar</span>
-          </button>
+            <Download className="mr-1 h-3 w-3" />
+            Exportar
+          </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-16 overflow-hidden">
+      <main className="flex-1 ml-56 overflow-hidden">
         <div className="h-screen overflow-y-auto p-4 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (
