@@ -713,21 +713,19 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar compacta estilo Atlas Copco SmartLink: rail de ícones que expande no hover */}
-      <aside className="group fixed z-40 flex h-screen w-[76px] flex-col overflow-hidden bg-[#12466b] text-white shadow-lg transition-[width] duration-200 ease-in-out hover:w-64">
-        {/* Logo/Header */}
-        <div className="flex h-16 flex-shrink-0 items-center justify-center border-b border-white/15 px-2">
+      {/* Sidebar fixa (224px): ícone + texto */}
+      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-[#12466b] text-white shadow-lg">
+        {/* Header */}
+        <div className="flex-shrink-0 border-b border-white/15 px-3 py-3">
           <Image
             src="/images/atlas-copco-oficial.png"
             alt="Atlas Copco"
             width={4167}
             height={2775}
-            className="h-auto w-10 object-contain transition-all duration-200 group-hover:w-[140px]"
+            className="h-auto w-[130px] object-contain"
             priority
           />
-        </div>
-        <div className="hidden flex-shrink-0 border-b border-white/15 px-3 pb-3 pt-2 group-hover:block">
-          <h1 className="whitespace-nowrap text-sm font-bold text-white">Gestão de Máquinas</h1>
+          <h1 className="mt-2 text-sm font-bold text-white">Gestão de Máquinas</h1>
           <div className="mt-1.5 text-xs">
             <span className="inline-flex items-center rounded bg-white/15 px-1.5 py-0.5 font-medium text-white">
               {contrato.numero}
@@ -745,23 +743,22 @@ export default function Home() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </div>
 
-          {/* Gestão de Materiais Section */}
+          {/* Gestão de Materiais */}
           <div className="mt-4">
-            <div className="hidden whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 group-hover:block">
+            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50">
               Gestão de Materiais
             </div>
             <div className="mt-1 space-y-1">
@@ -769,16 +766,15 @@ export default function Home() {
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
-                  title={item.label}
                   className={cn(
-                    "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
+                    "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     activeSection === item.id
                       ? "bg-white text-[#12466b]"
                       : "text-white/80 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <item.icon className="h-5 w-5 flex-shrink-0" />
-                  <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
+                  <item.icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </button>
               ))}
             </div>
@@ -793,54 +789,45 @@ export default function Home() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                title={item.label}
                 className={cn(
-                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
+                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
                     ? "bg-white text-[#12466b]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
+                <item.icon className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">{item.label}</span>
               </button>
             ))}
           </div>
         </nav>
 
-        {/* Footer */}
-        <div className="hidden flex-shrink-0 border-t border-white/15 p-3 group-hover:block">
-          <p className="mb-2 text-center text-xs text-white/70">
-            {activeSection === "entrada" ? "Entrada de Peças" :
-             activeSection === "saida" ? "Saída de Peças" :
-             activeSection === "estoque" ? "Estoque" :
-             activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleImport}
-              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
-            >
-              <Upload className="mr-1 h-3 w-3" />
-              Importar
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
-            >
-              <Download className="mr-1 h-3 w-3" />
-              Exportar
-            </Button>
-          </div>
+        {/* Footer: importar / exportar */}
+        <div className="flex flex-shrink-0 gap-2 border-t border-white/15 p-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleImport}
+            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
+          >
+            <Upload className="mr-1 h-3 w-3" />
+            Importar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExport}
+            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
+          >
+            <Download className="mr-1 h-3 w-3" />
+            Exportar
+          </Button>
         </div>
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-[76px] overflow-hidden">
+      <main className="flex-1 ml-56 overflow-hidden">
         <div className="h-screen overflow-y-auto p-4 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (

@@ -41,7 +41,7 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
         className="lg:row-span-2 border-0 shadow-sm text-white overflow-hidden"
         style={{ backgroundColor: "#12466b" }}
       >
-        <CardContent className="flex h-full flex-col justify-between gap-3 p-4">
+        <CardContent className="flex h-full flex-col justify-between gap-2 p-4">
           {/* Disponibilidade física */}
           <div className="text-center">
             <p className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/70">
