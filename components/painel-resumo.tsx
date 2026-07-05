@@ -39,7 +39,7 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
         className="border-0 shadow-sm text-white overflow-hidden"
-        style={{ backgroundColor: "#7ac6dc" }}
+        style={{ backgroundColor: "#0092bc" }}
       >
         <CardContent className="flex h-full flex-col justify-around gap-4 px-5 py-5">
           {/* Disponibilidade física */}
@@ -75,9 +75,9 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
                 <div className="w-px flex-1 bg-white/30" />
               </div>
               <div className="flex flex-1 flex-col items-center">
-                <p className="text-5xl font-bold leading-none" style={{ color: "#0092bc" }}>{stats.paradasAtlas}</p>
+                <p className="text-5xl font-bold leading-none" style={{ color: "#bfe6f2" }}>{stats.paradasAtlas}</p>
                 <p className="mt-2 text-center text-xs text-white/80">máquinas paradas</p>
-                <span className="mt-2 whitespace-nowrap rounded px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#0092bc" }}>Ação Atlas</span>
+                <span className="mt-2 whitespace-nowrap rounded px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#12466b" }}>Ação Atlas</span>
               </div>
             </div>
           </div>
