@@ -109,15 +109,15 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
 
   return (
     <Card className="flex h-full flex-col border-border shadow-sm">
-      <CardHeader className="pb-1 pt-3 px-4">
+      <CardHeader className="pb-0 pt-2.5 px-4 gap-0.5">
         <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
-          Disponibilidade Semanal
+          Disponibilidade Semanal (%)
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           Evolução da disponibilidade ao longo das semanas (Meta: 90%)
         </CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pb-3 pt-0">
+      <CardContent className="px-4 pb-2 pt-1">
         <div className="w-full max-w-full overflow-hidden">
           <ChartContainer
             config={{
@@ -126,7 +126,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[210px] w-full"
+            className="h-[150px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 14, bottom: 2 }}>
