@@ -39,7 +39,7 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
         className="border-0 shadow-sm text-white overflow-hidden"
-        style={{ backgroundColor: "#12466b" }}
+        style={{ backgroundColor: "#0092bc" }}
       >
         <CardContent className="flex h-full flex-col justify-around gap-4 px-5 py-5">
           {/* Disponibilidade física */}

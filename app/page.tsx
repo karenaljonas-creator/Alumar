@@ -714,7 +714,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar fixa (224px): ícone + texto */}
-      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-[#12466b] text-white shadow-lg">
+      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-[#0092bc] text-white shadow-lg">
         {/* Header */}
         <div className="flex-shrink-0 border-b border-white/15 px-3 py-3">
           <Image
@@ -746,7 +746,7 @@ export default function Home() {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-white text-[#12466b]"
+                    ? "bg-white text-[#0092bc]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
@@ -769,7 +769,7 @@ export default function Home() {
                   className={cn(
                     "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     activeSection === item.id
-                      ? "bg-white text-[#12466b]"
+                      ? "bg-white text-[#0092bc]"
                       : "text-white/80 hover:bg-white/10 hover:text-white",
                   )}
                 >
@@ -792,7 +792,7 @@ export default function Home() {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-white text-[#12466b]"
+                    ? "bg-white text-[#0092bc]"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
