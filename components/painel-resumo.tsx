@@ -38,60 +38,60 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
     <div className="grid gap-3 lg:grid-cols-4 lg:items-stretch">
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
-        className="border-0 shadow-sm text-slate-800 overflow-hidden"
-        style={{ backgroundColor: "#d1d4d7" }}
+        className="border-0 shadow-sm text-white overflow-hidden"
+        style={{ backgroundColor: "#7ac6dc" }}
       >
         <CardContent className="flex h-full flex-col justify-around gap-4 px-5 py-5">
           {/* Disponibilidade física */}
           <div className="text-center">
-            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-slate-600">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-white/80">
               Disponibilidade da Planta (Física)
-              <Info className="h-4 w-4 text-slate-500" />
+              <Info className="h-4 w-4 text-white/60" />
             </p>
-            <p className="mt-2 text-7xl font-bold leading-none tracking-tight text-slate-900">
+            <p className="mt-2 text-7xl font-bold leading-none tracking-tight">
               {stats.disponibilidade.toFixed(1).replace(".", ",")}%
             </p>
-            <p className="mt-3 text-base font-semibold text-slate-700">Meta: {META}%</p>
-            <div className="mx-auto mt-4 h-0 w-full border-b-2 border-dashed border-amber-500/80" />
+            <p className="mt-3 text-base font-semibold text-white/90">Meta: {META}%</p>
+            <div className="mx-auto mt-4 h-0 w-full border-b-2 border-dashed border-amber-400" />
           </div>
 
           {/* Responsáveis pela indisponibilidade */}
           <div>
-            <p className="text-center text-sm font-medium text-slate-600">
+            <p className="text-center text-sm font-medium text-white/80">
               Principais responsáveis pela indisponibilidade
             </p>
             <div className="mt-3 flex items-stretch justify-center">
               <div className="flex flex-1 flex-col items-center">
                 <p className="text-5xl font-bold leading-none text-red-600">{stats.paradasVale}</p>
-                <p className="mt-2 text-center text-xs text-slate-600">máquinas paradas</p>
+                <p className="mt-2 text-center text-xs text-white/80">máquinas paradas</p>
                 <span className="mt-2 whitespace-nowrap rounded bg-red-600 px-3 py-1 text-xs font-semibold text-white">Ação Vale</span>
               </div>
               {/* Divisor VS com linhas verticais e círculo */}
               <div className="flex flex-col items-center justify-center px-3">
-                <div className="w-px flex-1 bg-slate-400/60" />
-                <div className="my-1 flex h-9 w-9 items-center justify-center rounded-full border border-slate-400">
-                  <span className="text-xs font-bold text-slate-600">VS</span>
+                <div className="w-px flex-1 bg-white/30" />
+                <div className="my-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/40">
+                  <span className="text-xs font-bold text-white/80">VS</span>
                 </div>
-                <div className="w-px flex-1 bg-slate-400/60" />
+                <div className="w-px flex-1 bg-white/30" />
               </div>
               <div className="flex flex-1 flex-col items-center">
                 <p className="text-5xl font-bold leading-none" style={{ color: "#0092bc" }}>{stats.paradasAtlas}</p>
-                <p className="mt-2 text-center text-xs text-slate-600">máquinas paradas</p>
+                <p className="mt-2 text-center text-xs text-white/80">máquinas paradas</p>
                 <span className="mt-2 whitespace-nowrap rounded px-3 py-1 text-xs font-semibold text-white" style={{ backgroundColor: "#0092bc" }}>Ação Atlas</span>
               </div>
             </div>
           </div>
 
           {/* Disponibilidade contratual Atlas */}
-          <div className="flex items-center justify-center gap-4 border-t border-slate-400/50 pt-4">
-            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-slate-400/30">
-              <Shield className="h-6 w-6 text-slate-600" fill="currentColor" fillOpacity={0.15} />
+          <div className="flex items-center justify-center gap-4 border-t border-white/25 pt-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white/15">
+              <Shield className="h-6 w-6 text-white/90" fill="currentColor" fillOpacity={0.15} />
             </div>
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
                 Disponibilidade Contratual Atlas
               </p>
-              <p className="text-3xl font-bold leading-none text-slate-900">
+              <p className="text-3xl font-bold leading-none">
                 {stats.disponibilidadeContrato.toFixed(1).replace(".", ",")}%
               </p>
             </div>
