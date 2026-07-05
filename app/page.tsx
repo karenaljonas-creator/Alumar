@@ -714,9 +714,9 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar fixa (224px): ícone + texto */}
-      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-[#0092bc] text-white shadow-lg">
+      <aside className="fixed z-40 flex h-screen w-56 flex-col bg-white text-slate-700 border-r border-slate-200 shadow-lg">
         {/* Header */}
-        <div className="flex-shrink-0 border-b border-white/15 px-3 py-3">
+        <div className="flex-shrink-0 border-b border-slate-200 px-3 py-3">
           <Image
             src="/images/atlas-copco-oficial.png"
             alt="Atlas Copco"
@@ -725,13 +725,13 @@ export default function Home() {
             className="h-auto w-full object-contain"
             priority
           />
-          <h1 className="mt-2 text-sm font-bold text-white">Gestão de Máquinas</h1>
+          <h1 className="mt-2 text-sm font-bold text-slate-800">Gestão de Máquinas</h1>
           <div className="mt-1.5 text-xs">
-            <span className="inline-flex items-center rounded bg-white/15 px-1.5 py-0.5 font-medium text-white">
+            <span className="inline-flex items-center rounded bg-[#e6f4f9] px-1.5 py-0.5 font-medium text-[#0092bc]">
               {contrato.numero}
             </span>
-            <span className="mx-1 text-white/60">|</span>
-            <span className="text-white/80">{contrato.localizacao}</span>
+            <span className="mx-1 text-slate-400">|</span>
+            <span className="text-slate-500">{contrato.localizacao}</span>
           </div>
         </div>
 
@@ -746,8 +746,8 @@ export default function Home() {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-white text-[#0092bc]"
-                    : "text-white/80 hover:bg-white/10 hover:text-white",
+                    ? "bg-[#e6f4f9] text-[#0092bc]"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                 )}
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -758,7 +758,7 @@ export default function Home() {
 
           {/* Gestão de Materiais */}
           <div className="mt-4">
-            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50">
+            <div className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
               Gestão de Materiais
             </div>
             <div className="mt-1 space-y-1">
@@ -781,7 +781,7 @@ export default function Home() {
           </div>
 
           {/* Divider */}
-          <div className="my-4 border-t border-white/15" />
+          <div className="my-4 border-t border-slate-200" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -792,8 +792,8 @@ export default function Home() {
                 className={cn(
                   "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   activeSection === item.id
-                    ? "bg-white text-[#0092bc]"
-                    : "text-white/80 hover:bg-white/10 hover:text-white",
+                    ? "bg-[#e6f4f9] text-[#0092bc]"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                 )}
               >
                 <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -804,12 +804,12 @@ export default function Home() {
         </nav>
 
         {/* Footer: importar / exportar */}
-        <div className="flex flex-shrink-0 gap-2 border-t border-white/15 p-2">
+        <div className="flex flex-shrink-0 gap-2 border-t border-slate-200 p-2">
           <Button
             variant="outline"
             size="sm"
             onClick={handleImport}
-            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
+            className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           >
             <Upload className="mr-1 h-3 w-3" />
             Importar
@@ -818,7 +818,7 @@ export default function Home() {
             variant="outline"
             size="sm"
             onClick={handleExport}
-            className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
+            className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
           >
             <Download className="mr-1 h-3 w-3" />
             Exportar
