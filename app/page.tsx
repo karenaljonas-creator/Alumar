@@ -872,14 +872,16 @@ export default function Home() {
               />
 
               {/* Linha 2: Top 5 Críticas (largo) + Causa das Paradas */}
-              <div className="grid gap-3 lg:grid-cols-3 [&>*]:min-w-0">
-                <div className="lg:col-span-2">
+              <div className="grid gap-3 lg:grid-cols-5 [&>*]:min-w-0">
+                <div className="lg:col-span-3">
                   <TopMaquinasCriticas
                     machines={maquinasParadasFiltradas}
                     onVerTodas={() => setActiveSection("paradas")}
                   />
                 </div>
-                <CausaParadasChart machines={maquinasParadasFiltradas} />
+                <div className="lg:col-span-2">
+                  <CausaParadasChart machines={maquinasParadasFiltradas} />
+                </div>
               </div>
 
               {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}

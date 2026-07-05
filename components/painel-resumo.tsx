@@ -96,17 +96,17 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
 
       {/* Coluna direita: KPIs em cima, gráfico preenchendo o resto */}
       <div className="flex flex-col gap-3 lg:col-span-3">
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 sm:grid-cols-[1fr_1fr_1.55fr]">
       {/* Máquinas Paradas */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="flex h-full flex-col justify-between p-4">
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Máquinas Paradas</p>
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10">
-              <AlertTriangle className="h-4 w-4 text-red-600" />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-500/10">
+              <AlertTriangle className="h-6 w-6 text-red-600" />
             </div>
           </div>
-          <p className="mt-2 text-4xl font-bold leading-none text-red-600">{stats.paradas}</p>
+          <p className="mt-3 text-4xl font-bold leading-none text-red-600">{stats.paradas}</p>
           <p className="mt-4 text-xs text-muted-foreground">
             Impacto no contrato: <span className={`font-bold ${impactoColor}`}>{impacto}</span>
           </p>
@@ -115,14 +115,14 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
 
       {/* Máquinas Operacionais */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="flex h-full flex-col justify-between p-4">
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Máquinas Operacionais</p>
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
-              <Activity className="h-4 w-4 text-primary" />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10">
+              <Activity className="h-6 w-6 text-primary" />
             </div>
           </div>
-          <p className="mt-2 text-4xl font-bold leading-none text-primary">
+          <p className="mt-3 text-4xl font-bold leading-none text-primary">
             {stats.operacionais} <span className="text-2xl text-muted-foreground">/ {stats.total}</span>
           </p>
           <p className="mt-4 text-xs text-muted-foreground">Total de máquinas</p>
@@ -131,23 +131,23 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
 
       {/* Preventivas Concluídas */}
       <Card className="border-border shadow-sm">
-        <CardContent className="p-4">
+        <CardContent className="flex h-full flex-col justify-between p-4">
           <div className="flex items-start justify-between gap-2">
             <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preventivas Concluídas</p>
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/10">
-              <ShieldCheck className="h-4 w-4 text-amber-600" />
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-amber-500/10">
+              <ShieldCheck className="h-6 w-6 text-amber-600" />
             </div>
           </div>
-          <div className="flex items-end justify-between gap-3">
+          <div className="mt-3 flex items-end justify-between gap-4">
             <div>
-              <p className="mt-2 text-4xl font-bold leading-none text-amber-600">
+              <p className="text-4xl font-bold leading-none text-amber-600">
                 {preventivasPct.toFixed(1).replace(".", ",")}%
               </p>
               <p className="mt-3 text-xs text-muted-foreground">
                 {preventivas.ok} de {preventivas.total} concluídas
               </p>
             </div>
-            <div className="space-y-1.5 border-l border-border pl-3 text-[11px]">
+            <div className="space-y-2 border-l border-border pl-4 text-[11px]">
               <div className="flex items-center justify-between gap-3">
                 <span className="text-primary">Preventivas em dia</span>
                 <span className="font-bold text-emerald-600">{preventivas.ok}</span>

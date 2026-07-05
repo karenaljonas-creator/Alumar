@@ -40,7 +40,7 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
   }, [machines])
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="border-border shadow-sm h-full flex flex-col">
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-foreground">
@@ -50,14 +50,14 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
           <span className="text-xs font-medium text-muted-foreground">% do total</span>
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4">
+      <CardContent className="px-4 pb-4 flex-1 flex flex-col">
         {total === 0 ? (
-          <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+          <div className="flex items-center justify-center flex-1 text-sm text-muted-foreground">
             Nenhuma máquina parada
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            <div className="flex flex-col gap-3">
+          <div className="flex flex-1 flex-col justify-between gap-3">
+            <div className="flex flex-1 flex-col justify-around gap-3">
               {data.map((entry) => (
                 <div key={entry.nome} className="flex items-center gap-3">
                   <span className="w-[38%] flex-shrink-0 text-right text-xs text-foreground leading-tight">
