@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "v0 App",
-  description: "Created with v0",
+  title: "Painel de Controle Salobo | Gestão de Máquinas",
+  description: "Painel operacional Atlas Copco para gestão de disponibilidade e paradas de máquinas.",
   generator: "v0.app",
 }
 
@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR" className="bg-background">
       <body className={`font-sans antialiased`}>
         {children}
         <Toaster />

@@ -713,77 +713,79 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Sidebar */}
-      <aside className="w-56 bg-primary text-primary-foreground flex flex-col fixed h-screen">
+      {/* Sidebar compacta estilo Atlas Copco SmartLink: rail de ícones que expande no hover */}
+      <aside className="group fixed z-40 flex h-screen w-[76px] flex-col overflow-hidden bg-[#12466b] text-white shadow-lg transition-[width] duration-200 ease-in-out hover:w-64">
         {/* Logo/Header */}
-        <div className="p-3 border-b border-primary-foreground/15">
-          <div className="mb-3 flex items-center justify-center">
-            <Image
-              src="/images/atlas-copco-oficial.png"
-              alt="Atlas Copco"
-              width={4167}
-              height={2775}
-              className="h-auto w-full max-w-[150px] object-contain"
-              priority
-            />
-          </div>
-          <h1 className="text-base font-bold text-primary-foreground">Gestão de Máquinas</h1>
-          <div className="mt-2 text-xs">
-            <span className="inline-flex items-center rounded bg-primary-foreground/15 px-1.5 py-0.5 text-primary-foreground font-medium">
+        <div className="flex h-16 flex-shrink-0 items-center justify-center border-b border-white/15 px-2">
+          <Image
+            src="/images/atlas-copco-oficial.png"
+            alt="Atlas Copco"
+            width={4167}
+            height={2775}
+            className="h-auto w-10 object-contain transition-all duration-200 group-hover:w-[140px]"
+            priority
+          />
+        </div>
+        <div className="hidden flex-shrink-0 border-b border-white/15 px-3 pb-3 pt-2 group-hover:block">
+          <h1 className="whitespace-nowrap text-sm font-bold text-white">Gestão de Máquinas</h1>
+          <div className="mt-1.5 text-xs">
+            <span className="inline-flex items-center rounded bg-white/15 px-1.5 py-0.5 font-medium text-white">
               {contrato.numero}
             </span>
-            <span className="mx-1 text-primary-foreground/60">|</span>
-            <span className="text-primary-foreground/80">{contrato.localizacao}</span>
+            <span className="mx-1 text-white/60">|</span>
+            <span className="text-white/80">{contrato.localizacao}</span>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 overflow-y-auto sidebar-scroll">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden p-2 sidebar-scroll">
           {/* Main Menu Items */}
           <div className="space-y-1">
             {menuItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
+                title={item.label}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
                   activeSection === item.id
-                    ? "bg-primary-foreground text-primary"
-                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                    ? "bg-white text-[#12466b]"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
               </button>
             ))}
           </div>
 
           {/* Gestão de Materiais Section */}
           <div className="mt-4">
-            <div className="px-3 py-2 text-xs font-semibold text-primary-foreground/60 uppercase tracking-wider">
+            <div className="hidden whitespace-nowrap px-3 py-2 text-xs font-semibold uppercase tracking-wider text-white/50 group-hover:block">
               Gestão de Materiais
             </div>
-            <div className="mt-1 space-y-1 pl-2">
+            <div className="mt-1 space-y-1">
               {materiaisItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveSection(item.id)}
+                  title={item.label}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                    "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
                     activeSection === item.id
-                      ? "bg-primary-foreground text-primary"
-                      : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                      ? "bg-white text-[#12466b]"
+                      : "text-white/80 hover:bg-white/10 hover:text-white",
                   )}
                 >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
                 </button>
               ))}
             </div>
           </div>
 
           {/* Divider */}
-          <div className="my-4 border-t border-primary-foreground/15" />
+          <div className="my-4 border-t border-white/15" />
 
           {/* Config Items */}
           <div className="space-y-1">
@@ -791,45 +793,46 @@ export default function Home() {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
+                title={item.label}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
+                  "flex w-full items-center justify-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors group-hover:justify-start",
                   activeSection === item.id
-                    ? "bg-primary-foreground text-primary"
-                    : "text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+                    ? "bg-white text-[#12466b]"
+                    : "text-white/80 hover:bg-white/10 hover:text-white",
                 )}
               >
-                <item.icon className="h-4 w-4" />
-                {item.label}
+                <item.icon className="h-5 w-5 flex-shrink-0" />
+                <span className="hidden whitespace-nowrap group-hover:inline">{item.label}</span>
               </button>
             ))}
           </div>
         </nav>
 
         {/* Footer */}
-        <div className="p-3 border-t border-primary-foreground/15">
-          <p className="text-xs text-primary-foreground/70 mb-2 text-center">
-            {activeSection === "entrada" ? "Entrada de Peças" : 
+        <div className="hidden flex-shrink-0 border-t border-white/15 p-3 group-hover:block">
+          <p className="mb-2 text-center text-xs text-white/70">
+            {activeSection === "entrada" ? "Entrada de Peças" :
              activeSection === "saida" ? "Saída de Peças" :
-             activeSection === "estoque" ? "Estoque" : 
-  activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
+             activeSection === "estoque" ? "Estoque" :
+             activeSection === "estoque-estrategico" ? "Estoque Estratégico" : "Máquinas"}
           </p>
           <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleImport}
-              className="flex-1 text-xs bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
             >
-              <Upload className="h-3 w-3 mr-1" />
+              <Upload className="mr-1 h-3 w-3" />
               Importar
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleExport}
-              className="flex-1 text-xs bg-transparent text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+              className="flex-1 border-white/30 bg-transparent text-xs text-white hover:bg-white/10 hover:text-white"
             >
-              <Download className="h-3 w-3 mr-1" />
+              <Download className="mr-1 h-3 w-3" />
               Exportar
             </Button>
           </div>
@@ -837,14 +840,14 @@ export default function Home() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-56 overflow-hidden">
+      <main className="flex-1 ml-[76px] overflow-hidden">
         <div className="h-screen overflow-y-auto p-4 w-full">
           {/* Painel de Controle */}
           {activeSection === "painel" && (
-            <div className="space-y-5">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-semibold">Painel de Controle</h2>
+                  <h2 className="text-lg font-semibold leading-tight">Painel de Controle</h2>
                   <p className="text-sm text-muted-foreground">
                     {new Date()
                       .toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })
@@ -882,7 +885,7 @@ export default function Home() {
               />
 
               {/* Linha 2: Top 5 Críticas (largo) + Causa das Paradas */}
-              <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
+              <div className="grid gap-3 lg:grid-cols-3 [&>*]:min-w-0">
                 <div className="lg:col-span-2">
                   <TopMaquinasCriticas
                     machines={maquinasParadasFiltradas}
@@ -893,7 +896,7 @@ export default function Home() {
               </div>
 
               {/* Linha 3: Período Inoperante + Paradas por Semana + Localização */}
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
+              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 [&>*]:min-w-0">
                 <GraficoPeriodoInoperante machines={maquinasParadasFiltradas} />
                 <ParadasPorSemanaChart history={history} contratoFilter={contratoFilter} />
                 <GraficoLocalizacao data={porLocalizacao} />
