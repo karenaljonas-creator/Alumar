@@ -41,52 +41,57 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
         className="border-0 shadow-sm text-white overflow-hidden"
         style={{ backgroundColor: "#12466b" }}
       >
-        <CardContent className="flex h-full flex-col justify-between gap-1.5 px-4 py-3">
+        <CardContent className="flex h-full flex-col justify-around gap-4 px-5 py-5">
           {/* Disponibilidade física */}
           <div className="text-center">
-            <p className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/70">
+            <p className="flex items-center justify-center gap-1.5 text-sm font-semibold uppercase tracking-wide text-white/70">
               Disponibilidade da Planta (Física)
-              <Info className="h-3.5 w-3.5 text-white/50" />
+              <Info className="h-4 w-4 text-white/50" />
             </p>
-            <p className="mt-1 text-5xl font-bold leading-none tracking-tight">
+            <p className="mt-2 text-7xl font-bold leading-none tracking-tight">
               {stats.disponibilidade.toFixed(1).replace(".", ",")}%
             </p>
-            <p className="mt-1 text-sm font-semibold text-white/90">Meta: {META}%</p>
-            <div className="mx-auto mt-1.5 h-0 w-full border-b-2 border-dashed border-amber-400/80" />
+            <p className="mt-3 text-base font-semibold text-white/90">Meta: {META}%</p>
+            <div className="mx-auto mt-4 h-0 w-full border-b-2 border-dashed border-amber-400/80" />
           </div>
 
           {/* Responsáveis pela indisponibilidade */}
-          <div className="border-t border-white/15 pt-2">
-            <p className="text-center text-xs font-medium text-white/70">
+          <div>
+            <p className="text-center text-sm font-medium text-white/70">
               Principais responsáveis pela indisponibilidade
             </p>
-            <div className="mt-1.5 flex items-stretch justify-center">
+            <div className="mt-3 flex items-stretch justify-center">
               <div className="flex flex-1 flex-col items-center">
-                <p className="text-3xl font-bold leading-none text-red-500">{stats.paradasVale}</p>
-                <p className="mt-1 text-center text-[11px] text-white/70">máquinas paradas</p>
-                <span className="mt-1.5 rounded bg-red-500 px-2.5 py-0.5 text-[11px] font-semibold">Ação Vale</span>
+                <p className="text-5xl font-bold leading-none text-red-500">{stats.paradasVale}</p>
+                <p className="mt-2 text-center text-xs text-white/70">máquinas paradas</p>
+                <span className="mt-2 whitespace-nowrap rounded bg-red-500 px-3 py-1 text-xs font-semibold">Ação Vale</span>
               </div>
-              <div className="flex flex-col items-center justify-center border-x border-white/15 px-4">
-                <span className="text-xs font-bold text-white/50">VS</span>
+              {/* Divisor VS com linhas verticais e círculo */}
+              <div className="flex flex-col items-center justify-center px-3">
+                <div className="w-px flex-1 bg-white/20" />
+                <div className="my-1 flex h-9 w-9 items-center justify-center rounded-full border border-white/25">
+                  <span className="text-xs font-bold text-white/70">VS</span>
+                </div>
+                <div className="w-px flex-1 bg-white/20" />
               </div>
               <div className="flex flex-1 flex-col items-center">
-                <p className="text-3xl font-bold leading-none text-sky-400">{stats.paradasAtlas}</p>
-                <p className="mt-1 text-center text-[11px] text-white/70">máquinas paradas</p>
-                <span className="mt-1.5 rounded bg-white/15 px-2.5 py-0.5 text-[11px] font-semibold">Ação Atlas</span>
+                <p className="text-5xl font-bold leading-none text-sky-400">{stats.paradasAtlas}</p>
+                <p className="mt-2 text-center text-xs text-white/70">máquinas paradas</p>
+                <span className="mt-2 whitespace-nowrap rounded bg-white/15 px-3 py-1 text-xs font-semibold">Ação Atlas</span>
               </div>
             </div>
           </div>
 
           {/* Disponibilidade contratual Atlas */}
-          <div className="flex items-center justify-center gap-3 border-t border-white/15 pt-2">
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/25">
-              <Shield className="h-5 w-5 text-white/80" />
+          <div className="flex items-center justify-center gap-4 border-t border-white/15 pt-4">
+            <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-white/10">
+              <Shield className="h-6 w-6 text-white/90" fill="currentColor" fillOpacity={0.15} />
             </div>
             <div className="text-center">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/70">
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
                 Disponibilidade Contratual Atlas
               </p>
-              <p className="text-2xl font-bold leading-none">
+              <p className="text-3xl font-bold leading-none">
                 {stats.disponibilidadeContrato.toFixed(1).replace(".", ",")}%
               </p>
             </div>
