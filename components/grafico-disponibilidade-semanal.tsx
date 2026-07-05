@@ -108,7 +108,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
   }
 
   return (
-    <Card className="border-border shadow-sm">
+    <Card className="flex h-full flex-col border-border shadow-sm">
       <CardHeader className="pb-1 pt-3 px-4">
         <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">
           Disponibilidade Semanal
@@ -126,7 +126,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[92px] w-full"
+            className="h-[240px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 14, bottom: 2 }}>
