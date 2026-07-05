@@ -1,7 +1,16 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Bar, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, LabelList } from "recharts"
+import {
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  LabelList,
+  ReferenceLine,
+} from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { loadHistory } from "@/lib/supabase-history-storage"
 import { dedupeHistoryPorSemana } from "@/lib/machine-utils"
@@ -30,13 +39,14 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
       return { data: [] }
     }
 
-    const last5Weeks = dedupeHistoryPorSemana(history).slice(-5)
+    const lastWeeks = dedupeHistoryPorSemana(history).slice(-9)
 
-    const data = last5Weeks.map((snapshot) => {
+    const data = lastWeeks.map((snapshot) => {
       let disponibilidade: number
 
       if (contratoFilter === "todos") {
-        disponibilidade = snapshot.stats.disponibilidade
+        // Disponibilidade contratual (Atlas): considera indisponíveis apenas paradas Atlas
+        disponibilidade = snapshot.stats.disponibilidadeContrato ?? snapshot.stats.disponibilidade
       } else {
         const machines = snapshot.machines || []
         const filteredMachines = machines.filter((m) => {
@@ -45,9 +55,11 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
           return true
         })
 
-        const operacionais = filteredMachines.filter((m) => m.status === "operacional").length
         const total = filteredMachines.length
-        disponibilidade = total > 0 ? (operacionais / total) * 100 : 0
+        const indisponiveisAtlas = filteredMachines.filter(
+          (m) => m.status === "parada" && m.acaoResponsavel === "Atlas",
+        ).length
+        disponibilidade = total > 0 ? ((total - indisponiveisAtlas) / total) * 100 : 0
       }
 
       return {
@@ -110,29 +122,71 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
           <ChartContainer
             config={{
               disponibilidade: {
-                label: "Disponibilidade (%)",
+                label: "Disponibilidade contratual (Atlas)",
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[220px] w-full"
+            className="h-[240px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData.data} margin={{ left: 40, right: 40, top: 20, bottom: 60 }} barGap={16}>
+              <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 24, bottom: 10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="semana" tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickMargin={10} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} tickMargin={10} />
-                <ChartTooltip content={<ChartTooltipContent />} cursor={{ fill: "var(--muted)" }} />
-                <Bar dataKey="disponibilidade" fill="var(--color-disponibilidade)" radius={[4, 4, 0, 0]} maxBarSize={60}>
+                <XAxis
+                  dataKey="semana"
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tickMargin={10}
+                  axisLine={{ stroke: "var(--border)" }}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[80, 100]}
+                  ticks={[80, 85, 90, 95, 100]}
+                  tickFormatter={(v: number) => `${v}%`}
+                  tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                  tickMargin={8}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ReferenceLine
+                  y={90}
+                  stroke="#f59e0b"
+                  strokeDasharray="6 6"
+                  strokeWidth={2}
+                  ifOverflow="extendDomain"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="disponibilidade"
+                  stroke="var(--color-disponibilidade)"
+                  strokeWidth={2.5}
+                  dot={{ r: 4, fill: "var(--background)", stroke: "var(--color-disponibilidade)", strokeWidth: 2 }}
+                  activeDot={{ r: 5 }}
+                >
                   <LabelList
                     dataKey="disponibilidade"
                     position="top"
                     formatter={(value: number) => `${value}%`}
-                    style={{ fontSize: 12, fontWeight: 600, fill: "var(--foreground)" }}
+                    style={{ fontSize: 11, fontWeight: 600, fill: "var(--foreground)" }}
                   />
-                </Bar>
-              </BarChart>
+                </Line>
+              </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
+        </div>
+        {/* Legenda */}
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs">
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <span className="inline-block h-0.5 w-6 rounded-full bg-[var(--chart-1)]" />
+            Disponibilidade contratual (Atlas)
+          </span>
+          <span className="flex items-center gap-2 text-muted-foreground">
+            <span
+              className="inline-block h-0.5 w-6 rounded-full"
+              style={{ backgroundImage: "repeating-linear-gradient(90deg,#f59e0b 0 4px,transparent 4px 8px)" }}
+            />
+            Meta contratual (90%)
+          </span>
         </div>
       </CardContent>
     </Card>
