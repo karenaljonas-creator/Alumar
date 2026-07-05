@@ -722,7 +722,7 @@ export default function Home() {
             alt="Atlas Copco"
             width={4167}
             height={2775}
-            className="h-auto w-[130px] object-contain"
+            className="h-auto w-full object-contain"
             priority
           />
           <h1 className="mt-2 text-sm font-bold text-white">Gestão de Máquinas</h1>

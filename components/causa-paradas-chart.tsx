@@ -10,7 +10,7 @@ interface CausaParadasChartProps {
   machines: Machine[]
 }
 
-const BAR_COLOR = "#0e6d8a"
+const BAR_COLOR = "#0092bc"
 const MAX_PCT = 60
 
 export function CausaParadasChart({ machines }: CausaParadasChartProps) {
@@ -60,7 +60,7 @@ export function CausaParadasChart({ machines }: CausaParadasChartProps) {
             <div className="flex flex-1 flex-col justify-around gap-3">
               {data.map((entry) => (
                 <div key={entry.nome} className="flex items-center gap-3">
-                  <span className="w-[38%] flex-shrink-0 text-right text-xs text-foreground leading-tight">
+                  <span className="w-[38%] flex-shrink-0 text-left text-xs text-foreground leading-tight">
                     {entry.nome}
                   </span>
                   <div className="relative flex-1">
