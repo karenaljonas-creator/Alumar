@@ -35,51 +35,51 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
   const preventivasPct = preventivas.total > 0 ? (preventivas.ok / preventivas.total) * 100 : 0
 
   return (
-    <div className="grid gap-4 lg:grid-cols-4">
+    <div className="grid gap-3 lg:grid-cols-4">
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
         className="lg:row-span-2 border-0 shadow-sm text-white overflow-hidden"
         style={{ backgroundColor: "#12466b" }}
       >
-        <CardContent className="flex h-full flex-col justify-between gap-5 p-6">
+        <CardContent className="flex h-full flex-col justify-between gap-3 p-4">
           {/* Disponibilidade física */}
           <div className="text-center">
             <p className="flex items-center justify-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-white/70">
               Disponibilidade da Planta (Física)
               <Info className="h-3.5 w-3.5 text-white/50" />
             </p>
-            <p className="mt-3 text-6xl font-bold leading-none tracking-tight">
+            <p className="mt-2 text-5xl font-bold leading-none tracking-tight">
               {stats.disponibilidade.toFixed(1).replace(".", ",")}%
             </p>
-            <p className="mt-3 text-base font-semibold text-white/90">Meta: {META}%</p>
-            <div className="mx-auto mt-3 h-0 w-full border-b-2 border-dashed border-amber-400/80" />
+            <p className="mt-2 text-sm font-semibold text-white/90">Meta: {META}%</p>
+            <div className="mx-auto mt-2 h-0 w-full border-b-2 border-dashed border-amber-400/80" />
           </div>
 
           {/* Responsáveis pela indisponibilidade */}
-          <div className="border-t border-white/15 pt-4">
+          <div className="border-t border-white/15 pt-3">
             <p className="text-center text-xs font-medium text-white/70">
               Principais responsáveis pela indisponibilidade
             </p>
-            <div className="mt-4 flex items-stretch justify-center">
+            <div className="mt-3 flex items-stretch justify-center">
               <div className="flex flex-1 flex-col items-center">
-                <p className="text-4xl font-bold leading-none text-red-500">{stats.paradasVale}</p>
-                <p className="mt-1.5 text-center text-[11px] text-white/70">máquinas paradas</p>
-                <span className="mt-2.5 rounded bg-red-500 px-2.5 py-1 text-[11px] font-semibold">Ação Vale</span>
+                <p className="text-3xl font-bold leading-none text-red-500">{stats.paradasVale}</p>
+                <p className="mt-1 text-center text-[11px] text-white/70">máquinas paradas</p>
+                <span className="mt-2 rounded bg-red-500 px-2.5 py-1 text-[11px] font-semibold">Ação Vale</span>
               </div>
               <div className="flex flex-col items-center justify-center border-x border-white/15 px-4">
                 <span className="text-xs font-bold text-white/50">VS</span>
               </div>
               <div className="flex flex-1 flex-col items-center">
-                <p className="text-4xl font-bold leading-none text-sky-400">{stats.paradasAtlas}</p>
-                <p className="mt-1.5 text-center text-[11px] text-white/70">máquinas paradas</p>
-                <span className="mt-2.5 rounded bg-white/15 px-2.5 py-1 text-[11px] font-semibold">Ação Atlas</span>
+                <p className="text-3xl font-bold leading-none text-sky-400">{stats.paradasAtlas}</p>
+                <p className="mt-1 text-center text-[11px] text-white/70">máquinas paradas</p>
+                <span className="mt-2 rounded bg-white/15 px-2.5 py-1 text-[11px] font-semibold">Ação Atlas</span>
               </div>
             </div>
           </div>
 
           {/* Disponibilidade contratual Atlas */}
-          <div className="flex items-center justify-center gap-3 border-t border-white/15 pt-4">
-            <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-white/25">
+          <div className="flex items-center justify-center gap-3 border-t border-white/15 pt-3">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-white/25">
               <Shield className="h-5 w-5 text-white/80" />
             </div>
             <div className="text-center">

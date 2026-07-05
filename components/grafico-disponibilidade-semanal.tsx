@@ -82,7 +82,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-5 flex items-center justify-center h-[220px]">
+        <CardContent className="p-4 flex items-center justify-center h-[150px]">
           <div className="text-sm text-muted-foreground">Carregando dados...</div>
         </CardContent>
       </Card>
@@ -100,7 +100,7 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
             Evolução da disponibilidade ao longo das semanas (Meta: 90%)
           </CardDescription>
         </CardHeader>
-        <CardContent className="p-5 flex items-center justify-center h-[220px]">
+        <CardContent className="p-4 flex items-center justify-center h-[150px]">
           <div className="text-sm text-muted-foreground">Nenhum dado histórico disponível</div>
         </CardContent>
       </Card>
@@ -126,10 +126,10 @@ export function GraficoDisponibilidadeSemanal({ contratoFilter }: GraficoDisponi
                 color: "var(--chart-1)",
               },
             }}
-            className="h-[200px] w-full"
+            className="h-[130px] w-full"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 24, bottom: 10 }}>
+              <LineChart data={chartData.data} margin={{ left: 20, right: 40, top: 18, bottom: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                 <XAxis
                   dataKey="semana"

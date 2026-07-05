@@ -62,15 +62,15 @@ export function TopMaquinasCriticas({ machines, onVerTodas }: TopMaquinasCritica
                     const acao = m.acaoResponsavel ?? "-"
                     return (
                       <tr key={m.id} className="border-b border-border/50 last:border-0">
-                        <td className="py-2 font-semibold text-foreground">{m.nome}</td>
-                        <td className="py-2 text-muted-foreground">{m.localizacao}</td>
-                        <td className={`py-2 font-semibold ${critico ? "text-destructive" : "text-foreground"}`}>
+                        <td className="py-1.5 font-semibold text-foreground">{m.nome}</td>
+                        <td className="py-1.5 text-muted-foreground">{m.localizacao}</td>
+                        <td className={`py-1.5 font-semibold ${critico ? "text-destructive" : "text-foreground"}`}>
                           {m.dias >= 90 ? "91+ dias" : `${m.dias} dias`}
                         </td>
-                        <td className={`py-2 font-medium ${m.acaoResponsavel === "Atlas" ? "text-primary" : "text-foreground"}`}>
+                        <td className={`py-1.5 font-medium ${m.acaoResponsavel === "Atlas" ? "text-primary" : "text-foreground"}`}>
                           {acao}
                         </td>
-                        <td className="py-2 text-muted-foreground">{formatData(m.updated_at || m.dataParada)}</td>
+                        <td className="py-1.5 text-muted-foreground">{formatData(m.updated_at || m.dataParada)}</td>
                       </tr>
                     )
                   })}
@@ -79,7 +79,7 @@ export function TopMaquinasCriticas({ machines, onVerTodas }: TopMaquinasCritica
             </div>
 
             {onVerTodas && (
-              <div className="flex justify-center pt-3">
+              <div className="flex justify-center pt-2">
                 <Button variant="outline" size="sm" onClick={onVerTodas} className="gap-2">
                   Ver todas as máquinas paradas
                   <ArrowRight className="h-4 w-4" />
