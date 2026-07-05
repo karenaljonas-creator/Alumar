@@ -35,7 +35,7 @@ export function PainelResumo({ stats, preventivas, chart }: PainelResumoProps) {
   const preventivasPct = preventivas.total > 0 ? (preventivas.ok / preventivas.total) * 100 : 0
 
   return (
-    <div className="grid gap-3 lg:grid-cols-4 lg:items-start">
+    <div className="grid gap-3 lg:grid-cols-4 lg:items-stretch">
       {/* Card grande: Disponibilidade da Planta (Física) */}
       <Card
         className="border-0 shadow-sm text-white overflow-hidden"
