@@ -16,7 +16,6 @@ import {
   analisarPreventivas,
   filtrarMaquinasPrincipais,
 } from "@/lib/machine-utils"
-import { StatusChart } from "@/components/status-chart"
 import { MachineFilters } from "@/components/machine-filters"
 import { MachineTable } from "@/components/machine-table"
 import { MachineFormDialog } from "@/components/machine-form-dialog"
@@ -31,9 +30,8 @@ import { HistoricoMaquinas } from "@/components/historico-maquinas"
 import { ImportHistoricalButton } from "@/components/import-historical-button"
 import { GraficoPeriodoInoperante } from "@/components/grafico-periodo-inoperante"
 import { GraficoLocalizacao } from "@/components/grafico-localizacao"
-import { StatsCards } from "@/components/stats-cards"
+import { PainelResumo } from "@/components/painel-resumo"
 import { GraficoDisponibilidadeSemanal } from "@/components/grafico-disponibilidade-semanal"
-import { PreventivasChart } from "@/components/preventivas-chart"
 import { CausaParadasChart } from "@/components/causa-paradas-chart"
 import { TopMaquinasCriticas } from "@/components/top-maquinas-criticas"
 import { ParadasPorSemanaChart } from "@/components/paradas-por-semana-chart"
@@ -875,18 +873,13 @@ export default function Home() {
                 </div>
               </div>
 
-              <StatsCards
+              {/* Linha 1: Resumo (Disponibilidade da Planta + KPIs + Disponibilidade Semanal) */}
+              <PainelResumo
                 stats={stats}
-                preventivas={{ ok: preventivas.ok, total: preventivas.total }}
+                preventivas={preventivas}
                 trend={statsTrend}
+                chart={<GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />}
               />
-
-              {/* Linha 1: Disponibilidade (gauge) + Disponibilidade Semanal + Preventivas */}
-              <div className="grid gap-4 lg:grid-cols-3">
-                <StatusChart stats={stats} machines={machinesForChart} contratoFilter={contratoFilter} />
-                <GraficoDisponibilidadeSemanal contratoFilter={contratoFilter} />
-                <PreventivasChart preventivas={preventivas} />
-              </div>
 
               {/* Linha 2: Top 5 Críticas (largo) + Causa das Paradas */}
               <div className="grid gap-4 lg:grid-cols-3 [&>*]:min-w-0">
