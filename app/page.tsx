@@ -769,8 +769,8 @@ export default function Home() {
                   className={cn(
                     "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                     activeSection === item.id
-                      ? "bg-white text-[#0092bc]"
-                      : "text-white/80 hover:bg-white/10 hover:text-white",
+                      ? "bg-[#e6f4f9] text-[#0092bc]"
+                      : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
                   )}
                 >
                   <item.icon className="h-4 w-4 flex-shrink-0" />
