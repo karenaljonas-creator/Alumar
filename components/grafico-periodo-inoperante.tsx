@@ -40,12 +40,12 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
             <BarChart
               data={chartData}
               layout="vertical"
-              margin={{ left: 80, right: 40, top: 5, bottom: 5 }}
+              margin={{ left: 4, right: 44, top: 5, bottom: 5 }}
               barCategoryGap="25%"
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
               <XAxis type="number" stroke="#64748b" tick={{ fontSize: 12 }} allowDecimals={false} />
-              <YAxis dataKey="periodo" type="category" width={75} stroke="#64748b" tick={{ fontSize: 13 }} />
+              <YAxis dataKey="periodo" type="category" width={66} stroke="#64748b" tick={{ fontSize: 13 }} />
               <Tooltip
                 cursor={{ fill: "rgba(0, 146, 188, 0.06)" }}
                 contentStyle={{
