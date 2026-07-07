@@ -28,24 +28,20 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
       .filter((item) => item.quantidade > 0)
   }, [machines])
 
-  // Altura proporcional ao número de barras para evitar espaços vazios,
-  // com um mínimo para caber os eixos e um teto quando há muitas faixas.
-  const chartHeight = Math.min(210, Math.max(120, chartData.length * 56 + 40))
-
   return (
-    <Card className="border-border shadow-sm h-full flex flex-col">
-      <CardHeader className="pb-2 pt-4 px-4">
+    <Card className="border-border shadow-sm h-[360px] flex flex-col gap-2 py-4">
+      <CardHeader className="pb-1 pt-0 px-4">
         <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">Período Inoperante</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">Distribuição de máquinas paradas por tempo de inatividade</CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex flex-1 items-center">
-        <div className="w-full" style={{ height: chartHeight }}>
+      <CardContent className="px-4 pb-4 flex flex-1 flex-col min-h-0">
+        <div className="w-full flex-1 min-h-0">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
               layout="vertical"
               margin={{ left: 80, right: 40, top: 5, bottom: 5 }}
-              barCategoryGap="30%"
+              barCategoryGap="25%"
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
               <XAxis type="number" stroke="#64748b" tick={{ fontSize: 12 }} allowDecimals={false} />
@@ -59,7 +55,7 @@ export function GraficoPeriodoInoperante({ machines }: GraficoPeriodoInoperanteP
                   fontSize: "12px",
                 }}
               />
-              <Bar dataKey="quantidade" fill="#0092bc" radius={[0, 6, 6, 0]} maxBarSize={44}>
+              <Bar dataKey="quantidade" fill="#0092bc" radius={[0, 6, 6, 0]} maxBarSize={64}>
                 <LabelList
                   dataKey="quantidade"
                   position="right"
