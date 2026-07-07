@@ -16,12 +16,12 @@ interface GraficoLocalizacaoProps {
 
 export function GraficoLocalizacao({ data }: GraficoLocalizacaoProps) {
   return (
-    <Card className="border-border shadow-sm h-full flex flex-col">
-      <CardHeader className="pb-2 pt-4 px-4">
+    <Card className="border-border shadow-sm h-[360px] flex flex-col gap-2 py-4">
+      <CardHeader className="pb-1 pt-0 px-4">
         <CardTitle className="text-sm font-bold uppercase tracking-wide text-foreground">Localização das Máquinas Paradas</CardTitle>
         <CardDescription className="text-xs text-muted-foreground">Distribuição geográfica dos equipamentos inativos</CardDescription>
       </CardHeader>
-      <CardContent className="px-4 pb-4 flex-1">
+      <CardContent className="px-4 pb-4 flex flex-1 flex-col min-h-0">
         <ChartContainer
           config={{
             quantidade: {
@@ -29,7 +29,7 @@ export function GraficoLocalizacao({ data }: GraficoLocalizacaoProps) {
               color: "#0092bc",
             },
           }}
-          className="h-[210px] w-full"
+          className="w-full flex-1 min-h-0 aspect-auto"
         >
           <BarChart data={data} layout="vertical" margin={{ left: 20, right: 40, top: 5, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
