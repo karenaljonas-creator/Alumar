@@ -360,26 +360,97 @@ export default function Home() {
 
       if (activeSection === "estoque-estrategico") {
         const supabase = (await import("@/lib/supabase/client")).createClient()
-        const { data, error } = await supabase
-          .from("lista_mestre")
-          .select("codigo, descricao, quantidade_minima")
-          .order("codigo", { ascending: true })
-        if (error) {
-          toast({ title: "Erro ao exportar", description: error.message, variant: "destructive" })
-          return
-        }
-        if (!data || data.length === 0) {
-          toast({ title: "Nenhum dado", description: "A Lista Mestre está vazia.", variant: "destructive" })
-          return
-        }
-        const headers = ["PN", "Descrição", "Quantidade Mínima"]
-        const rows = data.map((it) => [
-          it.codigo ?? "",
-          it.descricao ?? "",
-          it.quantidade_minima ?? 0,
+        const ORIGEM_ESTRATEGICA = "Estoque estratégico - corretivos"
+        // Mesma lógica da tela: saldo = entradas - saídas, cruzado com a Lista Mestre.
+        const [entradasRes, saidasRes, mestreRes] = await Promise.all([
+          supabase.from("estoque_pecas").select("codigo, descricao, quantidade, origem"),
+          supabase.from("saida_pecas").select("codigo, quantidade"),
+          supabase.from("lista_mestre").select("id, codigo, descricao, quantidade_minima"),
         ])
-        downloadCsv(`lista-mestre-estrategico-${today}.csv`, headers, rows)
-        toast({ title: "Exportação concluída", description: "Lista Mestre exportada com sucesso." })
+        const primeiroErro = entradasRes.error || saidasRes.error || mestreRes.error
+        if (primeiroErro) {
+          toast({ title: "Erro ao exportar", description: primeiroErro.message, variant: "destructive" })
+          return
+        }
+
+        // Total de entradas por código + códigos com origem estratégica
+        const mapaEntradas = new Map<string, { descricao: string; total: number }>()
+        const codigosEstrategicos = new Set<string>()
+        for (const e of entradasRes.data || []) {
+          const atual = mapaEntradas.get(e.codigo)
+          if (atual) atual.total += e.quantidade || 0
+          else mapaEntradas.set(e.codigo, { descricao: e.descricao || "", total: e.quantidade || 0 })
+          if (e.origem === ORIGEM_ESTRATEGICA) codigosEstrategicos.add(e.codigo)
+        }
+
+        // Total de saídas por código
+        const mapaSaidas = new Map<string, number>()
+        for (const s of saidasRes.data || []) {
+          mapaSaidas.set(s.codigo, (mapaSaidas.get(s.codigo) || 0) + (s.quantidade || 0))
+        }
+
+        // Lista Mestre por código
+        const mapaMestre = new Map<string, { descricao: string; quantidade_minima: number }>()
+        for (const m of mestreRes.data || []) {
+          mapaMestre.set(m.codigo, { descricao: m.descricao, quantidade_minima: m.quantidade_minima })
+        }
+
+        // União: itens da Lista Mestre + PNs estratégicos fora dela ("Analisar")
+        const todosCodigos = new Set<string>([...mapaMestre.keys(), ...codigosEstrategicos])
+        type LinhaExport = {
+          codigo: string
+          descricao: string
+          saldo: number
+          quantidadeMinima: number | null
+          diferenca: number | null
+          status: "OK" | "Repor" | "Analisar"
+        }
+        const linhas: LinhaExport[] = []
+        for (const codigo of todosCodigos) {
+          const info = mapaEntradas.get(codigo)
+          const saldo = (info?.total || 0) - (mapaSaidas.get(codigo) || 0)
+          const mestre = mapaMestre.get(codigo)
+          if (mestre) {
+            linhas.push({
+              codigo,
+              descricao: mestre.descricao || info?.descricao || "",
+              saldo,
+              quantidadeMinima: mestre.quantidade_minima,
+              diferenca: saldo - mestre.quantidade_minima,
+              status: saldo >= mestre.quantidade_minima ? "OK" : "Repor",
+            })
+          } else {
+            linhas.push({
+              codigo,
+              descricao: info?.descricao || "",
+              saldo,
+              quantidadeMinima: null,
+              diferenca: null,
+              status: "Analisar",
+            })
+          }
+        }
+
+        if (linhas.length === 0) {
+          toast({ title: "Nenhum dado", description: "Não há itens estratégicos para exportar.", variant: "destructive" })
+          return
+        }
+
+        // Mesma ordenação da tela: Repor, depois Analisar, depois OK
+        const ordem: Record<LinhaExport["status"], number> = { Repor: 0, Analisar: 1, OK: 2 }
+        linhas.sort((a, b) => ordem[a.status] - ordem[b.status] || a.codigo.localeCompare(b.codigo))
+
+        const headers = ["Código (PN)", "Descrição", "Saldo", "Qtd. Mínima", "Diferença", "Status"]
+        const rows = linhas.map((it) => [
+          it.codigo,
+          it.descricao,
+          it.saldo,
+          it.quantidadeMinima ?? "-",
+          it.diferenca ?? "-",
+          it.status,
+        ])
+        downloadCsv(`estoque-estrategico-${today}.csv`, headers, rows)
+        toast({ title: "Exportação concluída", description: "Estoque estratégico exportado com sucesso." })
         return
       }
 
