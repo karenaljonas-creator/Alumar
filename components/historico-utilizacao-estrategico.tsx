@@ -430,7 +430,6 @@ export function HistoricoUtilizacaoEstrategico() {
                     <TableHead className="text-center">Consumido</TableHead>
                     <TableHead className="text-center">Saldo Atual</TableHead>
                     <TableHead className="text-center">Qtd. Mínima</TableHead>
-                    <TableHead className="text-center">Classificação</TableHead>
                     <TableHead>Última Utilização</TableHead>
                     <TableHead className="text-center">OS Atendidas</TableHead>
                     <TableHead>Equipamentos</TableHead>
@@ -453,9 +452,6 @@ export function HistoricoUtilizacaoEstrategico() {
                         </span>
                       </TableCell>
                       <TableCell className="text-center">{item.quantidadeMinima ?? "-"}</TableCell>
-                      <TableCell className="text-center">
-                        <CriticidadeBadge c={item.criticidade} />
-                      </TableCell>
                       <TableCell className="whitespace-nowrap">{formatarData(item.ultimaUtilizacao)}</TableCell>
                       <TableCell className="text-center">{item.osAtendidas}</TableCell>
                       <TableCell className="max-w-[160px] truncate">
