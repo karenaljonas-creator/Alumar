@@ -170,6 +170,13 @@ export function HistoricoUtilizacaoEstrategico() {
         const ss = saidasPorCodigo.get(codigo) || []
         const mestreInfo = mapaMestre.get(codigo)
 
+        // Esta aba controla exclusivamente a movimentação do estoque estratégico:
+        // o item só entra na lista se teve ao menos uma ENTRADA com origem estratégica
+        // E ao menos uma SAÍDA registrada.
+        const temEntradaEstrategica = es.some((e) => e.origem === ORIGEM_ESTRATEGICA)
+        const temSaida = ss.length > 0
+        if (!temEntradaEstrategica || !temSaida) continue
+
         const qtdInicial = es.reduce((acc, e) => acc + (e.quantidade || 0), 0)
         const consumido = ss.reduce((acc, s) => acc + (s.quantidade || 0), 0)
         const saldoAtual = qtdInicial - consumido
