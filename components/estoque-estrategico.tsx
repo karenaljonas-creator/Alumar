@@ -37,7 +37,6 @@ import {
   ArrowDown,
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
-import { HistoricoUtilizacaoEstrategico } from "@/components/historico-utilizacao-estrategico"
 
 type Status = "OK" | "Repor" | "Analisar"
 
@@ -624,9 +623,6 @@ export function EstoqueEstrategico() {
           </CardContent>
         </Card>
       </div>
-
-      {/* Histórico de Utilização dos Itens Estratégicos */}
-      <HistoricoUtilizacaoEstrategico />
 
       <Card>
         <CardHeader>
