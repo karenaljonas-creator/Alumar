@@ -38,6 +38,8 @@ import {
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 import { EstoqueEstrategicoGraficos } from "@/components/estoque-estrategico-graficos"
+import { ValidacaoListaMestre } from "@/components/validacao-lista-mestre"
+import { ItensSemUtilizacao } from "@/components/itens-sem-utilizacao"
 
 type Status = "OK" | "Repor" | "Analisar"
 
@@ -627,6 +629,12 @@ export function EstoqueEstrategico() {
 
       {/* Gráficos de consumo e utilização (baseados nas saídas de origem estratégica) */}
       <EstoqueEstrategicoGraficos />
+
+      {/* Pendências de classificação + itens sem utilização (lado a lado) */}
+      <div className="grid gap-4 xl:grid-cols-2">
+        <ValidacaoListaMestre />
+        <ItensSemUtilizacao />
+      </div>
 
       <Card>
         <CardHeader>
