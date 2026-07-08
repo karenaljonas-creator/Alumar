@@ -508,7 +508,6 @@ export function EstoqueEstrategico() {
   }, [itens, filtros, searchTerm, ordenacao])
 
   const totalRepor = itens.filter((i) => i.status === "Repor").length
-  const totalAnalisar = itens.filter((i) => i.status === "Analisar").length
   const totalOk = itens.filter((i) => i.status === "OK").length
   const totalMonitorados = itens.length
   // Itens avaliáveis = possuem mínimo definido (Lista Mestre): OK ou Repor.
@@ -522,15 +521,7 @@ export function EstoqueEstrategico() {
     0,
   )
 
-  // Top 5 itens mais críticos (maior déficit primeiro)
-  const top5Criticos = [...itens]
-    .filter((i) => (i.diferenca ?? 0) < 0)
-    .sort((a, b) => (a.diferenca ?? 0) - (b.diferenca ?? 0))
-    .slice(0, 5)
-
-  // Percentuais sobre o total de itens monitorados (com 1 casa decimal, formato BR)
-  const pctDoTotal = (valor: number) =>
-    totalMonitorados ? ((valor / totalMonitorados) * 100).toFixed(1).replace(".", ",") : "0,0"
+  // Percentual de itens abaixo do mínimo (usado no donut do topo)
   const criticosPctTotal = totalMonitorados ? Math.round((totalRepor / totalMonitorados) * 100) : 0
 
   // Faixa de aderência: define cor e rótulo
@@ -629,81 +620,6 @@ export function EstoqueEstrategico() {
               <AlertTriangle className="h-3.5 w-3.5" />
               <span>Impacto na operação</span>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Top 5 críticos + Estoque abaixo do mínimo */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Top 5 itens mais críticos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {top5Criticos.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">Nenhum item crítico no momento.</p>
-            ) : (
-              <ul className="flex flex-col divide-y">
-                {top5Criticos.map((item, idx) => (
-                  <li key={item.codigo} className="flex items-center gap-3 py-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                  {idx + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{item.descricao || item.codigo}</p>
-                      <p className="truncate text-xs text-muted-foreground">{item.codigo}</p>
-                    </div>
-                    <span className="shrink-0 text-sm font-bold text-primary">{item.diferenca}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Estoque abaixo do mínimo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-3">
-              <p className="text-5xl font-bold text-primary">{totalRepor}</p>
-              <div>
-                <p className="text-sm font-medium text-foreground">itens abaixo do mínimo</p>
-                <p className="text-xs text-muted-foreground">{pctDoTotal(totalRepor)}% do total de itens</p>
-              </div>
-            </div>
-
-            {/* Barra de progresso */}
-            <div className="mt-4 h-7 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="flex h-full items-center justify-end rounded-full bg-primary pr-3 text-xs font-semibold text-primary-foreground"
-                style={{ width: `${Math.max(criticosPctTotal, 8)}%` }}
-              >
-                {criticosPctTotal}%
-              </div>
-            </div>
-
-            {/* Distribuição por status */}
-            <div className="mt-5 grid grid-cols-3 gap-2 border-t pt-4">
-              {[
-                { cor: "bg-primary", rotulo: "OK", valor: totalOk },
-                { cor: "bg-muted-foreground/40", rotulo: "Para revisar", valor: totalAnalisar },
-                { cor: "bg-primary", rotulo: "Abaixo do mínimo", valor: totalRepor },
-              ].map((linha) => (
-                <div key={linha.rotulo} className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${linha.cor}`} aria-hidden="true" />
-                    <span className="text-lg font-bold text-foreground">{linha.valor}</span>
-                  </div>
-                  <span className="text-xs text-muted-foreground">
-                    {linha.rotulo} ({pctDoTotal(linha.valor)}%)
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-4 border-t pt-3 text-xs text-muted-foreground">Total de itens: {totalMonitorados}</p>
           </CardContent>
         </Card>
       </div>

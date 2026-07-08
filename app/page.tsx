@@ -22,7 +22,7 @@ import { MachineFormDialog } from "@/components/machine-form-dialog"
 import { RegistroSemanal } from "@/components/registro-semanal"
 import { Configuracoes } from "@/components/configuracoes"
 import { Button } from "@/components/ui/button"
-import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench, Shield } from "lucide-react"
+import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench, Shield, History } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -40,9 +40,10 @@ import { EntradaPecas } from "@/components/entrada-pecas"
 import { SaidaPecas } from "@/components/saida-pecas"
 import { EstoqueSaldo } from "@/components/estoque-saldo"
 import { EstoqueEstrategico } from "@/components/estoque-estrategico"
+import { HistoricoUtilizacaoEstrategico } from "@/components/historico-utilizacao-estrategico"
 import { cn } from "@/lib/utils"
 
-type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "estoque-estrategico" | "gerenciar" | "config"
+type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "estoque-estrategico" | "historico-utilizacao" | "gerenciar" | "config"
 
 export default function Home() {
   const [machines, setMachines] = useState<Machine[]>([])
@@ -775,6 +776,7 @@ export default function Home() {
     { id: "saida" as const, label: "Saída", icon: PackageMinus },
     { id: "estoque" as const, label: "Estoque", icon: Boxes },
     { id: "estoque-estrategico" as const, label: "Estoque Estratégico", icon: Shield },
+    { id: "historico-utilizacao" as const, label: "Histórico de Utilização", icon: History },
   ]
 
   const configItems = [
@@ -1035,6 +1037,19 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground">Controle de estoque mínimo para peças críticas</p>
               </div>
               <EstoqueEstrategico />
+            </div>
+          )}
+
+          {/* Histórico de Utilização */}
+          {activeSection === "historico-utilizacao" && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-xl font-semibold">Histórico de Utilização</h2>
+                <p className="text-sm text-muted-foreground">
+                  Entradas e saídas de todos os itens com movimentação
+                </p>
+              </div>
+              <HistoricoUtilizacaoEstrategico />
             </div>
           )}
 
