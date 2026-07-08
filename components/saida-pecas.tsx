@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { formatDateOnly } from "@/lib/utils"
 import { ColumnFilter } from "@/components/column-filter"
 import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
+import { HorizontalScrollArea } from "@/components/horizontal-scroll-area"
 
 interface SaidaPeca {
   id: string
@@ -948,8 +949,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
               Nenhuma saída registrada. Clique em &quot;Nova Saída&quot; para adicionar.
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
+            <HorizontalScrollArea>
+              <Table className="w-full min-w-[1100px]">
                 <TableHeader>
                   <TableRow className="bg-muted">
                     <TableHead>
@@ -1023,7 +1024,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                   ))}
                 </TableBody>
               </Table>
-            </div>
+            </HorizontalScrollArea>
           )}
         </CardContent>
       </Card>

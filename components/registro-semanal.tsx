@@ -14,6 +14,7 @@ import { loadMachines, saveMachines } from "@/lib/supabase-machine-storage"
 import { saveWeeklySnapshot } from "@/lib/supabase-history-storage"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { HorizontalScrollArea } from "@/components/horizontal-scroll-area"
 
 interface RegistroSemanalProps {
   machines: Machine[]
@@ -441,8 +442,8 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
       )}
 
       <div className="rounded-lg border border-border bg-card overflow-hidden">
-        <div className="overflow-x-auto">
-            <Table className="w-full min-w-[1100px]">
+        <HorizontalScrollArea>
+          <Table className="w-full min-w-[1100px]">
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="font-semibold w-[3%] px-2"></TableHead>
@@ -572,7 +573,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
               ))}
             </TableBody>
           </Table>
-        </div>
+        </HorizontalScrollArea>
       </div>
 
       <div className="flex justify-between items-center">
