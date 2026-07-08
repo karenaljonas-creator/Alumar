@@ -1046,7 +1046,7 @@ export default function Home() {
               <div>
                 <h2 className="text-xl font-semibold">Histórico de Utilização</h2>
                 <p className="text-sm text-muted-foreground">
-                  Entradas e saídas dos itens controlados como estoque estratégico
+                  Entradas e saídas de todos os itens com movimentação
                 </p>
               </div>
               <HistoricoUtilizacaoEstrategico />

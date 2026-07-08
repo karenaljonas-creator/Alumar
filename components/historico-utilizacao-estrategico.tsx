@@ -44,8 +44,6 @@ import {
   X,
 } from "lucide-react"
 
-const ORIGEM_ESTRATEGICA = "Estoque estratégico - corretivos"
-
 type Status = "OK" | "Repor" | "Analisar"
 type Criticidade = "Crítico" | "Atenção" | "Normal"
 
@@ -144,25 +142,26 @@ export function HistoricoUtilizacaoEstrategico() {
         mapaMestre.set(m.codigo, { descricao: m.descricao, quantidade_minima: m.quantidade_minima })
       }
 
-      // Apenas itens cadastrados na Lista Mestre entram no histórico.
-      // PNs estratégicos "a analisar" (fora da Lista Mestre) são omitidos.
-      const todosCodigos = new Set<string>(mapaMestre.keys())
-
-      // Agrupar movimentos por código
+      // Agrupar movimentos por código (todos os itens, sem restrição de lista/origem)
       const entradasPorCodigo = new Map<string, typeof entradas>()
       for (const e of entradas) {
-        if (!todosCodigos.has(e.codigo)) continue
         const arr = entradasPorCodigo.get(e.codigo) || []
         arr.push(e)
         entradasPorCodigo.set(e.codigo, arr)
       }
       const saidasPorCodigo = new Map<string, typeof saidas>()
       for (const s of saidas) {
-        if (!todosCodigos.has(s.codigo)) continue
         const arr = saidasPorCodigo.get(s.codigo) || []
         arr.push(s)
         saidasPorCodigo.set(s.codigo, arr)
       }
+
+      // Todos os códigos que aparecem em qualquer movimento ou na Lista Mestre.
+      const todosCodigos = new Set<string>([
+        ...mapaMestre.keys(),
+        ...entradasPorCodigo.keys(),
+        ...saidasPorCodigo.keys(),
+      ])
 
       const linhas: HistoricoItem[] = []
       for (const codigo of todosCodigos) {
@@ -170,12 +169,8 @@ export function HistoricoUtilizacaoEstrategico() {
         const ss = saidasPorCodigo.get(codigo) || []
         const mestreInfo = mapaMestre.get(codigo)
 
-        // Esta aba controla exclusivamente a movimentação do estoque estratégico:
-        // o item só entra na lista se teve ao menos uma ENTRADA com origem estratégica
-        // E ao menos uma SAÍDA registrada.
-        const temEntradaEstrategica = es.some((e) => e.origem === ORIGEM_ESTRATEGICA)
-        const temSaida = ss.length > 0
-        if (!temEntradaEstrategica || !temSaida) continue
+        // Histórico geral: inclui qualquer item que teve movimentação (entrada ou saída).
+        if (es.length === 0 && ss.length === 0) continue
 
         const qtdInicial = es.reduce((acc, e) => acc + (e.quantidade || 0), 0)
         const consumido = ss.reduce((acc, s) => acc + (s.quantidade || 0), 0)
@@ -353,7 +348,7 @@ export function HistoricoUtilizacaoEstrategico() {
       <CardHeader>
         <div className="flex flex-col gap-4">
           <CardTitle className="flex items-center gap-2 text-base">
-            <History className="h-5 w-5" /> Histórico de Utilização dos Itens Estratégicos
+            <History className="h-5 w-5" /> Histórico de Utilização dos Itens
           </CardTitle>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex flex-wrap items-center gap-2">
