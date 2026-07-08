@@ -32,6 +32,8 @@ interface SaidaPeca {
   observacao: string
   created_at: string
   updated_at?: string
+  // Derivado: origem da entrada correspondente à NF (não é coluna da tabela saida_pecas)
+  origem?: string
 }
 
 interface EstoquePeca {
@@ -100,7 +102,28 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
     if (error) {
       toast({ title: "Erro ao carregar saídas", description: error.message, variant: "destructive" })
     } else {
-      setSaidas(data || [])
+      const saidasData = data || []
+
+      // Buscar a origem de cada NF a partir das entradas (estoque_pecas)
+      const nfs = [...new Set(saidasData.map((s) => s.nota_fiscal).filter(Boolean))]
+      const mapaOrigemPorNF = new Map<string, string>()
+      if (nfs.length > 0) {
+        const { data: entradas, error: erroEntradas } = await supabase
+          .from("estoque_pecas")
+          .select("nota_fiscal, origem")
+          .in("nota_fiscal", nfs)
+        if (erroEntradas) {
+          console.error("Erro ao carregar origem das NFs:", erroEntradas)
+        } else {
+          for (const e of entradas || []) {
+            if (e.nota_fiscal && e.origem && !mapaOrigemPorNF.has(e.nota_fiscal)) {
+              mapaOrigemPorNF.set(e.nota_fiscal, e.origem)
+            }
+          }
+        }
+      }
+
+      setSaidas(saidasData.map((s) => ({ ...s, origem: mapaOrigemPorNF.get(s.nota_fiscal) || "" })))
     }
     setLoading(false)
   }, [supabase, toast])
@@ -382,6 +405,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       { key: "compressor", value: (s) => s.compressor },
       { key: "utilizacao", value: (s) => s.utilizacao },
       { key: "nota_fiscal", value: (s) => s.nota_fiscal || "-" },
+      { key: "origem", value: (s) => s.origem || "-" },
       {
         key: "data_atualizacao",
         value: (s) =>
@@ -398,7 +422,8 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
       s.descricao.toLowerCase().includes(termo) ||
       s.ordem_servico.toLowerCase().includes(termo) ||
       s.compressor.toLowerCase().includes(termo) ||
-      (s.nota_fiscal || "").toLowerCase().includes(termo),
+      (s.nota_fiscal || "").toLowerCase().includes(termo) ||
+      (s.origem || "").toLowerCase().includes(termo),
     [],
   )
 
@@ -981,6 +1006,9 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <div className="flex items-center font-medium">NF {renderFiltro("nota_fiscal")}</div>
                     </TableHead>
                     <TableHead>
+                      <div className="flex items-center font-medium">Origem {renderFiltro("origem")}</div>
+                    </TableHead>
+                    <TableHead>
                       <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
                     <TableHead className="text-center">Ações</TableHead>
@@ -1007,6 +1035,15 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                         </Badge>
                       </TableCell>
                       <TableCell className="font-mono text-sm">{saida.nota_fiscal || "-"}</TableCell>
+                      <TableCell>
+                        {saida.origem ? (
+                          <Badge variant="outline" className="text-xs whitespace-nowrap">
+                            {saida.origem}
+                          </Badge>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {saida.updated_at ? new Date(saida.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(saida.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
