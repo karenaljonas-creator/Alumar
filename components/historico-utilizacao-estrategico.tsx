@@ -201,7 +201,7 @@ export function HistoricoUtilizacaoEstrategico() {
         const descricao =
           mestreInfo?.descricao || es[0]?.descricao || ss[0]?.descricao || ""
 
-        // Linha do tempo (entradas + saídas) ordenada por data ascendente
+        // Linha do tempo (entradas + saídas) ordenada por data descendente (mais novo primeiro)
         const movimentos: Movimento[] = [
           ...es.map((e) => ({
             tipo: "ENTRADA" as const,
@@ -224,7 +224,7 @@ export function HistoricoUtilizacaoEstrategico() {
         ].sort((a, b) => {
           const da = a.data || ""
           const db = b.data || ""
-          return da.localeCompare(db)
+          return db.localeCompare(da)
         })
 
         const status: Status = mestreInfo
