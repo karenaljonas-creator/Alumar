@@ -139,17 +139,14 @@ export function HistoricoUtilizacaoEstrategico() {
       const saidas = saidasRes.data || []
       const mestre = mestreRes.data || []
 
-      // Códigos que fazem parte do controle estratégico
-      const codigosEstrategicos = new Set<string>()
-      for (const e of entradas) {
-        if (e.origem === ORIGEM_ESTRATEGICA) codigosEstrategicos.add(e.codigo)
-      }
       const mapaMestre = new Map<string, { descricao: string; quantidade_minima: number }>()
       for (const m of mestre) {
         mapaMestre.set(m.codigo, { descricao: m.descricao, quantidade_minima: m.quantidade_minima })
       }
 
-      const todosCodigos = new Set<string>([...mapaMestre.keys(), ...codigosEstrategicos])
+      // Apenas itens cadastrados na Lista Mestre entram no histórico.
+      // PNs estratégicos "a analisar" (fora da Lista Mestre) são omitidos.
+      const todosCodigos = new Set<string>(mapaMestre.keys())
 
       // Agrupar movimentos por código
       const entradasPorCodigo = new Map<string, typeof entradas>()
