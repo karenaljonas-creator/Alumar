@@ -38,6 +38,7 @@ import {
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 import { EstoqueEstrategicoGraficos } from "@/components/estoque-estrategico-graficos"
+import { ValidacaoListaMestre } from "@/components/validacao-lista-mestre"
 
 type Status = "OK" | "Repor" | "Analisar"
 
@@ -627,6 +628,9 @@ export function EstoqueEstrategico() {
 
       {/* Gráficos de consumo e utilização (baseados nas saídas de origem estratégica) */}
       <EstoqueEstrategicoGraficos />
+
+      {/* Pendências de classificação: itens estratégicos fora da Lista Mestre */}
+      <ValidacaoListaMestre />
 
       <Card>
         <CardHeader>
