@@ -215,13 +215,6 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
-            <MiniKpi label="Críticos" value={reposicao.criticos} tone="danger" />
-            <MiniKpi label="Abaixo do mínimo" value={reposicao.abaixo} tone="warning" />
-            <MiniKpi label="Total para repor" value={reposicao.totalRepor} tone="default" />
-            <MiniKpi label="Impacto alto" value={reposicao.impactoAlto} tone="default" />
-          </div>
-
           <div>
             <p className="mb-2 text-sm font-medium">Top 10 Itens para Reposição</p>
             {reposicao.top.length === 0 ? (
