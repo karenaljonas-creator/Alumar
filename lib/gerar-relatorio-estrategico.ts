@@ -11,7 +11,7 @@ import { loadContrato } from "@/lib/contrato-storage"
 
 /* ---- Paleta (identidade Atlas Copco do app) ---- */
 const AZUL = "#0092bc" // Atlas Copco Blue OFICIAL (--primary)
-const AZUL_ESCURO = "#0c2c44" // usado como fundo escuro (igual ao relatório de paradas)
+const AZUL_ESCURO = "#0a4a5f" // Atlas Copco Blue 11 (azul-petróleo escuro da paleta oficial)
 const AZUL_MEDIO = "#15607a"
 const AZUL_CLARO_BG = "#e6f4f9"
 const TEXTO = "#1f2d3a"
@@ -289,7 +289,7 @@ function montarDocumento(titulo: string, paginas: string): string {
   .page-inner { flex:1; display:flex; min-height:0; }
   .sidebar {
     width:82mm; flex:none;
-    background:linear-gradient(180deg, ${AZUL_ESCURO} 0%, #0f3f5f 100%);
+    background:linear-gradient(180deg, ${AZUL_ESCURO} 0%, #063847 100%);
     color:#fff; padding:14mm 11mm;
     display:flex; flex-direction:column; gap:16px;
   }
