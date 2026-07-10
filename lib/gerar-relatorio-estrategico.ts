@@ -7,6 +7,7 @@ import { loadContrato } from "@/lib/contrato-storage"
 /* Relatório Gerencial de Estoque Estratégico (A4 Landscape)          */
 /* Página 1 - Resumo Executivo                                        */
 /* Página 2 - Estoque e Utilização                                    */
+/* Página 3 - Rastreabilidade das Utilizações                         */
 /* Dados cruzados de: Entrada + Saída + Estoque Estratégico           */
 /* ================================================================== */
 
@@ -71,6 +72,23 @@ interface DadosPagina2 {
   consumoCorretiva: number
   consumoPreventiva: number
   consumoEquip: { nome: string; total: number }[]
+}
+
+interface LinhaRastreio {
+  data: string
+  codigo: string
+  descricao: string
+  quantidade: number
+  equipamento: string
+  os: string
+  tipo: string
+  origem: string
+}
+
+interface DadosPagina3 {
+  periodoInicio: string
+  periodoFim: string
+  linhas: LinhaRastreio[]
 }
 
 /* ------------------------------------------------------------------ */
@@ -493,6 +511,119 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Página 3 - Rastreabilidade das Utilizações                          */
+/* ------------------------------------------------------------------ */
+
+function badgeTipo(tipo: string): string {
+  const t = tipo.trim().toLowerCase()
+  if (t === "corretiva") {
+    return `<span style="display:inline-block;padding:2px 9px;border-radius:11px;background:${AZUL_MEDIO};color:#fff;font-size:9.5px;font-weight:700;">Corretiva</span>`
+  }
+  if (t === "preventiva") {
+    return `<span style="display:inline-block;padding:2px 9px;border-radius:11px;background:${AZUL_CLARO_BG};color:${AZUL_MEDIO};font-size:9.5px;font-weight:700;">Preventiva</span>`
+  }
+  return `<span style="font-size:9.5px;color:${TEXTO_SUAVE};">${escapeHtml(tipo || "-")}</span>`
+}
+
+function paginaRastreabilidade(d: DadosPagina3): string {
+  const LINHAS_POR_PAGINA = 16
+  const total = d.linhas.length
+  const blocos: LinhaRastreio[][] = []
+  if (total === 0) {
+    blocos.push([])
+  } else {
+    for (let i = 0; i < total; i += LINHAS_POR_PAGINA) {
+      blocos.push(d.linhas.slice(i, i + LINHAS_POR_PAGINA))
+    }
+  }
+
+  const cabecalhoTabela = `
+    <thead>
+      <tr style="background:${AZUL};color:#fff;">
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">Data</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">Código (PN)</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">Descrição</th>
+        <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;">Quantidade</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">Equipamento</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">OS</th>
+        <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:700;">Tipo de utilização</th>
+        <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:700;">Origem</th>
+      </tr>
+    </thead>`
+
+  return blocos
+    .map((bloco, idxBloco) => {
+      const corpo = bloco.length
+        ? bloco
+            .map((l, i) => {
+              const zebra = i % 2 === 1 ? `background:${AZUL_CLARO_BG};` : "background:#fff;"
+              return `
+          <tr style="${zebra}border-bottom:1px solid ${BORDA};">
+            <td style="padding:7px 10px;font-size:10px;color:${TEXTO};white-space:nowrap;">${escapeHtml(l.data)}</td>
+            <td style="padding:7px 10px;font-size:10px;color:${AZUL};font-weight:600;">${escapeHtml(l.codigo)}</td>
+            <td style="padding:7px 10px;font-size:10px;color:${TEXTO};max-width:230px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(l.descricao || "-")}</td>
+            <td style="padding:7px 10px;font-size:10px;text-align:center;color:${TEXTO};">${l.quantidade}</td>
+            <td style="padding:7px 10px;font-size:10px;color:${TEXTO};white-space:nowrap;">${escapeHtml(l.equipamento || "-")}</td>
+            <td style="padding:7px 10px;font-size:10px;color:${TEXTO};white-space:nowrap;">${escapeHtml(l.os || "-")}</td>
+            <td style="padding:7px 10px;text-align:center;">${badgeTipo(l.tipo)}</td>
+            <td style="padding:7px 10px;font-size:9.5px;color:${TEXTO_SUAVE};white-space:nowrap;">${escapeHtml(l.origem || "-")}</td>
+          </tr>`
+            })
+            .join("")
+        : `<tr><td colspan="8" style="padding:24px;text-align:center;font-size:12px;color:${TEXTO_SUAVE};">Nenhuma utilização de item do estoque estratégico registrada no período.</td></tr>`
+
+      const contador =
+        blocos.length > 1
+          ? `<span style="font-size:10.5px;color:${TEXTO_SUAVE};">Página ${idxBloco + 1} de ${blocos.length} — ${total} utilizações</span>`
+          : `<span style="font-size:10.5px;color:${TEXTO_SUAVE};">${total} ${total === 1 ? "utilização registrada" : "utilizações registradas"}</span>`
+
+      const tituloCabecalho =
+        idxBloco === 0
+          ? `
+        <div style="flex:none;display:flex;align-items:center;gap:14px;padding:14px 18px 6px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:11px;background:${AZUL_CLARO_BG};color:${AZUL};flex:none;">${icone("doc", 24)}</span>
+          <div>
+            <div style="font-size:23px;font-weight:900;color:${AZUL_MEDIO};letter-spacing:.3px;line-height:1.05;">RASTREABILIDADE DAS UTILIZAÇÕES</div>
+            <div style="font-size:11.5px;color:${TEXTO_SUAVE};margin-top:2px;">Histórico detalhado de quando, onde e como os itens do estoque estratégico foram utilizados.</div>
+          </div>
+        </div>`
+          : `
+        <div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 18px 6px;">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:9px;background:${AZUL_CLARO_BG};color:${AZUL};flex:none;">${icone("doc", 18)}</span>
+          <div style="font-size:16px;font-weight:800;color:${AZUL_MEDIO};letter-spacing:.3px;">RASTREABILIDADE DAS UTILIZAÇÕES (cont.)</div>
+        </div>`
+
+      return `
+  <div class="page">
+    ${tituloCabecalho}
+    <div style="flex:1;min-height:0;padding:6px 18px 10px;display:flex;flex-direction:column;">
+      <div style="border:1px solid ${BORDA};border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(15,45,68,.06);">
+        <table style="width:100%;border-collapse:collapse;">
+          ${cabecalhoTabela}
+          <tbody>${corpo}</tbody>
+        </table>
+      </div>
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
+        ${contador}
+        <span style="font-size:9px;color:${TEXTO_SUAVE};">PN: Part Number (Código da Peça) · Período: ${d.periodoInicio} a ${d.periodoFim}</span>
+      </div>
+    </div>
+    <div class="rodape">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:${AZUL};color:#fff;">${icone("doc", 13)}</span>
+        <span style="font-size:10.5px;color:${TEXTO_SUAVE};">Rastreabilidade completa das saídas do estoque estratégico por ordem de serviço e equipamento.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:10.5px;font-weight:700;color:${AZUL_MEDIO};">Gestão de Estoque Estratégico</span>
+        <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:18px;display:block;" />
+      </div>
+    </div>
+  </div>`
+    })
+    .join("")
+}
+
+/* ------------------------------------------------------------------ */
 /* Shell HTML + impressão                                              */
 /* ------------------------------------------------------------------ */
 
@@ -598,7 +729,7 @@ function abrirDocumento(html: string): boolean {
 
 async function carregarDados(
   itens: ItemEstrategicoRelatorio[],
-): Promise<{ p1: DadosPagina1; p2: DadosPagina2 }> {
+): Promise<{ p1: DadosPagina1; p2: DadosPagina2; p3: DadosPagina3 }> {
   const supabase = createClient()
 
   // KPIs derivados do Estoque Estratégico (mesmas fórmulas da tela)
@@ -619,7 +750,7 @@ async function carregarDados(
     .select("codigo, descricao, origem, data_emissao, nota_fiscal")
   const { data: saidas } = await supabase
     .from("saida_pecas")
-    .select("codigo, descricao, quantidade, compressor, ordem_servico, nota_fiscal, utilizacao")
+    .select("codigo, descricao, quantidade, compressor, ordem_servico, nota_fiscal, utilizacao, data_saida")
 
   const ehEstrategica = (origem?: string | null) =>
     (origem || "").toLowerCase().startsWith(PREFIXO_ORIGEM_ESTRATEGICA)
@@ -730,6 +861,22 @@ async function carregarDados(
       }
     })
 
+  /* ---- Dados da Página 3 (rastreabilidade das saídas estratégicas) ---- */
+  const linhasRastreio: LinhaRastreio[] = saidasEstrategicas
+    .map((s) => ({
+      dataOrd: s.data_saida || "",
+      data: s.data_saida ? fmtData(s.data_saida) : "-",
+      codigo: s.codigo,
+      descricao: s.descricao || "",
+      quantidade: s.quantidade || 0,
+      equipamento: (s.compressor || "").trim() || "Não informado",
+      os: (s.ordem_servico || "").trim() || "-",
+      tipo: (s.utilizacao || "").trim(),
+      origem: mapaOrigem.get(s.nota_fiscal) || "-",
+    }))
+    .sort((a, b) => (a.dataOrd < b.dataOrd ? 1 : a.dataOrd > b.dataOrd ? -1 : 0))
+    .map(({ dataOrd, ...rest }) => rest)
+
   const contrato = loadContrato()
   const cliente = "Vale S.A."
   const periodoInicio = fmtData(minData)
@@ -769,6 +916,11 @@ async function carregarDados(
       consumoPreventiva,
       consumoEquip,
     },
+    p3: {
+      periodoInicio,
+      periodoFim,
+      linhas: linhasRastreio,
+    },
   }
 }
 
@@ -777,8 +929,8 @@ async function carregarDados(
 /* ------------------------------------------------------------------ */
 
 export async function gerarRelatorioEstrategico(itens: ItemEstrategicoRelatorio[]): Promise<boolean> {
-  const { p1, p2 } = await carregarDados(itens)
-  const paginas = paginaResumoExecutivo(p1) + paginaEstoqueUtilizacao(p2)
+  const { p1, p2, p3 } = await carregarDados(itens)
+  const paginas = paginaResumoExecutivo(p1) + paginaEstoqueUtilizacao(p2) + paginaRastreabilidade(p3)
   const html = montarDocumento("Relatório Gerencial de Estoque Estratégico", paginas)
   return abrirDocumento(html)
 }
