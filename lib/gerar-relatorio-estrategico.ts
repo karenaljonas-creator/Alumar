@@ -6,6 +6,7 @@ import { loadContrato } from "@/lib/contrato-storage"
 /* ================================================================== */
 /* Relatório Gerencial de Estoque Estratégico (A4 Landscape)          */
 /* Página 1 - Resumo Executivo                                        */
+/* Página 2 - Estoque e Utilização                                    */
 /* Dados cruzados de: Entrada + Saída + Estoque Estratégico           */
 /* ================================================================== */
 
@@ -14,6 +15,7 @@ const AZUL = "#0092bc" // Atlas Copco Blue OFICIAL (--primary)
 const AZUL_ESCURO = "#0a4a5f" // Atlas Copco Blue 11 (azul-petróleo escuro da paleta oficial)
 const AZUL_MEDIO = "#15607a"
 const AZUL_CLARO_BG = "#e6f4f9"
+const AZUL_TINT = "#8fd0e6" // Atlas Copco Blue tint (segmento claro dos gráficos)
 const TEXTO = "#1f2d3a"
 const TEXTO_SUAVE = "#5b7083"
 const BORDA = "#e2e8f0"
@@ -46,6 +48,29 @@ interface DadosPagina1 {
   equipamentosAtendidos: number
   abaixoMinimoPct: number
   topSemUso: { descricao: string; dias: number }[]
+}
+
+interface DadosPagina2 {
+  cliente: string
+  contrato: string
+  planta: string
+  periodoInicio: string
+  periodoFim: string
+  abaixoMinimo: {
+    codigo: string
+    descricao: string
+    saldo: number
+    minimo: number | null
+    deficit: number
+    sugestao: number
+  }[]
+  pecasConsumidas: number
+  osAtendidas: number
+  taxaUtilizacao: number
+  topConsumidos: { descricao: string; total: number }[]
+  consumoCorretiva: number
+  consumoPreventiva: number
+  consumoEquip: { nome: string; total: number }[]
 }
 
 /* ------------------------------------------------------------------ */
@@ -244,6 +269,230 @@ function paginaResumoExecutivo(d: DadosPagina1): string {
 }
 
 /* ------------------------------------------------------------------ */
+/* Componentes da Página 2                                             */
+/* ------------------------------------------------------------------ */
+
+function faixaTitulo(ico: string, texto: string): string {
+  return `
+  <div style="display:flex;align-items:center;gap:9px;background:${AZUL};color:#fff;border-radius:8px;padding:8px 13px;">
+    <span style="display:inline-flex;align-items:center;justify-content:center;flex:none;">${ico}</span>
+    <span style="font-size:12.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;">${escapeHtml(texto)}</span>
+  </div>`
+}
+
+function kpiCompacto(ico: string, valor: string, legenda: string): string {
+  return `
+  <div style="background:#fff;border:1px solid ${BORDA};border-radius:11px;padding:12px 13px;box-shadow:0 1px 3px rgba(15,45,68,.06);display:flex;align-items:center;gap:11px;">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:9px;background:${AZUL_CLARO_BG};color:${AZUL};flex:none;">${ico}</span>
+    <div style="display:flex;flex-direction:column;gap:1px;min-width:0;">
+      <span style="font-size:26px;font-weight:900;color:${AZUL};line-height:1;">${escapeHtml(valor)}</span>
+      <span style="font-size:10.5px;color:${TEXTO_SUAVE};line-height:1.25;">${escapeHtml(legenda)}</span>
+    </div>
+  </div>`
+}
+
+function barraConsumo(rank: number, item: { descricao: string; total: number }, maxTotal: number): string {
+  const pct = maxTotal > 0 ? Math.max(5, Math.round((item.total / maxTotal) * 100)) : 0
+  return `
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div style="width:16px;font-size:10px;font-weight:700;color:${TEXTO_SUAVE};text-align:right;flex:none;">${rank}</div>
+    <div style="width:150px;font-size:10px;color:#33475b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;">${escapeHtml(item.descricao || "-")}</div>
+    <div style="flex:1;height:11px;background:${TRILHA};border-radius:6px;overflow:hidden;min-width:0;">
+      <div style="height:100%;width:${pct}%;background:${AZUL};border-radius:6px;"></div>
+    </div>
+    <div style="width:36px;text-align:right;font-size:10px;font-weight:700;color:${TEXTO};flex:none;">${item.total} un</div>
+  </div>`
+}
+
+function donutTipoUtilizacao(corretiva: number, preventiva: number): string {
+  const total = corretiva + preventiva
+  const r = 46
+  const cx = 60
+  const cy = 60
+  const sw = 22
+  const c = 2 * Math.PI * r
+  const segmentos = [
+    { label: "Corretiva", valor: corretiva, cor: AZUL },
+    { label: "Preventiva", valor: preventiva, cor: AZUL_TINT },
+  ]
+  let offset = 0
+  const arcos = total
+    ? segmentos
+        .map((s) => {
+          const dash = (s.valor / total) * c
+          const el = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.cor}" stroke-width="${sw}" stroke-dasharray="${dash} ${c - dash}" stroke-dashoffset="${-offset}" transform="rotate(-90 ${cx} ${cy})"/>`
+          offset += dash
+          return el
+        })
+        .join("")
+    : `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${TRILHA}" stroke-width="${sw}"/>`
+
+  const pctCorr = total ? Math.round((corretiva / total) * 100) : 0
+  const pctPrev = total ? 100 - pctCorr : 0
+
+  const legenda = (cor: string, label: string, pct: number, un: number) => `
+    <div style="display:flex;align-items:center;gap:7px;">
+      <span style="width:9px;height:9px;border-radius:50%;background:${cor};flex:none;"></span>
+      <span style="font-size:10.5px;color:#33475b;">${label}<br/><strong style="color:${TEXTO};">${pct}% (${un} un)</strong></span>
+    </div>`
+
+  return `
+  <div style="display:flex;align-items:center;gap:14px;">
+    <div style="position:relative;width:120px;height:120px;flex:none;">
+      <svg width="120" height="120" viewBox="0 0 120 120">${arcos}</svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <span style="font-size:22px;font-weight:900;color:${TEXTO};line-height:1;">${total}</span>
+        <span style="font-size:9.5px;color:${TEXTO_SUAVE};">Peças</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${legenda(AZUL, "Corretiva", pctCorr, corretiva)}
+      ${legenda(AZUL_TINT, "Preventiva", pctPrev, preventiva)}
+    </div>
+  </div>`
+}
+
+function barrasEquipamento(items: { nome: string; total: number }[]): string {
+  if (!items.length) {
+    return `<div style="font-size:11px;color:${TEXTO_SUAVE};padding:16px 0;text-align:center;">Sem consumo registrado no período.</div>`
+  }
+  const H = 96
+  const max = Math.max(1, ...items.map((i) => i.total))
+  const colunas = items
+    .map((i) => {
+      const h = Math.max(6, Math.round((i.total / max) * H))
+      return `
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;">
+        <span style="font-size:11px;font-weight:700;color:${TEXTO};">${i.total}</span>
+        <div style="width:60%;max-width:34px;height:${h}px;background:${AZUL};border-radius:4px 4px 0 0;"></div>
+        <span style="font-size:8.5px;color:${TEXTO_SUAVE};text-align:center;line-height:1.15;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(i.nome)}</span>
+      </div>`
+    })
+    .join("")
+  return `<div style="display:flex;align-items:flex-end;gap:6px;height:${H + 36}px;padding-top:6px;">${colunas}</div>`
+}
+
+/* ------------------------------------------------------------------ */
+/* Página 2 - Estoque e Utilização                                     */
+/* ------------------------------------------------------------------ */
+
+function paginaEstoqueUtilizacao(d: DadosPagina2): string {
+  const linhas = d.abaixoMinimo.length
+    ? d.abaixoMinimo
+        .map(
+          (it, idx) => `
+      <tr style="border-bottom:1px solid ${BORDA};">
+        <td style="padding:5px 6px;color:${TEXTO_SUAVE};font-size:10px;">${idx + 1}</td>
+        <td style="padding:5px 6px;color:${AZUL};font-weight:600;font-size:10px;">${escapeHtml(it.codigo)}</td>
+        <td style="padding:5px 6px;font-size:10px;color:${TEXTO};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;">${escapeHtml(it.descricao || "-")}</td>
+        <td style="padding:5px 6px;text-align:center;font-size:10px;color:${TEXTO};">${it.saldo}</td>
+        <td style="padding:5px 6px;text-align:center;font-size:10px;color:${TEXTO};">${it.minimo ?? "-"}</td>
+        <td style="padding:5px 6px;text-align:center;font-size:10px;font-weight:700;color:#c0392b;">${it.deficit}</td>
+        <td style="padding:5px 6px;text-align:center;font-size:10px;font-weight:700;color:${AZUL};">${it.sugestao}</td>
+      </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="7" style="padding:16px;text-align:center;font-size:11px;color:${TEXTO_SUAVE};">Nenhum item abaixo do mínimo.</td></tr>`
+
+  const maxConsumo = Math.max(1, ...d.topConsumidos.map((i) => i.total))
+  const listaConsumo = d.topConsumidos.length
+    ? d.topConsumidos.map((i, idx) => barraConsumo(idx + 1, i, maxConsumo)).join("")
+    : `<div style="font-size:11px;color:${TEXTO_SUAVE};padding:8px 0;">Nenhum item consumido no período.</div>`
+
+  const cardBase = `background:#fff;border:1px solid ${BORDA};border-radius:12px;padding:13px 15px;box-shadow:0 1px 3px rgba(15,45,68,.06);`
+  const subtitulo = `font-size:11px;font-weight:800;color:${AZUL_MEDIO};letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px;`
+
+  return `
+  <div class="page">
+    <!-- Cabeçalho -->
+    <div style="flex:none;display:flex;align-items:stretch;">
+      <div style="background:${AZUL};display:flex;align-items:center;padding:12px 16px;">
+        <div style="background:#fff;border-radius:6px;padding:6px 9px;display:inline-flex;">
+          <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:20px;display:block;" />
+        </div>
+      </div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:2px solid ${AZUL};">
+        <div>
+          <div style="font-size:19px;font-weight:900;color:${AZUL_MEDIO};letter-spacing:.3px;line-height:1.1;">ITENS ABAIXO DO MÍNIMO E UTILIZAÇÃO DO ESTOQUE ESTRATÉGICO</div>
+          <div style="font-size:11px;color:${TEXTO_SUAVE};margin-top:2px;">Visão consolidada dos itens abaixo do nível mínimo e da utilização do estoque estratégico no período.</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex:none;margin-left:14px;">
+          <span style="color:${AZUL};">${icone("cal", 18)}</span>
+          <div style="line-height:1.2;">
+            <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:${TEXTO_SUAVE};">Período analisado</div>
+            <div style="font-size:11.5px;font-weight:700;color:${AZUL};">${d.periodoInicio} a ${d.periodoFim}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Conteúdo -->
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.35fr;gap:14px;padding:12px 14px;">
+      <!-- Coluna esquerda: tabela -->
+      <div style="display:flex;flex-direction:column;gap:9px;min-height:0;">
+        ${faixaTitulo(icone("doc", 16), "Itens abaixo do mínimo (Top 15)")}
+        <div style="${cardBase}flex:1;overflow:hidden;padding:12px;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:${AZUL};color:#fff;">
+                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">#</th>
+                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">Código (PN)</th>
+                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">Descrição</th>
+                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Saldo Atual</th>
+                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Mínimo</th>
+                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Déficit</th>
+                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Sugestão</th>
+              </tr>
+            </thead>
+            <tbody>${linhas}</tbody>
+          </table>
+          <div style="font-size:9px;color:${TEXTO_SUAVE};margin-top:8px;">PN: Part Number (Código da Peça)</div>
+        </div>
+      </div>
+
+      <!-- Coluna direita: utilização -->
+      <div style="display:flex;flex-direction:column;gap:9px;min-height:0;">
+        ${faixaTitulo(icone("trend", 16), "Utilização e consumo do estoque estratégico")}
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+          ${kpiCompacto(icone("stack"), String(d.pecasConsumidas), "Peças consumidas")}
+          ${kpiCompacto(icone("doc"), String(d.osAtendidas), "OS atendidas")}
+          ${kpiCompacto(icone("pie"), `${d.taxaUtilizacao}%`, "Taxa de utilização")}
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:10px;">
+          <div style="${cardBase}">
+            <div style="${subtitulo}">Top 10 itens consumidos</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">${listaConsumo}</div>
+          </div>
+          <div style="${cardBase}display:flex;flex-direction:column;">
+            <div style="${subtitulo}">Consumo por tipo de utilização</div>
+            <div style="flex:1;display:flex;align-items:center;">${donutTipoUtilizacao(d.consumoCorretiva, d.consumoPreventiva)}</div>
+          </div>
+        </div>
+
+        <div style="${cardBase}flex:1;display:flex;flex-direction:column;min-height:0;">
+          <div style="${subtitulo}">Consumo por equipamento (peças)</div>
+          ${barrasEquipamento(d.consumoEquip)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Rodapé -->
+    <div class="rodape">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:${AZUL};color:#fff;">${icone("trend", 13)}</span>
+        <span style="font-size:10.5px;color:${TEXTO_SUAVE};">Manter o estoque estratégico otimizado para garantir disponibilidade e eficiência operacional.</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span style="font-size:10.5px;font-weight:700;color:${AZUL_MEDIO};">Gestão de Estoque Estratégico</span>
+        <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:18px;display:block;" />
+      </div>
+    </div>
+  </div>`
+}
+
+/* ------------------------------------------------------------------ */
 /* Shell HTML + impressão                                              */
 /* ------------------------------------------------------------------ */
 
@@ -347,7 +596,9 @@ function abrirDocumento(html: string): boolean {
 /* Carregamento e cruzamento dos dados                                 */
 /* ------------------------------------------------------------------ */
 
-async function carregarDadosPagina1(itens: ItemEstrategicoRelatorio[]): Promise<DadosPagina1> {
+async function carregarDados(
+  itens: ItemEstrategicoRelatorio[],
+): Promise<{ p1: DadosPagina1; p2: DadosPagina2 }> {
   const supabase = createClient()
 
   // KPIs derivados do Estoque Estratégico (mesmas fórmulas da tela)
@@ -426,25 +677,98 @@ async function carregarDadosPagina1(itens: ItemEstrategicoRelatorio[]): Promise<
   const utilizados = [...codigosEstrategicos].filter((c) => codigosComSaida.has(c)).length
   const taxaUtilizacao = codigosEstrategicos.size ? Math.round((utilizados / codigosEstrategicos.size) * 100) : 0
 
+  /* ---- Dados da Página 2 (a partir das saídas estratégicas) ---- */
+
+  // OS atendidas (ordens de serviço distintas)
+  const osSet = new Set<string>()
+  // Consumo por código, por tipo de utilização e por equipamento
+  const mapaConsumoCod = new Map<string, { descricao: string; total: number }>()
+  const mapaConsumoEquip = new Map<string, number>()
+  let consumoCorretiva = 0
+  let consumoPreventiva = 0
+  for (const s of saidasEstrategicas) {
+    const qtd = s.quantidade || 0
+    const os = (s.ordem_servico || "").trim()
+    if (os) osSet.add(os)
+
+    const ex = mapaConsumoCod.get(s.codigo)
+    if (ex) {
+      ex.total += qtd
+      if (!ex.descricao && s.descricao) ex.descricao = s.descricao
+    } else {
+      mapaConsumoCod.set(s.codigo, { descricao: s.descricao || s.codigo, total: qtd })
+    }
+
+    const eq = (s.compressor || "").trim() || "Não informado"
+    mapaConsumoEquip.set(eq, (mapaConsumoEquip.get(eq) || 0) + qtd)
+
+    const tipo = (s.utilizacao || "").trim().toLowerCase()
+    if (tipo === "corretiva") consumoCorretiva += qtd
+    else if (tipo === "preventiva") consumoPreventiva += qtd
+  }
+
+  const topConsumidos = [...mapaConsumoCod.values()].sort((a, b) => b.total - a.total).slice(0, 10)
+  const consumoEquip = [...mapaConsumoEquip.entries()]
+    .map(([nome, total]) => ({ nome, total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 10)
+
+  // Top 15 itens abaixo do mínimo (maior déficit primeiro)
+  const abaixoMinimo = itens
+    .filter((i) => (i.diferenca ?? 0) < 0)
+    .sort((a, b) => (a.diferenca as number) - (b.diferenca as number))
+    .slice(0, 15)
+    .map((i) => {
+      const deficit = Math.abs(i.diferenca as number)
+      return {
+        codigo: i.codigo,
+        descricao: i.descricao,
+        saldo: i.saldo,
+        minimo: i.quantidade_minima,
+        deficit,
+        sugestao: deficit,
+      }
+    })
+
   const contrato = loadContrato()
+  const cliente = "Vale S.A."
+  const periodoInicio = fmtData(minData)
+  const periodoFim = fmtData(maxData)
 
   return {
-    cliente: "Vale S.A.",
-    contrato: contrato.numero,
-    planta: contrato.localizacao,
-    periodoInicio: fmtData(minData),
-    periodoFim: fmtData(maxData),
-    dataEmissao: new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }),
-    aderenciaPct,
-    totalOk,
-    totalAvaliaveis,
-    deficitTotal,
-    taxaUtilizacao,
-    itensSemUso: listaSemUso.length,
-    pecasConsumidas,
-    equipamentosAtendidos: equipSet.size,
-    abaixoMinimoPct,
-    topSemUso,
+    p1: {
+      cliente,
+      contrato: contrato.numero,
+      planta: contrato.localizacao,
+      periodoInicio,
+      periodoFim,
+      dataEmissao: new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }),
+      aderenciaPct,
+      totalOk,
+      totalAvaliaveis,
+      deficitTotal,
+      taxaUtilizacao,
+      itensSemUso: listaSemUso.length,
+      pecasConsumidas,
+      equipamentosAtendidos: equipSet.size,
+      abaixoMinimoPct,
+      topSemUso,
+    },
+    p2: {
+      cliente,
+      contrato: contrato.numero,
+      planta: contrato.localizacao,
+      periodoInicio,
+      periodoFim,
+      abaixoMinimo,
+      pecasConsumidas,
+      osAtendidas: osSet.size,
+      taxaUtilizacao,
+      topConsumidos,
+      consumoCorretiva,
+      consumoPreventiva,
+      consumoEquip,
+    },
   }
 }
 
@@ -453,8 +777,8 @@ async function carregarDadosPagina1(itens: ItemEstrategicoRelatorio[]): Promise<
 /* ------------------------------------------------------------------ */
 
 export async function gerarRelatorioEstrategico(itens: ItemEstrategicoRelatorio[]): Promise<boolean> {
-  const dados = await carregarDadosPagina1(itens)
-  const paginas = paginaResumoExecutivo(dados)
+  const { p1, p2 } = await carregarDados(itens)
+  const paginas = paginaResumoExecutivo(p1) + paginaEstoqueUtilizacao(p2)
   const html = montarDocumento("Relatório Gerencial de Estoque Estratégico", paginas)
   return abrirDocumento(html)
 }
