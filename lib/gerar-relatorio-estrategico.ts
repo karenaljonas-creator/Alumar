@@ -619,7 +619,7 @@ async function carregarDados(
     .select("codigo, descricao, origem, data_emissao, nota_fiscal")
   const { data: saidas } = await supabase
     .from("saida_pecas")
-    .select("codigo, descricao, quantidade, compressor, ordem_servico, nota_fiscal")
+    .select("codigo, descricao, quantidade, compressor, ordem_servico, nota_fiscal, utilizacao")
 
   const ehEstrategica = (origem?: string | null) =>
     (origem || "").toLowerCase().startsWith(PREFIXO_ORIGEM_ESTRATEGICA)
