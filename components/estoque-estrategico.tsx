@@ -110,6 +110,7 @@ function DonutCritico({ pct }: { pct: number }) {
 export function EstoqueEstrategico() {
   const [itens, setItens] = useState<ItemEstrategico[]>([])
   const [loading, setLoading] = useState(true)
+  const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   // Filtros por coluna: chave presente = filtro ativo; array = valores permitidos
   const [filtros, setFiltros] = useState<Partial<Record<ColKey, string[]>>>({})
@@ -534,6 +535,37 @@ export function EstoqueEstrategico() {
   const aderenciaBarra = "bg-primary"
   const aderenciaRotulo = aderenciaNivel === "bom" ? "Bom" : aderenciaNivel === "medio" ? "Médio" : "Baixo"
 
+  const handleGerarRelatorio = async () => {
+    setGerandoRelatorio(true)
+    try {
+      const ok = await gerarRelatorioEstrategico(
+        itens.map((i) => ({
+          codigo: i.codigo,
+          descricao: i.descricao,
+          saldo: i.saldo,
+          quantidade_minima: i.quantidade_minima ?? null,
+          diferenca: i.diferenca ?? null,
+          status: i.status,
+        })),
+      )
+      if (!ok) {
+        toast({
+          title: "Não foi possível abrir o relatório",
+          description: "Verifique se o navegador está bloqueando pop-ups.",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      toast({
+        title: "Erro ao gerar relatório",
+        description: err instanceof Error ? err.message : "Tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setGerandoRelatorio(false)
+    }
+  }
+
   const filtrosAtivos = Object.keys(filtros).length > 0 || !!ordenacao
 
   const limparTodosFiltros = () => {
@@ -565,7 +597,16 @@ export function EstoqueEstrategico() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button
+          variant="outline"
+          onClick={handleGerarRelatorio}
+          disabled={gerandoRelatorio || loading || itens.length === 0}
+          className="gap-2"
+        >
+          {gerandoRelatorio ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+          Gerar Relatório
+        </Button>
         <Button onClick={() => setNovoDialogOpen(true)} className="gap-2">
           <Plus className="h-4 w-4" /> Novo Item Estratégico
         </Button>
