@@ -208,11 +208,7 @@ function paginaResumoExecutivo(d: DadosPagina1): string {
     <div class="page-inner">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <div style="background:#fff;border-radius:10px;padding:16px 22px;display:inline-flex;align-self:flex-start;">
-          <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:46px;display:block;" />
-        </div>
-
-        <div style="margin-top:10px;">
+        <div style="margin-top:6px;">
           <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.3px;">Relatório Gerencial de</div>
           <div style="font-size:40px;font-weight:900;color:#fff;line-height:1.03;margin-top:6px;">Estoque<br/>Estratégico</div>
           <div style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.45;margin-top:14px;">Monitoramento, utilização e rastreabilidade dos itens estratégicos</div>
