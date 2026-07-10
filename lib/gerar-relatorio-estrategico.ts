@@ -184,11 +184,11 @@ function pontoAtencao(ico: string, titulo: string, sub: string): string {
 
 function itemSidebar(ico: string, rotulo: string, valor: string): string {
   return `
-  <div style="display:flex;align-items:flex-start;gap:9px;">
-    <span style="color:#ffffff;margin-top:1px;flex:none;">${ico}</span>
-    <div style="display:flex;flex-direction:column;gap:1px;">
-      <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.8);">${escapeHtml(rotulo)}</span>
-      <span style="font-size:12px;font-weight:600;color:#ffffff;line-height:1.3;">${escapeHtml(valor)}</span>
+  <div style="display:flex;align-items:flex-start;gap:12px;">
+    <span style="color:#ffffff;margin-top:2px;flex:none;">${ico}</span>
+    <div style="display:flex;flex-direction:column;gap:2px;">
+      <span style="font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,.8);">${escapeHtml(rotulo)}</span>
+      <span style="font-size:16px;font-weight:600;color:#ffffff;line-height:1.3;">${escapeHtml(valor)}</span>
     </div>
   </div>`
 }
@@ -208,24 +208,23 @@ function paginaResumoExecutivo(d: DadosPagina1): string {
     <div class="page-inner">
       <!-- Sidebar -->
       <aside class="sidebar">
-        <div style="background:#fff;border-radius:8px;padding:9px 12px;display:inline-flex;align-self:flex-start;">
-          <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:26px;display:block;" />
+        <div style="background:#fff;border-radius:10px;padding:16px 22px;display:inline-flex;align-self:flex-start;">
+          <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:46px;display:block;" />
         </div>
 
-        <div style="margin-top:6px;">
-          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.3px;">Relatório Gerencial de</div>
-          <div style="font-size:30px;font-weight:900;color:#fff;line-height:1.05;margin-top:4px;">Estoque<br/>Estratégico</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.85);line-height:1.4;margin-top:10px;">Monitoramento, utilização e rastreabilidade dos itens estratégicos</div>
+        <div style="margin-top:10px;">
+          <div style="font-size:15px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.3px;">Relatório Gerencial de</div>
+          <div style="font-size:40px;font-weight:900;color:#fff;line-height:1.03;margin-top:6px;">Estoque<br/>Estratégico</div>
+          <div style="font-size:14px;color:rgba(255,255,255,.85);line-height:1.45;margin-top:14px;">Monitoramento, utilização e rastreabilidade dos itens estratégicos</div>
         </div>
 
-        <div style="height:1px;background:rgba(255,255,255,.15);margin:4px 0;"></div>
+        <div style="height:1px;background:rgba(255,255,255,.18);margin:8px 0;"></div>
 
-        <div style="display:flex;flex-direction:column;gap:13px;">
-          ${itemSidebar(icone("user", 15), "Cliente", d.cliente)}
-          ${itemSidebar(icone("doc", 15), "Contrato", d.contrato)}
-          ${itemSidebar(icone("pin", 15), "Planta", d.planta)}
-          ${itemSidebar(icone("cal", 15), "Período analisado", `${d.periodoInicio} a ${d.periodoFim}`)}
-          ${itemSidebar(icone("cal", 15), "Data de emissão", d.dataEmissao)}
+        <div style="display:flex;flex-direction:column;gap:20px;">
+          ${itemSidebar(icone("user", 19), "Cliente", d.cliente)}
+          ${itemSidebar(icone("doc", 19), "Contrato", d.contrato)}
+          ${itemSidebar(icone("pin", 19), "Planta", d.planta)}
+          ${itemSidebar(icone("cal", 19), "Data de emissão", d.dataEmissao)}
         </div>
       </aside>
 
@@ -374,20 +373,20 @@ function barrasEquipamento(items: { nome: string; total: number }[]): string {
   if (!items.length) {
     return `<div style="font-size:11px;color:${TEXTO_SUAVE};padding:16px 0;text-align:center;">Sem consumo registrado no período.</div>`
   }
-  const H = 96
+  const H = 150
   const max = Math.max(1, ...items.map((i) => i.total))
   const colunas = items
     .map((i) => {
-      const h = Math.max(6, Math.round((i.total / max) * H))
+      const h = Math.max(8, Math.round((i.total / max) * H))
       return `
-      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;">
-        <span style="font-size:11px;font-weight:700;color:${TEXTO};">${i.total}</span>
-        <div style="width:60%;max-width:34px;height:${h}px;background:${AZUL};border-radius:4px 4px 0 0;"></div>
-        <span style="font-size:8.5px;color:${TEXTO_SUAVE};text-align:center;line-height:1.15;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(i.nome)}</span>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;min-width:0;">
+        <span style="font-size:13px;font-weight:700;color:${TEXTO};">${i.total}</span>
+        <div style="width:60%;max-width:46px;height:${h}px;background:${AZUL};border-radius:5px 5px 0 0;"></div>
+        <span style="font-size:9.5px;color:${TEXTO_SUAVE};text-align:center;line-height:1.15;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(i.nome)}</span>
       </div>`
     })
     .join("")
-  return `<div style="display:flex;align-items:flex-end;gap:6px;height:${H + 36}px;padding-top:6px;">${colunas}</div>`
+  return `<div style="flex:1;display:flex;align-items:flex-end;justify-content:space-around;gap:10px;min-height:${H + 40}px;padding-top:10px;">${colunas}</div>`
 }
 
 /* ------------------------------------------------------------------ */
@@ -400,13 +399,13 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
         .map(
           (it, idx) => `
       <tr style="border-bottom:1px solid ${BORDA};">
-        <td style="padding:5px 6px;color:${TEXTO_SUAVE};font-size:10px;">${idx + 1}</td>
-        <td style="padding:5px 6px;color:${AZUL};font-weight:600;font-size:10px;">${escapeHtml(it.codigo)}</td>
-        <td style="padding:5px 6px;font-size:10px;color:${TEXTO};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;">${escapeHtml(it.descricao || "-")}</td>
-        <td style="padding:5px 6px;text-align:center;font-size:10px;color:${TEXTO};">${it.saldo}</td>
-        <td style="padding:5px 6px;text-align:center;font-size:10px;color:${TEXTO};">${it.minimo ?? "-"}</td>
-        <td style="padding:5px 6px;text-align:center;font-size:10px;font-weight:700;color:#c0392b;">${it.deficit}</td>
-        <td style="padding:5px 6px;text-align:center;font-size:10px;font-weight:700;color:${AZUL};">${it.sugestao}</td>
+        <td style="padding:10px 8px;color:${TEXTO_SUAVE};font-size:11px;">${idx + 1}</td>
+        <td style="padding:10px 8px;color:${AZUL};font-weight:600;font-size:11px;">${escapeHtml(it.codigo)}</td>
+        <td style="padding:10px 8px;font-size:11px;color:${TEXTO};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;">${escapeHtml(it.descricao || "-")}</td>
+        <td style="padding:10px 8px;text-align:center;font-size:11px;color:${TEXTO};">${it.saldo}</td>
+        <td style="padding:10px 8px;text-align:center;font-size:11px;color:${TEXTO};">${it.minimo ?? "-"}</td>
+        <td style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:#c0392b;">${it.deficit}</td>
+        <td style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:${AZUL};">${it.sugestao}</td>
       </tr>`,
         )
         .join("")
@@ -423,29 +422,18 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
   return `
   <div class="page">
     <!-- Cabeçalho -->
-    <div style="flex:none;display:flex;align-items:stretch;">
-      <div style="background:${AZUL};display:flex;align-items:center;padding:12px 16px;">
-        <div style="background:#fff;border-radius:6px;padding:6px 9px;display:inline-flex;">
-          <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:20px;display:block;" />
-        </div>
-      </div>
-      <div style="flex:1;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:2px solid ${AZUL};">
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:18px;background:#fff;padding:16px 22px;border-bottom:3px solid ${AZUL};">
+      <div style="display:flex;align-items:center;gap:20px;">
+        <img src="${ATLAS_COPCO_LOGO_DATA_URI}" alt="Atlas Copco" style="height:52px;display:block;flex:none;" />
         <div>
-          <div style="font-size:19px;font-weight:900;color:${AZUL_MEDIO};letter-spacing:.3px;line-height:1.1;">ITENS ABAIXO DO MÍNIMO E UTILIZAÇÃO DO ESTOQUE ESTRATÉGICO</div>
-          <div style="font-size:11px;color:${TEXTO_SUAVE};margin-top:2px;">Visão consolidada dos itens abaixo do nível mínimo e da utilização do estoque estratégico no período.</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex:none;margin-left:14px;">
-          <span style="color:${AZUL};">${icone("cal", 18)}</span>
-          <div style="line-height:1.2;">
-            <div style="font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:${TEXTO_SUAVE};">Período analisado</div>
-            <div style="font-size:11.5px;font-weight:700;color:${AZUL};">${d.periodoInicio} a ${d.periodoFim}</div>
-          </div>
+          <div style="font-size:22px;font-weight:900;color:${AZUL_MEDIO};letter-spacing:.3px;line-height:1.1;">ITENS ABAIXO DO MÍNIMO E UTILIZAÇÃO DO ESTOQUE ESTRATÉGICO</div>
+          <div style="font-size:12.5px;color:${TEXTO_SUAVE};margin-top:3px;">Visão consolidada dos itens abaixo do nível mínimo e da utilização do estoque estratégico no período.</div>
         </div>
       </div>
     </div>
 
     <!-- Conteúdo -->
-    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.35fr;gap:14px;padding:12px 14px;">
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 1.35fr;gap:16px;padding:16px 18px;">
       <!-- Coluna esquerda: tabela -->
       <div style="display:flex;flex-direction:column;gap:9px;min-height:0;">
         ${faixaTitulo(icone("doc", 16), "Itens abaixo do mínimo (Top 15)")}
@@ -453,13 +441,13 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
           <table style="width:100%;border-collapse:collapse;">
             <thead>
               <tr style="background:${AZUL};color:#fff;">
-                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">#</th>
-                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">Código (PN)</th>
-                <th style="padding:6px;text-align:left;font-size:9.5px;font-weight:700;">Descrição</th>
-                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Saldo Atual</th>
-                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Mínimo</th>
-                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Déficit</th>
-                <th style="padding:6px;text-align:center;font-size:9.5px;font-weight:700;">Sugestão</th>
+                <th style="padding:9px 8px;text-align:left;font-size:10.5px;font-weight:700;">#</th>
+                <th style="padding:9px 8px;text-align:left;font-size:10.5px;font-weight:700;">Código (PN)</th>
+                <th style="padding:9px 8px;text-align:left;font-size:10.5px;font-weight:700;">Descrição</th>
+                <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Saldo Atual</th>
+                <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Mínimo</th>
+                <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Déficit</th>
+                <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Sugestão</th>
               </tr>
             </thead>
             <tbody>${linhas}</tbody>
