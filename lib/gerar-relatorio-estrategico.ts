@@ -173,11 +173,11 @@ function barraSemUso(item: { descricao: string; dias: number }, maxDias: number)
 
 function pontoAtencao(ico: string, titulo: string, sub: string): string {
   return `
-  <div style="display:flex;align-items:flex-start;gap:10px;">
-    <span style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:${AZUL_CLARO_BG};color:${AZUL};flex:none;">${ico}</span>
-    <div style="display:flex;flex-direction:column;gap:1px;">
-      <span style="font-size:11.5px;font-weight:800;color:#26333f;line-height:1.25;">${escapeHtml(titulo)}</span>
-      <span style="font-size:10.5px;color:${TEXTO_SUAVE};line-height:1.3;">${escapeHtml(sub)}</span>
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;border-radius:10px;background:${AZUL_CLARO_BG};color:${AZUL};flex:none;">${ico}</span>
+    <div style="display:flex;flex-direction:column;gap:3px;">
+      <span style="font-size:15.5px;font-weight:800;color:#26333f;line-height:1.25;">${escapeHtml(titulo)}</span>
+      <span style="font-size:13.5px;color:${TEXTO_SUAVE};line-height:1.3;">${escapeHtml(sub)}</span>
     </div>
   </div>`
 }
@@ -251,12 +251,12 @@ function paginaResumoExecutivo(d: DadosPagina1): string {
           </div>
 
           <div style="background:#fff;border:1px solid ${BORDA};border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(15,45,68,.06);display:flex;flex-direction:column;">
-            <div style="font-size:12px;font-weight:800;color:${AZUL_MEDIO};letter-spacing:.5px;text-transform:uppercase;margin-bottom:14px;">Pontos de Atenção</div>
-            <div style="display:flex;flex-direction:column;gap:16px;justify-content:space-between;flex:1;">
-              ${pontoAtencao(icone("alert"), "Maior período sem utilização", `${maxDias} dias`)}
-              ${pontoAtencao(icone("trend"), "Abaixo do mínimo", `${d.abaixoMinimoPct}% dos itens estão abaixo do mínimo`)}
-              ${pontoAtencao(icone("box"), "Itens sem movimentação desde a entrada", `${d.itensSemUso} itens`)}
-              ${pontoAtencao(icone("equip"), "Equipamentos atendidos no período", `${d.equipamentosAtendidos} equipamentos`)}
+            <div style="font-size:13px;font-weight:800;color:${AZUL_MEDIO};letter-spacing:.5px;text-transform:uppercase;margin-bottom:16px;">Pontos de Atenção</div>
+            <div style="display:flex;flex-direction:column;gap:22px;justify-content:space-around;flex:1;">
+              ${pontoAtencao(icone("alert", 22), "Maior período sem utilização", `${maxDias} dias`)}
+              ${pontoAtencao(icone("trend", 22), "Abaixo do mínimo", `${d.abaixoMinimoPct}% dos itens estão abaixo do mínimo`)}
+              ${pontoAtencao(icone("box", 22), "Itens sem movimentação desde a entrada", `${d.itensSemUso} itens`)}
+              ${pontoAtencao(icone("equip", 22), "Equipamentos atendidos no período", `${d.equipamentosAtendidos} equipamentos`)}
             </div>
           </div>
         </div>
@@ -589,7 +589,7 @@ function paginaRastreabilidade(d: DadosPagina3): string {
       </div>
       <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;">
         ${contador}
-        <span style="font-size:9px;color:${TEXTO_SUAVE};">PN: Part Number (Código da Peça) · Período: ${d.periodoInicio} a ${d.periodoFim}</span>
+        <span style="font-size:9px;color:${TEXTO_SUAVE};">PN: Part Number (Código da Peça)</span>
       </div>
     </div>
     <div class="rodape">
