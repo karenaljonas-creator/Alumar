@@ -11,7 +11,7 @@ import { loadContrato } from "@/lib/contrato-storage"
 
 /* ---- Paleta (identidade Atlas Copco do app) ---- */
 const AZUL = "#0092bc" // Atlas Copco Blue OFICIAL (--primary)
-const AZUL_ESCURO = "#0c2c44" // usado como fundo escuro (igual ao relatório de paradas)
+const AZUL_ESCURO = "#0a4a5f" // Atlas Copco Blue 11 (azul-petróleo escuro da paleta oficial)
 const AZUL_MEDIO = "#15607a"
 const AZUL_CLARO_BG = "#e6f4f9"
 const TEXTO = "#1f2d3a"
@@ -142,10 +142,10 @@ function pontoAtencao(ico: string, titulo: string, sub: string): string {
 function itemSidebar(ico: string, rotulo: string, valor: string): string {
   return `
   <div style="display:flex;align-items:flex-start;gap:9px;">
-    <span style="color:#7fd0e8;margin-top:1px;flex:none;">${ico}</span>
+    <span style="color:#ffffff;margin-top:1px;flex:none;">${ico}</span>
     <div style="display:flex;flex-direction:column;gap:1px;">
-      <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:#8bb4cc;">${escapeHtml(rotulo)}</span>
-      <span style="font-size:12px;font-weight:600;color:#eef6fb;line-height:1.3;">${escapeHtml(valor)}</span>
+      <span style="font-size:9.5px;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.8);">${escapeHtml(rotulo)}</span>
+      <span style="font-size:12px;font-weight:600;color:#ffffff;line-height:1.3;">${escapeHtml(valor)}</span>
     </div>
   </div>`
 }
@@ -170,9 +170,9 @@ function paginaResumoExecutivo(d: DadosPagina1): string {
         </div>
 
         <div style="margin-top:6px;">
-          <div style="font-size:12px;font-weight:600;color:#9dc4da;letter-spacing:.3px;">Relatório Gerencial de</div>
+          <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,.85);letter-spacing:.3px;">Relatório Gerencial de</div>
           <div style="font-size:30px;font-weight:900;color:#fff;line-height:1.05;margin-top:4px;">Estoque<br/>Estratégico</div>
-          <div style="font-size:11px;color:#a9c8db;line-height:1.4;margin-top:10px;">Monitoramento, utilização e rastreabilidade dos itens estratégicos</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.85);line-height:1.4;margin-top:10px;">Monitoramento, utilização e rastreabilidade dos itens estratégicos</div>
         </div>
 
         <div style="height:1px;background:rgba(255,255,255,.15);margin:4px 0;"></div>
@@ -289,7 +289,7 @@ function montarDocumento(titulo: string, paginas: string): string {
   .page-inner { flex:1; display:flex; min-height:0; }
   .sidebar {
     width:82mm; flex:none;
-    background:linear-gradient(180deg, ${AZUL_ESCURO} 0%, #0f3f5f 100%);
+    background:linear-gradient(180deg, ${AZUL} 0%, #00769a 100%);
     color:#fff; padding:14mm 11mm;
     display:flex; flex-direction:column; gap:16px;
   }
