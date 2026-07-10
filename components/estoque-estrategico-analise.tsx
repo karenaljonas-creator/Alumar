@@ -2,10 +2,17 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { createClient } from "@/lib/supabase/client"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Cell, Label, Pie, PieChart } from "recharts"
-import { Loader2, PackageX, ShoppingCart, Wrench } from "lucide-react"
+import { ArrowRight, Loader2, PackageX, ShoppingCart, Wrench } from "lucide-react"
 
 // Origens consideradas "estoque estratégico" (comparação case-insensitive por prefixo)
 const PREFIXO_ORIGEM_ESTRATEGICA = "estoque estratégico"
@@ -62,7 +69,9 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
   const [loading, setLoading] = useState(true)
   const [semUso, setSemUso] = useState<ItemSemUso[]>([])
   const [consumo, setConsumo] = useState<ConsumoItem[]>([])
+  const [consumoFull, setConsumoFull] = useState<ConsumoItem[]>([])
   const [totalItensConsumo, setTotalItensConsumo] = useState(0)
+  const [dialogAberto, setDialogAberto] = useState<null | "reposicao" | "semUso" | "consumo">(null)
   const [equipamentos, setEquipamentos] = useState<EquipItem[]>([])
   const [totalPecas, setTotalPecas] = useState(0)
   const [osAtendidas, setOsAtendidas] = useState(0)
@@ -144,6 +153,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
 
         const listaConsumo = [...mapaConsumo.values()].sort((a, b) => b.total - a.total)
         setTotalItensConsumo(listaConsumo.length)
+        setConsumoFull(listaConsumo)
         setConsumo(listaConsumo.slice(0, 10))
         setTotalPecas(somaPecas)
         setOsAtendidas(osSet.size)
@@ -180,15 +190,14 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
     const criticos = itens.filter((i) => i.quantidade_minima != null && i.saldo <= 0)
     const impactoAlto = abaixo.filter((i) => (i.diferenca as number) <= -3)
     const totalRepor = abaixo.reduce((acc, i) => acc + Math.abs(i.diferenca as number), 0)
-    const top = [...abaixo]
-      .sort((a, b) => (a.diferenca as number) - (b.diferenca as number))
-      .slice(0, 10)
+    const ordenados = [...abaixo].sort((a, b) => (a.diferenca as number) - (b.diferenca as number))
     return {
       criticos: criticos.length,
       abaixo: abaixo.length,
       totalRepor,
       impactoAlto: impactoAlto.length,
-      top,
+      top: ordenados.slice(0, 10),
+      lista: ordenados,
     }
   }, [itens])
 
@@ -206,16 +215,16 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
   }
 
   return (
-    <div className="grid items-start gap-4 xl:grid-cols-3">
+    <div className="grid gap-4 xl:grid-cols-3">
       {/* Coluna 1 — Reposição do Estoque */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <ShoppingCart className="h-4 w-4 text-primary" /> 1. Reposição do Estoque
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div>
+        <CardContent className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col">
             <p className="mb-2 text-sm font-medium">Top 10 Itens para Reposição</p>
             {reposicao.top.length === 0 ? (
               <p className="py-6 text-center text-sm text-muted-foreground">
@@ -254,23 +263,28 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
               </div>
             )}
             {reposicao.abaixo > 0 && (
-              <p className="mt-3 border-t pt-3 text-sm font-medium text-primary">
-                Ver todos os {reposicao.abaixo} itens abaixo do mínimo →
-              </p>
+              <button
+                type="button"
+                onClick={() => setDialogAberto("reposicao")}
+                className="mt-auto flex items-center gap-1 border-t pt-3 text-left text-sm font-medium text-primary transition-colors hover:text-primary/80"
+              >
+                Ver todos os {reposicao.abaixo} itens abaixo do mínimo
+                <ArrowRight className="h-4 w-4" />
+              </button>
             )}
           </div>
         </CardContent>
       </Card>
 
       {/* Coluna 2 — Itens sem Utilização */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <PackageX className="h-4 w-4 text-primary" /> 2. Itens sem Utilização{" "}
             <span className="text-sm font-normal text-muted-foreground">(desde a entrada)</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex flex-1 flex-col">
           {semUso.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               Todos os itens estratégicos já foram utilizados ao menos uma vez.
@@ -306,22 +320,27 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
                   </tbody>
                 </table>
               </div>
-              <p className="mt-3 border-t pt-3 text-sm font-medium text-primary">
-                Ver todos os {semUso.length} itens sem utilização →
-              </p>
+              <button
+                type="button"
+                onClick={() => setDialogAberto("semUso")}
+                className="mt-auto flex items-center gap-1 border-t pt-3 text-left text-sm font-medium text-primary transition-colors hover:text-primary/80"
+              >
+                Ver todos os {semUso.length} itens sem utilização
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </>
           )}
         </CardContent>
       </Card>
 
       {/* Coluna 3 — Utilização dos Itens Estratégicos */}
-      <Card>
+      <Card className="flex flex-col">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Wrench className="h-4 w-4 text-primary" /> 3. Utilização dos Itens Estratégicos
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-5">
+        <CardContent className="flex flex-1 flex-col space-y-5">
           <div className="grid grid-cols-3 gap-3">
             <MiniKpi label="Peças consumidas" value={totalPecas} tone="primary" />
             <MiniKpi label="OS atendidas" value={osAtendidas} tone="primary" />
@@ -354,9 +373,14 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
               </ul>
             )}
             {totalItensConsumo > 0 && (
-              <p className="mt-3 border-t pt-3 text-sm font-medium text-primary">
-                Ver todos os {totalItensConsumo} itens consumidos →
-              </p>
+              <button
+                type="button"
+                onClick={() => setDialogAberto("consumo")}
+                className="mt-3 flex items-center gap-1 border-t pt-3 text-left text-sm font-medium text-primary transition-colors hover:text-primary/80"
+              >
+                Ver todos os {totalItensConsumo} itens consumidos
+                <ArrowRight className="h-4 w-4" />
+              </button>
             )}
           </div>
 
@@ -421,6 +445,110 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
           )}
         </CardContent>
       </Card>
+
+      {/* Diálogo: todos os itens abaixo do mínimo */}
+      <Dialog open={dialogAberto === "reposicao"} onOpenChange={(o) => !o && setDialogAberto(null)}>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Itens abaixo do mínimo</DialogTitle>
+            <DialogDescription>{reposicao.lista.length} itens precisam de reposição.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-background">
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-2 font-medium">#</th>
+                  <th className="py-2 pr-2 font-medium">Código (PN)</th>
+                  <th className="py-2 pr-2 font-medium">Descrição</th>
+                  <th className="py-2 pr-2 text-center font-medium">Saldo</th>
+                  <th className="py-2 pr-2 text-center font-medium">Mín.</th>
+                  <th className="py-2 pr-2 text-center font-medium">Dif.</th>
+                  <th className="py-2 text-center font-medium">Sugerida</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reposicao.lista.map((item, idx) => (
+                  <tr key={item.codigo} className="border-b last:border-0">
+                    <td className="py-2 pr-2 text-muted-foreground">{idx + 1}</td>
+                    <td className="py-2 pr-2 font-mono text-primary">{item.codigo}</td>
+                    <td className="py-2 pr-2">{item.descricao}</td>
+                    <td className="py-2 pr-2 text-center">{item.saldo}</td>
+                    <td className="py-2 pr-2 text-center">{item.quantidade_minima ?? "-"}</td>
+                    <td className="py-2 pr-2 text-center font-medium text-destructive">{item.diferenca}</td>
+                    <td className="py-2 text-center font-medium">{Math.abs(item.diferenca as number)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo: todos os itens sem utilização */}
+      <Dialog open={dialogAberto === "semUso"} onOpenChange={(o) => !o && setDialogAberto(null)}>
+        <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Itens sem utilização (desde a entrada)</DialogTitle>
+            <DialogDescription>{semUso.length} itens nunca foram utilizados desde a entrada.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-background">
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-2 font-medium">Código (PN)</th>
+                  <th className="py-2 pr-2 font-medium">Descrição</th>
+                  <th className="py-2 pr-2 text-center font-medium">Entrada Estratégica</th>
+                  <th className="py-2 pr-2 text-center font-medium">Utilizado pela última vez</th>
+                  <th className="py-2 text-center font-medium">Dias sem utilização</th>
+                </tr>
+              </thead>
+              <tbody>
+                {semUso.map((item) => (
+                  <tr key={item.codigo} className="border-b last:border-0">
+                    <td className="py-2 pr-2 font-mono text-primary">{item.codigo}</td>
+                    <td className="py-2 pr-2">{item.descricao || "-"}</td>
+                    <td className="py-2 pr-2 text-center">Sim</td>
+                    <td className="py-2 pr-2 text-center text-muted-foreground">Nunca</td>
+                    <td className="py-2 text-center font-medium">{item.diasSemUso}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Diálogo: todos os itens consumidos */}
+      <Dialog open={dialogAberto === "consumo"} onOpenChange={(o) => !o && setDialogAberto(null)}>
+        <DialogContent className="max-h-[85vh] max-w-2xl overflow-hidden">
+          <DialogHeader>
+            <DialogTitle>Itens estratégicos consumidos</DialogTitle>
+            <DialogDescription>{consumoFull.length} itens com saída registrada.</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[65vh] overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-background">
+                <tr className="border-b text-left text-xs text-muted-foreground">
+                  <th className="py-2 pr-2 font-medium">#</th>
+                  <th className="py-2 pr-2 font-medium">Código (PN)</th>
+                  <th className="py-2 pr-2 font-medium">Descrição</th>
+                  <th className="py-2 text-right font-medium">Consumido</th>
+                </tr>
+              </thead>
+              <tbody>
+                {consumoFull.map((item, idx) => (
+                  <tr key={item.codigo} className="border-b last:border-0">
+                    <td className="py-2 pr-2 text-muted-foreground">{idx + 1}</td>
+                    <td className="py-2 pr-2 font-mono text-primary">{item.codigo}</td>
+                    <td className="py-2 pr-2">{item.descricao}</td>
+                    <td className="py-2 text-right font-medium tabular-nums">{item.total} un</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
