@@ -35,9 +35,11 @@ import {
   Loader2,
   Package,
   ArrowDown,
+  FileText,
 } from "lucide-react"
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 import { EstoqueEstrategicoAnalise } from "@/components/estoque-estrategico-analise"
+import { gerarRelatorioEstrategico } from "@/lib/gerar-relatorio-estrategico"
 
 type Status = "OK" | "Repor" | "Analisar"
 
