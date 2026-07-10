@@ -56,7 +56,7 @@ function calcularDias(data: string | null): number {
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)))
 }
 
-const LIMITE = 5
+const LIMITE = 10
 
 export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] }) {
   const [loading, setLoading] = useState(true)
@@ -206,7 +206,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-3">
+    <div className="grid items-start gap-4 xl:grid-cols-3">
       {/* Coluna 1 — Reposição do Estoque */}
       <Card>
         <CardHeader>
@@ -322,10 +322,9 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-2">
+          <div className="grid grid-cols-3 gap-3">
             <MiniKpi label="Peças consumidas" value={totalPecas} tone="primary" />
             <MiniKpi label="OS atendidas" value={osAtendidas} tone="primary" />
-            <MiniKpi label="Itens sem utilização" value={semUso.length} tone="primary" />
             <MiniKpi label="Taxa de utilização" value={`${taxaUtilizacao}%`} tone="primary" />
           </div>
 
