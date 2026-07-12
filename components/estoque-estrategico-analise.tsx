@@ -240,8 +240,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
                       <th className="py-2 pr-2 font-medium">Descrição</th>
                       <th className="py-2 pr-2 text-center font-medium">Saldo</th>
                       <th className="py-2 pr-2 text-center font-medium">Mín.</th>
-                      <th className="py-2 pr-2 text-center font-medium">Dif.</th>
-                      <th className="py-2 text-center font-medium">Sugerida</th>
+                      <th className="py-2 text-center font-medium">Dif.</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -254,8 +253,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
                         </td>
                         <td className="py-2 pr-2 text-center">{item.saldo}</td>
                         <td className="py-2 pr-2 text-center">{item.quantidade_minima ?? "-"}</td>
-                        <td className="py-2 pr-2 text-center font-medium text-destructive">{item.diferenca}</td>
-                        <td className="py-2 text-center font-medium">{Math.abs(item.diferenca as number)}</td>
+                        <td className="py-2 text-center font-medium text-destructive">{item.diferenca}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -462,8 +460,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
                   <th className="py-2 pr-2 font-medium">Descrição</th>
                   <th className="py-2 pr-2 text-center font-medium">Saldo</th>
                   <th className="py-2 pr-2 text-center font-medium">Mín.</th>
-                  <th className="py-2 pr-2 text-center font-medium">Dif.</th>
-                  <th className="py-2 text-center font-medium">Sugerida</th>
+                  <th className="py-2 text-center font-medium">Dif.</th>
                 </tr>
               </thead>
               <tbody>
@@ -474,8 +471,7 @@ export function EstoqueEstrategicoAnalise({ itens }: { itens: ItemReposicao[] })
                     <td className="py-2 pr-2">{item.descricao}</td>
                     <td className="py-2 pr-2 text-center">{item.saldo}</td>
                     <td className="py-2 pr-2 text-center">{item.quantidade_minima ?? "-"}</td>
-                    <td className="py-2 pr-2 text-center font-medium text-destructive">{item.diferenca}</td>
-                    <td className="py-2 text-center font-medium">{Math.abs(item.diferenca as number)}</td>
+                    <td className="py-2 text-center font-medium text-destructive">{item.diferenca}</td>
                   </tr>
                 ))}
               </tbody>

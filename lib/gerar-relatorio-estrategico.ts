@@ -401,11 +401,10 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
         <td style="padding:10px 8px;text-align:center;font-size:11px;color:${TEXTO};">${it.saldo}</td>
         <td style="padding:10px 8px;text-align:center;font-size:11px;color:${TEXTO};">${it.minimo ?? "-"}</td>
         <td style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:#c0392b;">${it.deficit}</td>
-        <td style="padding:10px 8px;text-align:center;font-size:11px;font-weight:700;color:${AZUL};">${it.sugestao}</td>
       </tr>`,
         )
         .join("")
-    : `<tr><td colspan="7" style="padding:16px;text-align:center;font-size:11px;color:${TEXTO_SUAVE};">Nenhum item abaixo do mínimo.</td></tr>`
+    : `<tr><td colspan="6" style="padding:16px;text-align:center;font-size:11px;color:${TEXTO_SUAVE};">Nenhum item abaixo do mínimo.</td></tr>`
 
   const maxConsumo = Math.max(1, ...d.topConsumidos.map((i) => i.total))
   const listaConsumo = d.topConsumidos.length
@@ -443,7 +442,6 @@ function paginaEstoqueUtilizacao(d: DadosPagina2): string {
                 <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Saldo Atual</th>
                 <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Mínimo</th>
                 <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Déficit</th>
-                <th style="padding:9px 8px;text-align:center;font-size:10.5px;font-weight:700;">Sugestão</th>
               </tr>
             </thead>
             <tbody>${linhas}</tbody>
