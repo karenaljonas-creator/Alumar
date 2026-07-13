@@ -149,9 +149,9 @@ function reportHead(numero: string, localizacao: string, dataEmissao: string): s
 }
 
 function reportTitle(title: string, subtitle: string): string {
-  return `<div style="margin:16px 0 18px;">
-    <div style="font-size:26px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
-    <div style="font-size:13px;color:#5b7083;margin-top:3px;">${escapeHtml(subtitle)}</div>
+  return `<div style="margin:12px 0 12px;">
+    <div style="font-size:24px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
+    <div style="font-size:13px;color:#5b7083;margin-top:2px;">${escapeHtml(subtitle)}</div>
   </div>`
 }
 
@@ -249,38 +249,36 @@ function blueMetricCard(
   dispContrato: number,
 ): string {
   const fmt = (n: number) => n.toFixed(1).replace(".", ",")
-  return `<div style="background:${AZUL_NAVY};border-radius:10px;color:#fff;padding:18px 16px;display:flex;flex-direction:column;justify-content:space-between;gap:14px;height:100%;">
+  return `<div style="background:${AZUL_ATLAS};border-radius:10px;color:#fff;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;height:100%;">
     <div style="text-align:center;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.8);line-height:1.25;">Disponibilidade da Planta<br/>(Física)</div>
-      <div style="font-size:52px;font-weight:900;line-height:1;margin-top:8px;">${fmt(dispFisica)}%</div>
-      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.9);margin-top:8px;">Meta: ${meta}%</div>
-      <div style="border-bottom:2px dashed #f5b301;margin-top:12px;"></div>
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.85);line-height:1.25;">Disponibilidade da Planta (Física)</div>
+      <div style="font-size:46px;font-weight:900;line-height:1;margin-top:6px;">${fmt(dispFisica)}%</div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.95);margin-top:6px;">Meta: ${meta}%</div>
+      <div style="border-bottom:2px dashed #fbbf24;margin-top:10px;"></div>
     </div>
     <div>
-      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.8);margin-bottom:10px;">Principais responsáveis pela indisponibilidade</div>
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:8px;line-height:1.3;">Principais responsáveis pela indisponibilidade</div>
       <div style="display:flex;align-items:stretch;justify-content:center;gap:6px;">
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
-          <span style="font-size:34px;font-weight:900;line-height:1;color:#e8503a;">${countVale}</span>
-          <span style="font-size:10px;color:rgba(255,255,255,.8);text-align:center;">máquinas paradas</span>
-          <span style="font-size:10px;font-weight:700;background:#e8503a;color:#fff;border-radius:4px;padding:2px 10px;">Ação Vale</span>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span style="font-size:32px;font-weight:900;line-height:1;color:#ff5a44;">${countVale}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.85);text-align:center;">máquinas paradas</span>
+          <span style="font-size:10px;font-weight:700;background:#dc2626;color:#fff;border-radius:4px;padding:2px 10px;">Ação Vale</span>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px;">
-          <div style="width:1px;flex:1;background:rgba(255,255,255,.3);"></div>
-          <div style="width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:rgba(255,255,255,.85);margin:3px 0;">VS</div>
-          <div style="width:1px;flex:1;background:rgba(255,255,255,.3);"></div>
+          <div style="width:1px;flex:1;background:rgba(255,255,255,.35);"></div>
+          <div style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.9);margin:3px 0;">VS</div>
+          <div style="width:1px;flex:1;background:rgba(255,255,255,.35);"></div>
         </div>
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;">
-          <span style="font-size:34px;font-weight:900;line-height:1;color:#bfe6f2;">${countAtlas}</span>
-          <span style="font-size:10px;color:rgba(255,255,255,.8);text-align:center;">máquinas paradas</span>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span style="font-size:32px;font-weight:900;line-height:1;color:#fff;">${countAtlas}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.85);text-align:center;">máquinas paradas</span>
           <span style="font-size:10px;font-weight:700;background:#12466b;color:#fff;border-radius:4px;padding:2px 10px;">Ação Atlas</span>
         </div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:center;gap:12px;border-top:1px solid rgba(255,255,255,.25);padding-top:12px;">
-      <div style="text-align:center;">
-        <div style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.8);line-height:1.3;">Disponibilidade<br/>Contratual Atlas</div>
-        <div style="font-size:30px;font-weight:900;line-height:1;margin-top:4px;">${fmt(dispContrato)}%</div>
-      </div>
+    <div style="text-align:center;border-top:1px solid rgba(255,255,255,.3);padding-top:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.85);line-height:1.3;">Disponibilidade Contratual Atlas</div>
+      <div style="font-size:28px;font-weight:900;line-height:1;margin-top:4px;">${fmt(dispContrato)}%</div>
     </div>
   </div>`
 }
@@ -306,8 +304,8 @@ function hbars(items: { label: string; value: number }[]): string {
 /** Mini gráfico de linha da evolução da disponibilidade com linha de meta. */
 function svgLineChart(points: { label: string; value: number }[], meta = 90): string {
   if (points.length === 0) return `<p style="font-size:11px;color:#5b7083;margin:0;">Sem histórico disponível.</p>`
-  const W = 430
-  const H = 120
+  const W = 780
+  const H = 130
   const padL = 26
   const padR = 12
   const padT = 14
