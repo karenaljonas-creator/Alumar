@@ -158,8 +158,9 @@ function pageFooter(label: string): string {
   return `<div class="pg-footer">${escapeHtml(label)}</div>`
 }
 
-function page(inner: string, footerLabel: string, landscape = false): string {
-  return `<div class="page${landscape ? " landscape" : ""}"><div class="page-body">${inner}</div>${pageFooter(footerLabel)}</div>`
+function page(inner: string, footerLabel: string, landscape = false, compact = false): string {
+  const cls = `page${landscape ? " landscape" : ""}${compact ? " compact" : ""}`
+  return `<div class="${cls}"><div class="page-body">${inner}</div>${pageFooter(footerLabel)}</div>`
 }
 
 const ARROW_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`
@@ -304,11 +305,11 @@ function hbars(items: { label: string; value: number }[]): string {
 function svgLineChart(points: { label: string; value: number }[], meta = 90): string {
   if (points.length === 0) return `<p style="font-size:11px;color:#5b7083;margin:0;">Sem histórico disponível.</p>`
   const W = 780
-  const H = 90
+  const H = 66
   const padL = 26
   const padR = 12
-  const padT = 12
-  const padB = 18
+  const padT = 10
+  const padB = 16
   const minY = 80
   const maxY = 100
   const plotW = W - padL - padR
@@ -398,6 +399,7 @@ function montarDocumento(titulo: string, paginas: string): string {
   .page:last-child { page-break-after:auto; margin-bottom:0; }
   .page.landscape { width:297mm; min-height:210mm; page:landscapePg; }
   .page-body { padding:14mm 12mm 22mm; }
+  .page.compact .page-body { padding:8mm 11mm 14mm; }
   .page.landscape .page-body { padding:9mm 10mm 16mm; height:210mm; display:flex; flex-direction:column; }
   .pg-footer {
     position:absolute; left:0; right:0; bottom:0;
@@ -629,11 +631,11 @@ export function gerarRelatorioDetalhado(
   const top5Rows = top5
     .map(
       (item) => `<tr>
-        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;font-weight:700;color:#0f2d44;">${escapeHtml(item.m.nome || "-")}</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;" class="wrap">${escapeHtml(item.m.localizacao || "-")}</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;font-weight:700;color:#c81e1e;white-space:nowrap;">${item.dias} dias</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;">${escapeHtml(item.m.acaoResponsavel || "-")}</td>
-        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;white-space:nowrap;">${formatDate(item.m.prazoDados)}</td>
+        <td style="padding:3px 6px;border-bottom:1px solid #e8edf1;font-weight:700;color:#0f2d44;">${escapeHtml(item.m.nome || "-")}</td>
+        <td style="padding:3px 6px;border-bottom:1px solid #e8edf1;" class="wrap">${escapeHtml(item.m.localizacao || "-")}</td>
+        <td style="padding:3px 6px;border-bottom:1px solid #e8edf1;text-align:center;font-weight:700;color:#c81e1e;white-space:nowrap;">${item.dias} dias</td>
+        <td style="padding:3px 6px;border-bottom:1px solid #e8edf1;text-align:center;">${escapeHtml(item.m.acaoResponsavel || "-")}</td>
+        <td style="padding:3px 6px;border-bottom:1px solid #e8edf1;text-align:center;white-space:nowrap;">${formatDate(item.m.prazoDados)}</td>
       </tr>`,
     )
     .join("")
@@ -716,6 +718,8 @@ export function gerarRelatorioDetalhado(
       dashboard +
       infoRelatorio,
     `Relatório Detalhado - Página 1 de ${totalPaginas}`,
+    false,
+    true,
   )
 
   const pagina2 = page(
