@@ -691,10 +691,16 @@ export function gerarRelatorioDetalhado(
     `<div style="display:flex;align-items:center;gap:12px;">${donutResp}<div style="flex:1;min-width:0;">${legendResp}</div></div>`,
   )
 
-  const dashboard = `<div style="display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:12px;flex:1;min-height:0;align-items:stretch;">
-    <div style="display:flex;flex-direction:column;">${cardAzul}</div>
-    <div style="display:flex;flex-direction:column;gap:12px;">${resumoGeral}${top5Panel}${evolucaoPanel}</div>
-    <div style="display:flex;flex-direction:column;gap:12px;">${causaPanel}${localizacaoPanel}${respPanel}</div>
+  const dashboard = `<div style="display:flex;flex-direction:column;gap:12px;">
+    <div style="display:grid;grid-template-columns:0.85fr 1fr;gap:12px;align-items:stretch;">
+      <div style="display:flex;">${cardAzul}</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">${resumoGeral}${causaPanel}</div>
+    </div>
+    ${top5Panel}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;">
+      ${localizacaoPanel}${respPanel}
+    </div>
+    ${evolucaoPanel}
   </div>`
 
   const infoRelatorio = `<div style="border:1px solid #dde5ec;border-radius:8px;padding:10px 14px;background:#fff;margin-top:12px;">
@@ -714,7 +720,6 @@ export function gerarRelatorioDetalhado(
       dashboard +
       infoRelatorio,
     `Relatório Detalhado - Página 1 de ${totalPaginas}`,
-    true,
   )
 
   const pagina2 = page(
