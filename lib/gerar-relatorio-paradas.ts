@@ -4,6 +4,10 @@ import { ROBOTO_400, ROBOTO_500, ROBOTO_700, ROBOTO_900 } from "@/lib/roboto-fon
 import { computeIndicadores } from "@/lib/parada-eventos-storage"
 import { loadContrato } from "@/lib/contrato-storage"
 import { buildCategoriaColorMap } from "@/lib/categoria-cores"
+import { calculateStats, filtrarMaquinasPrincipais } from "@/lib/machine-utils"
+
+const META_DISPONIBILIDADE = 90
+const AZUL_ATLAS = "#0092bc"
 
 /* ------------------------------------------------------------------ */
 /* Utilidades                                                          */
@@ -144,9 +148,9 @@ function reportHead(numero: string, localizacao: string, dataEmissao: string): s
 }
 
 function reportTitle(title: string, subtitle: string): string {
-  return `<div style="margin:16px 0 18px;">
-    <div style="font-size:26px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
-    <div style="font-size:13px;color:#5b7083;margin-top:3px;">${escapeHtml(subtitle)}</div>
+  return `<div style="margin:8px 0 8px;">
+    <div style="font-size:23px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
+    <div style="font-size:13px;color:#5b7083;margin-top:2px;">${escapeHtml(subtitle)}</div>
   </div>`
 }
 
@@ -154,8 +158,8 @@ function pageFooter(label: string): string {
   return `<div class="pg-footer">${escapeHtml(label)}</div>`
 }
 
-function page(inner: string, footerLabel: string): string {
-  return `<div class="page"><div class="page-body">${inner}</div>${pageFooter(footerLabel)}</div>`
+function page(inner: string, footerLabel: string, landscape = false): string {
+  return `<div class="page${landscape ? " landscape" : ""}"><div class="page-body">${inner}</div>${pageFooter(footerLabel)}</div>`
 }
 
 const ARROW_SVG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`
@@ -225,6 +229,126 @@ function tabelaConsolidada(machines: Machine[], indPorMaquina: Map<string, Parad
 }
 
 /* ------------------------------------------------------------------ */
+/* Componentes do dashboard (Página 1 - paisagem)                      */
+/* ------------------------------------------------------------------ */
+
+function panelCompact(titulo: string, inner: string, extraStyle = ""): string {
+  return `<div style="border:1px solid #dde5ec;border-radius:8px;padding:8px 12px;background:#fff;display:flex;flex-direction:column;${extraStyle}">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:6px;">${escapeHtml(titulo)}</div>
+    ${inner}
+  </div>`
+}
+
+/** Card azul-navy da esquerda: disponibilidade física, Vale vs Atlas, contratual. */
+function blueMetricCard(
+  dispFisica: number,
+  meta: number,
+  countVale: number,
+  countAtlas: number,
+  dispContrato: number,
+): string {
+  const fmt = (n: number) => n.toFixed(1).replace(".", ",")
+  return `<div style="background:${AZUL_ATLAS};border-radius:10px;color:#fff;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;height:100%;">
+    <div style="text-align:center;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.85);line-height:1.25;">Disponibilidade da Planta (Física)</div>
+      <div style="font-size:46px;font-weight:900;line-height:1;margin-top:6px;">${fmt(dispFisica)}%</div>
+      <div style="font-size:13px;font-weight:700;color:rgba(255,255,255,.95);margin-top:6px;">Meta: ${meta}%</div>
+      <div style="border-bottom:2px dashed #fbbf24;margin-top:10px;"></div>
+    </div>
+    <div>
+      <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.85);margin-bottom:8px;line-height:1.3;">Principais responsáveis pela indisponibilidade</div>
+      <div style="display:flex;align-items:stretch;justify-content:center;gap:6px;">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span style="font-size:32px;font-weight:900;line-height:1;color:#ff5a44;">${countVale}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.85);text-align:center;">máquinas paradas</span>
+          <span style="font-size:10px;font-weight:700;background:#dc2626;color:#fff;border-radius:4px;padding:2px 10px;">Ação Vale</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px;">
+          <div style="width:1px;flex:1;background:rgba(255,255,255,.35);"></div>
+          <div style="width:28px;height:28px;border-radius:50%;border:1px solid rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.9);margin:3px 0;">VS</div>
+          <div style="width:1px;flex:1;background:rgba(255,255,255,.35);"></div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;">
+          <span style="font-size:32px;font-weight:900;line-height:1;color:#fff;">${countAtlas}</span>
+          <span style="font-size:10px;color:rgba(255,255,255,.85);text-align:center;">máquinas paradas</span>
+          <span style="font-size:10px;font-weight:700;background:#12466b;color:#fff;border-radius:4px;padding:2px 10px;">Ação Atlas</span>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;border-top:1px solid rgba(255,255,255,.3);padding-top:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:rgba(255,255,255,.85);line-height:1.3;">Disponibilidade Contratual Atlas</div>
+      <div style="font-size:28px;font-weight:900;line-height:1;margin-top:4px;">${fmt(dispContrato)}%</div>
+    </div>
+  </div>`
+}
+
+/** Barras horizontais (ex.: localização das máquinas paradas). */
+function hbars(items: { label: string; value: number }[]): string {
+  if (items.length === 0) return `<p style="font-size:11px;color:#5b7083;margin:0;">Sem dados.</p>`
+  const max = Math.max(...items.map((i) => i.value), 1)
+  return `<div style="display:flex;flex-direction:column;gap:8px;">${items
+    .map((i) => {
+      const w = Math.max(6, Math.round((i.value / max) * 100))
+      return `<div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:96px;font-size:10px;color:#26333f;text-align:right;line-height:1.15;flex:none;">${escapeHtml(i.label)}</span>
+        <div style="flex:1;height:14px;background:#eef2f5;border-radius:3px;overflow:hidden;">
+          <div style="height:100%;width:${w}%;background:${AZUL_ATLAS};border-radius:3px;"></div>
+        </div>
+        <span style="width:16px;font-size:11px;font-weight:700;color:#0f2d44;flex:none;">${i.value}</span>
+      </div>`
+    })
+    .join("")}</div>`
+}
+
+/** Mini gráfico de linha da evolução da disponibilidade com linha de meta. */
+function svgLineChart(points: { label: string; value: number }[], meta = 90): string {
+  if (points.length === 0) return `<p style="font-size:11px;color:#5b7083;margin:0;">Sem histórico disponível.</p>`
+  const W = 780
+  const H = 90
+  const padL = 26
+  const padR = 12
+  const padT = 12
+  const padB = 18
+  const minY = 80
+  const maxY = 100
+  const plotW = W - padL - padR
+  const plotH = H - padT - padB
+  const x = (i: number) => padL + (points.length === 1 ? plotW / 2 : (i / (points.length - 1)) * plotW)
+  const y = (v: number) => padT + (1 - (Math.min(maxY, Math.max(minY, v)) - minY) / (maxY - minY)) * plotH
+  const gridLines = [80, 85, 90, 95, 100]
+    .map((g) => {
+      const gy = y(g)
+      return `<line x1="${padL}" y1="${gy}" x2="${W - padR}" y2="${gy}" stroke="#e2e8f0" stroke-width="1"/>
+        <text x="${padL - 4}" y="${gy + 3}" text-anchor="end" font-size="7" fill="#8094a4">${g}%</text>`
+    })
+    .join("")
+  const metaY = y(meta)
+  const metaLine = `<line x1="${padL}" y1="${metaY}" x2="${W - padR}" y2="${metaY}" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="5 4"/>`
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ")
+  const dots = points
+    .map(
+      (p, i) =>
+        `<circle cx="${x(i).toFixed(1)}" cy="${y(p.value).toFixed(1)}" r="2.6" fill="#fff" stroke="${AZUL_ATLAS}" stroke-width="1.5"/>
+        <text x="${x(i).toFixed(1)}" y="${(y(p.value) - 6).toFixed(1)}" text-anchor="middle" font-size="7" font-weight="700" fill="#0f2d44">${p.value.toFixed(1).replace(".", ",")}%</text>`,
+    )
+    .join("")
+  const labels = points
+    .map((p, i) => `<text x="${x(i).toFixed(1)}" y="${H - 6}" text-anchor="middle" font-size="7" fill="#5b7083">${escapeHtml(p.label)}</text>`)
+    .join("")
+  return `<div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">
+      ${gridLines}${metaLine}
+      <path d="${linePath}" fill="none" stroke="${AZUL_ATLAS}" stroke-width="2"/>
+      ${dots}${labels}
+    </svg>
+    <div style="display:flex;justify-content:center;gap:16px;margin-top:4px;font-size:8px;color:#5b7083;">
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:2px;background:${AZUL_ATLAS};display:inline-block;"></span>Disponibilidade contratual (Atlas)</span>
+      <span style="display:flex;align-items:center;gap:4px;"><span style="width:14px;height:0;border-top:2px dashed #f59e0b;display:inline-block;"></span>Meta contratual (${meta}%)</span>
+    </div>
+  </div>`
+}
+
+/* ------------------------------------------------------------------ */
 /* Shell HTML + impressão                                              */
 /* ------------------------------------------------------------------ */
 
@@ -240,6 +364,7 @@ function montarDocumento(titulo: string, paginas: string): string {
   @font-face { font-family:"ReportRoboto"; font-style:normal; font-weight:700; font-display:block; src:url(${ROBOTO_700}) format("woff2"); }
   @font-face { font-family:"ReportRoboto"; font-style:normal; font-weight:900; font-display:block; src:url(${ROBOTO_900}) format("woff2"); }
   @page { size: A4 portrait; margin: 0; }
+  @page landscapePg { size: A4 landscape; margin: 0; }
   * {
     box-sizing: border-box;
     -webkit-print-color-adjust: exact !important;
@@ -271,7 +396,9 @@ function montarDocumento(titulo: string, paginas: string): string {
     overflow:hidden;
   }
   .page:last-child { page-break-after:auto; margin-bottom:0; }
+  .page.landscape { width:297mm; min-height:210mm; page:landscapePg; }
   .page-body { padding:14mm 12mm 22mm; }
+  .page.landscape .page-body { padding:9mm 10mm 16mm; height:210mm; display:flex; flex-direction:column; }
   .pg-footer {
     position:absolute; left:0; right:0; bottom:0;
     background:#0092bc; color:#fff; text-align:center;
@@ -455,59 +582,138 @@ export function gerarRelatorioDetalhado(
   const porResponsavel = contarPor(machines, (m) => m.acaoResponsavel || "Não definido")
   const catColor = buildCategoriaColorMap(porCategoria.map((c) => c.nome))
 
-  /* ---------- Página 1: Resumo Geral ---------- */
-  const resumoGeral = panel(
+  /* ---------- Página 1: Painel de Controle ---------- */
+  // Disponibilidade física/contratual e responsáveis: replicam exatamente o
+  // Painel de Controle do app, que usa calculateStats sobre as MÁQUINAS
+  // PRINCIPAIS do último snapshot semanal (Compressor/Secador/Soprador).
+  const registrosOrdenados = [...registros].sort(
+    (a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime(),
+  )
+  const ultimoRegistro = registrosOrdenados[registrosOrdenados.length - 1]
+  const baseMaquinas = ultimoRegistro?.maquinas?.length ? ultimoRegistro.maquinas : machines
+  const statsBase = calculateStats(filtrarMaquinasPrincipais(baseMaquinas))
+
+  // Evolução da disponibilidade contratual (últimas semanas) - mesma base.
+  const evolucao = registrosOrdenados.slice(-8).map((r) => ({
+    label: `S${r.semana?.split("-W")[1] || "?"}`,
+    value: Number(calculateStats(filtrarMaquinasPrincipais(r.maquinas || [])).disponibilidadeContrato.toFixed(1)),
+  }))
+
+  // Localização das máquinas paradas (top 5).
+  const porLocalizacao = contarPor(machines, (m) => m.localizacao || "Sem localização").slice(0, 5)
+
+  const cardAzul = blueMetricCard(
+    statsBase.disponibilidade,
+    META_DISPONIBILIDADE,
+    statsBase.paradasVale,
+    statsBase.paradasAtlas,
+    statsBase.disponibilidadeContrato,
+  )
+
+  // Resumo geral
+  const resumoGeral = panelCompact(
     "Resumo Geral",
-    `<div style="display:flex;flex-direction:column;gap:16px;">
+    `<div style="display:flex;flex-direction:column;gap:9px;">
       ${resumoLinha(String(total), "", "Máquinas Paradas", "#c81e1e")}
       ${resumoLinha(String(tempoMedio), "dias", "Tempo médio de parada", "#d97706")}
       ${resumoLinha(String(maior), "dias", "Maior parada registrada", "#c81e1e")}
-      ${resumoLinha(String(menor), "dias", "Menor parada registrada", "#0092bc")}
+      ${resumoLinha(String(menor), "dias", "Menor parada registrada", AZUL_ATLAS)}
     </div>`,
   )
 
+  // Top 5 máquinas críticas
+  const top5 = [...machines]
+    .map((m) => ({ m, dias: indPorMaquina.get(m.id)?.diasTotais ?? getDias(m) }))
+    .sort((a, b) => b.dias - a.dias)
+    .slice(0, 5)
+  const top5Rows = top5
+    .map(
+      (item) => `<tr>
+        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;font-weight:700;color:#0f2d44;">${escapeHtml(item.m.nome || "-")}</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;" class="wrap">${escapeHtml(item.m.localizacao || "-")}</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;font-weight:700;color:#c81e1e;white-space:nowrap;">${item.dias} dias</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;">${escapeHtml(item.m.acaoResponsavel || "-")}</td>
+        <td style="padding:5px 6px;border-bottom:1px solid #e8edf1;text-align:center;white-space:nowrap;">${formatDate(item.m.prazoDados)}</td>
+      </tr>`,
+    )
+    .join("")
+  const top5Panel = panelCompact(
+    "Top 5 Máquinas Críticas",
+    `<table style="font-size:10px;">
+      <colgroup><col style="width:26%"/><col style="width:24%"/><col style="width:18%"/><col style="width:16%"/><col style="width:16%"/></colgroup>
+      <thead><tr>
+        <th style="background:transparent;color:#5b7083;border-bottom:1px solid #cdd8e1;padding:4px 6px;">Equipamento</th>
+        <th style="background:transparent;color:#5b7083;border-bottom:1px solid #cdd8e1;padding:4px 6px;">Localização</th>
+        <th style="background:transparent;color:#5b7083;border-bottom:1px solid #cdd8e1;padding:4px 6px;text-align:center;">Dias parado</th>
+        <th style="background:transparent;color:#5b7083;border-bottom:1px solid #cdd8e1;padding:4px 6px;text-align:center;">Ação</th>
+        <th style="background:transparent;color:#5b7083;border-bottom:1px solid #cdd8e1;padding:4px 6px;text-align:center;">Atualização</th>
+      </tr></thead>
+      <tbody>${top5Rows || `<tr><td colspan="5" style="padding:12px;text-align:center;color:#8094a4;">Sem dados.</td></tr>`}</tbody>
+    </table>`,
+    "flex:1;",
+  )
+
+  const evolucaoPanel = panelCompact(
+    "Evolução da Disponibilidade ao Longo das Semanas (Meta: 90%)",
+    svgLineChart(evolucao, META_DISPONIBILIDADE),
+    "flex:1;",
+  )
+
+  // Donuts
   const donutCat = svgDonut(
     porCategoria.map((c) => ({ label: c.nome, value: c.qtd, color: catColor.get(c.nome)! })),
     String(total),
     "máquinas",
-    116,
-    20,
+    92,
+    16,
   )
   const legendCat = legend(porCategoria.map((c) => ({ label: c.nome, color: catColor.get(c.nome)!, value: `${c.qtd} (${c.pct}%)` })))
   const donutResp = svgDonut(
     porResponsavel.map((r) => ({ label: r.nome, value: r.qtd, color: corResponsavel(r.nome) })),
     String(total),
     "máquinas",
-    116,
-    20,
+    92,
+    16,
   )
   const legendResp = legend(porResponsavel.map((r) => ({ label: r.nome, color: corResponsavel(r.nome), value: `${r.qtd} (${r.pct}%)` })))
 
-  const colDireita = `<div style="display:flex;flex-direction:column;gap:14px;">
-    ${panel("Resumo por Categoria", `<div style="display:flex;align-items:center;gap:16px;">${donutCat}<div style="flex:1;">${legendCat}</div></div>`)}
-    ${panel("Resumo por Responsável", `<div style="display:flex;align-items:center;gap:16px;">${donutResp}<div style="flex:1;">${legendResp}</div></div>`)}
-  </div>`
-
-  const gridTopo = `<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:14px;margin-bottom:16px;">
-    ${resumoGeral}
-    ${colDireita}
-  </div>`
-
-  const infoRelatorio = panel(
-    "Informações do Relatório",
-    `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px 24px;font-size:12px;">
-      ${infoItem("Contrato", contrato.numero)}
-      ${infoItem("Total de registros", `${total} máquinas`)}
-      ${infoItem("Mina", contrato.localizacao)}
-      ${infoItem("Período dos dados", "Último registro semanal")}
-      ${infoItem("Data de emissão", dataEmissao)}
-    </div>`,
+  const causaPanel = panelCompact(
+    "Máquinas Paradas por Causa",
+    `<div style="display:flex;align-items:center;gap:12px;">${donutCat}<div style="flex:1;min-width:0;">${legendCat}</div></div>`,
   )
+  const localizacaoPanel = panelCompact("Localização das Máquinas Paradas", hbars(porLocalizacao.map((l) => ({ label: l.nome, value: l.qtd }))), "flex:1;")
+  const respPanel = panelCompact(
+    "Resumo por Responsável",
+    `<div style="display:flex;align-items:center;gap:12px;">${donutResp}<div style="flex:1;min-width:0;">${legendResp}</div></div>`,
+  )
+
+  const dashboard = `<div style="display:flex;flex-direction:column;gap:7px;">
+    <div style="display:grid;grid-template-columns:0.85fr 1fr;gap:8px;align-items:stretch;">
+      <div style="display:flex;">${cardAzul}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">${resumoGeral}${causaPanel}</div>
+    </div>
+    ${top5Panel}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;">
+      ${localizacaoPanel}${respPanel}
+    </div>
+    ${evolucaoPanel}
+  </div>`
+
+  const infoRelatorio = `<div style="border:1px solid #dde5ec;border-radius:8px;padding:8px 14px;background:#fff;margin-top:9px;">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:6px;">Informações do Relatório</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 24px;font-size:11px;">
+      ${infoItem("Contrato", contrato.numero)}
+      ${infoItem("Mina", contrato.localizacao)}
+      ${infoItem("Data de emissão", dataEmissao)}
+      ${infoItem("Total de registros", `${total} máquinas`)}
+      ${infoItem("Período dos dados", "Último registro semanal")}
+    </div>
+  </div>`
 
   const pagina1 = page(
     reportHead(contrato.numero, contrato.localizacao, dataEmissao) +
       reportTitle("RELATÓRIO DETALHADO", "Visão geral das máquinas paradas") +
-      gridTopo +
+      dashboard +
       infoRelatorio,
     `Relatório Detalhado - Página 1 de ${totalPaginas}`,
   )
