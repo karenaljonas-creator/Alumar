@@ -399,7 +399,7 @@ function montarDocumento(titulo: string, paginas: string): string {
   .page:last-child { page-break-after:auto; margin-bottom:0; }
   .page.landscape { width:297mm; min-height:210mm; page:landscapePg; }
   .page-body { padding:14mm 12mm 22mm; }
-  .page.compact .page-body { padding:8mm 11mm 14mm; }
+  .page.compact .page-body { padding:7mm 11mm 12mm; }
   .page.landscape .page-body { padding:9mm 10mm 16mm; height:210mm; display:flex; flex-direction:column; }
   .pg-footer {
     position:absolute; left:0; right:0; bottom:0;
@@ -666,16 +666,16 @@ export function gerarRelatorioDetalhado(
     porCategoria.map((c) => ({ label: c.nome, value: c.qtd, color: catColor.get(c.nome)! })),
     String(total),
     "máquinas",
-    92,
-    16,
+    84,
+    15,
   )
   const legendCat = legend(porCategoria.map((c) => ({ label: c.nome, color: catColor.get(c.nome)!, value: `${c.qtd} (${c.pct}%)` })))
   const donutResp = svgDonut(
     porResponsavel.map((r) => ({ label: r.nome, value: r.qtd, color: corResponsavel(r.nome) })),
     String(total),
     "máquinas",
-    92,
-    16,
+    84,
+    15,
   )
   const legendResp = legend(porResponsavel.map((r) => ({ label: r.nome, color: corResponsavel(r.nome), value: `${r.qtd} (${r.pct}%)` })))
 
