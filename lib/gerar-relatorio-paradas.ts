@@ -4,10 +4,9 @@ import { ROBOTO_400, ROBOTO_500, ROBOTO_700, ROBOTO_900 } from "@/lib/roboto-fon
 import { computeIndicadores } from "@/lib/parada-eventos-storage"
 import { loadContrato } from "@/lib/contrato-storage"
 import { buildCategoriaColorMap } from "@/lib/categoria-cores"
-import { calculateStats } from "@/lib/machine-utils"
+import { calculateStats, filtrarMaquinasPrincipais } from "@/lib/machine-utils"
 
 const META_DISPONIBILIDADE = 90
-const AZUL_NAVY = "#0c2c44"
 const AZUL_ATLAS = "#0092bc"
 
 /* ------------------------------------------------------------------ */
@@ -149,8 +148,8 @@ function reportHead(numero: string, localizacao: string, dataEmissao: string): s
 }
 
 function reportTitle(title: string, subtitle: string): string {
-  return `<div style="margin:12px 0 12px;">
-    <div style="font-size:24px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
+  return `<div style="margin:8px 0 8px;">
+    <div style="font-size:23px;font-weight:900;color:#15607a;letter-spacing:.3px;">${escapeHtml(title)}</div>
     <div style="font-size:13px;color:#5b7083;margin-top:2px;">${escapeHtml(subtitle)}</div>
   </div>`
 }
@@ -234,8 +233,8 @@ function tabelaConsolidada(machines: Machine[], indPorMaquina: Map<string, Parad
 /* ------------------------------------------------------------------ */
 
 function panelCompact(titulo: string, inner: string, extraStyle = ""): string {
-  return `<div style="border:1px solid #dde5ec;border-radius:8px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;${extraStyle}">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:8px;">${escapeHtml(titulo)}</div>
+  return `<div style="border:1px solid #dde5ec;border-radius:8px;padding:8px 12px;background:#fff;display:flex;flex-direction:column;${extraStyle}">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:6px;">${escapeHtml(titulo)}</div>
     ${inner}
   </div>`
 }
@@ -305,11 +304,11 @@ function hbars(items: { label: string; value: number }[]): string {
 function svgLineChart(points: { label: string; value: number }[], meta = 90): string {
   if (points.length === 0) return `<p style="font-size:11px;color:#5b7083;margin:0;">Sem histórico disponível.</p>`
   const W = 780
-  const H = 130
+  const H = 90
   const padL = 26
   const padR = 12
-  const padT = 14
-  const padB = 20
+  const padT = 12
+  const padB = 18
   const minY = 80
   const maxY = 100
   const plotW = W - padL - padR
@@ -583,22 +582,21 @@ export function gerarRelatorioDetalhado(
   const porResponsavel = contarPor(machines, (m) => m.acaoResponsavel || "Não definido")
   const catColor = buildCategoriaColorMap(porCategoria.map((c) => c.nome))
 
-  /* ---------- Página 1: Painel de Controle (paisagem) ---------- */
-  // Disponibilidade física/contratual: usa o último snapshot semanal (planta
-  // completa). Se não houver histórico, cai para as máquinas recebidas.
+  /* ---------- Página 1: Painel de Controle ---------- */
+  // Disponibilidade física/contratual e responsáveis: replicam exatamente o
+  // Painel de Controle do app, que usa calculateStats sobre as MÁQUINAS
+  // PRINCIPAIS do último snapshot semanal (Compressor/Secador/Soprador).
   const registrosOrdenados = [...registros].sort(
     (a, b) => new Date(a.dataRegistro).getTime() - new Date(b.dataRegistro).getTime(),
   )
   const ultimoRegistro = registrosOrdenados[registrosOrdenados.length - 1]
-  const statsBase = calculateStats(ultimoRegistro?.maquinas?.length ? ultimoRegistro.maquinas : machines)
+  const baseMaquinas = ultimoRegistro?.maquinas?.length ? ultimoRegistro.maquinas : machines
+  const statsBase = calculateStats(filtrarMaquinasPrincipais(baseMaquinas))
 
-  const countVale = machines.filter((m) => m.acaoResponsavel === "Vale").length
-  const countAtlas = machines.filter((m) => m.acaoResponsavel === "Atlas").length
-
-  // Evolução da disponibilidade contratual (últimas semanas).
+  // Evolução da disponibilidade contratual (últimas semanas) - mesma base.
   const evolucao = registrosOrdenados.slice(-8).map((r) => ({
     label: `S${r.semana?.split("-W")[1] || "?"}`,
-    value: Number(calculateStats(r.maquinas || []).disponibilidadeContrato.toFixed(1)),
+    value: Number(calculateStats(filtrarMaquinasPrincipais(r.maquinas || [])).disponibilidadeContrato.toFixed(1)),
   }))
 
   // Localização das máquinas paradas (top 5).
@@ -607,8 +605,8 @@ export function gerarRelatorioDetalhado(
   const cardAzul = blueMetricCard(
     statsBase.disponibilidade,
     META_DISPONIBILIDADE,
-    countVale,
-    countAtlas,
+    statsBase.paradasVale,
+    statsBase.paradasAtlas,
     statsBase.disponibilidadeContrato,
   )
 
@@ -689,20 +687,20 @@ export function gerarRelatorioDetalhado(
     `<div style="display:flex;align-items:center;gap:12px;">${donutResp}<div style="flex:1;min-width:0;">${legendResp}</div></div>`,
   )
 
-  const dashboard = `<div style="display:flex;flex-direction:column;gap:12px;">
-    <div style="display:grid;grid-template-columns:0.85fr 1fr;gap:12px;align-items:stretch;">
+  const dashboard = `<div style="display:flex;flex-direction:column;gap:7px;">
+    <div style="display:grid;grid-template-columns:0.85fr 1fr;gap:8px;align-items:stretch;">
       <div style="display:flex;">${cardAzul}</div>
-      <div style="display:flex;flex-direction:column;gap:12px;">${resumoGeral}${causaPanel}</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">${resumoGeral}${causaPanel}</div>
     </div>
     ${top5Panel}
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch;">
       ${localizacaoPanel}${respPanel}
     </div>
     ${evolucaoPanel}
   </div>`
 
-  const infoRelatorio = `<div style="border:1px solid #dde5ec;border-radius:8px;padding:10px 14px;background:#fff;margin-top:12px;">
-    <div style="font-size:11px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:8px;">Informações do Relatório</div>
+  const infoRelatorio = `<div style="border:1px solid #dde5ec;border-radius:8px;padding:8px 14px;background:#fff;margin-top:9px;">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.4px;color:#15607a;text-transform:uppercase;margin-bottom:6px;">Informações do Relatório</div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px 24px;font-size:11px;">
       ${infoItem("Contrato", contrato.numero)}
       ${infoItem("Mina", contrato.localizacao)}
