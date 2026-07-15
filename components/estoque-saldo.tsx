@@ -6,7 +6,18 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Search, Package, TrendingUp, TrendingDown, AlertTriangle, FilterX } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import {
+  Search,
+  Package,
+  TrendingUp,
+  TrendingDown,
+  AlertTriangle,
+  FilterX,
+  ArrowDownCircle,
+  PackageCheck,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useToast } from "@/hooks/use-toast"
 import { ColumnFilter } from "@/components/column-filter"
@@ -27,6 +38,7 @@ export function EstoqueSaldo() {
   const [saidas, setSaidas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [notasItem, setNotasItem] = useState<EstoqueItem | null>(null)
   const { toast } = useToast()
   const supabase = createClient()
 
@@ -264,6 +276,52 @@ export function EstoqueSaldo() {
     return origens
   }, [entradas, saidas])
 
+  const formatarData = (iso: string | null | undefined): string => {
+    if (!iso) return "–"
+    const d = new Date(iso + (iso.length === 10 ? "T00:00:00" : ""))
+    if (isNaN(d.getTime())) return "–"
+    return d.toLocaleDateString("pt-BR")
+  }
+
+  // Notas fiscais AINDA disponíveis em estoque para o item selecionado (FIFO:
+  // as saídas consomem as entradas mais antigas primeiro; o que sobra de cada
+  // NF é o que está disponível para utilização).
+  const notasDisponiveis = useMemo(() => {
+    if (!notasItem) return []
+
+    const entradasDoCodigo = entradas
+      .filter((e) => e.codigo === notasItem.codigo)
+      .map((e) => ({
+        notaFiscal: e.nota_fiscal as string | null,
+        origem: e.origem as string | null,
+        numeroSerie: e.numero_serie as string | null,
+        data: (e.data_emissao as string | null) || "",
+        quantidade: (e.quantidade as number) || 0,
+        valorUnitario: e.quantidade > 0 ? (e.valor_total || 0) / e.quantidade : e.valor_unitario || 0,
+      }))
+      .sort((a, b) => a.data.localeCompare(b.data))
+
+    let saidaRestante = saidas
+      .filter((s) => s.codigo === notasItem.codigo)
+      .reduce((acc, s) => acc + ((s.quantidade as number) || 0), 0)
+
+    const disponiveis = entradasDoCodigo
+      .map((e) => {
+        let qtdDisponivel = e.quantidade
+        if (saidaRestante > 0) {
+          const usada = Math.min(saidaRestante, qtdDisponivel)
+          qtdDisponivel -= usada
+          saidaRestante -= usada
+        }
+        return { ...e, qtdDisponivel }
+      })
+      .filter((e) => e.qtdDisponivel > 0)
+      // Mais recentes primeiro para exibição
+      .sort((a, b) => b.data.localeCompare(a.data))
+
+    return disponiveis
+  }, [notasItem, entradas, saidas])
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -420,12 +478,23 @@ export function EstoqueSaldo() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {item.saldo < 0 && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                          <span className={`font-bold ${item.saldo < 0 ? "text-destructive" : item.saldo === 0 ? "text-muted-foreground" : "text-foreground"}`}>
+                        {item.saldo > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => setNotasItem(item)}
+                            title="Ver notas fiscais disponíveis para uso"
+                            className="mx-auto flex items-center justify-center gap-1 rounded-md px-2 py-1 font-bold text-primary underline decoration-dotted underline-offset-4 transition-colors hover:bg-primary/10"
+                          >
                             {item.saldo}
-                          </span>
-                        </div>
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-center gap-1">
+                            {item.saldo < 0 && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                            <span className={`font-bold ${item.saldo < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                              {item.saldo}
+                            </span>
+                          </div>
+                        )}
                       </TableCell>
                       <TableCell className="text-right">{formatCurrency(item.valorMedioUnitario)}</TableCell>
                       <TableCell className="text-right font-medium">
@@ -439,6 +508,102 @@ export function EstoqueSaldo() {
           )}
         </CardContent>
       </Card>
+
+      {/* Painel lateral: Notas Fiscais disponíveis para uso do item */}
+      <Sheet open={!!notasItem} onOpenChange={(open) => !open && setNotasItem(null)}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+          {notasItem && (
+            <>
+              <SheetHeader className="space-y-1 text-left">
+                <SheetDescription className="text-xs uppercase tracking-wide">
+                  Notas Disponíveis em Estoque
+                </SheetDescription>
+                <SheetTitle className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-lg">{notasItem.codigo}</span>
+                  <Badge variant="outline" className="border-primary/20 bg-primary/10 text-primary">
+                    {notasItem.saldo} {notasItem.saldo === 1 ? "unidade" : "unidades"}
+                  </Badge>
+                </SheetTitle>
+                <p className="text-sm text-muted-foreground">{notasItem.descricao || "Sem descrição"}</p>
+              </SheetHeader>
+
+              {/* Resumo */}
+              <div className="mt-4 grid grid-cols-3 gap-3 rounded-lg border p-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Entrada</p>
+                  <p className="text-lg font-bold">{notasItem.totalEntrada}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Saída</p>
+                  <p className="text-lg font-bold">{notasItem.totalSaida}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Saldo Disponível</p>
+                  <p className="text-lg font-bold text-primary">{notasItem.saldo}</p>
+                </div>
+              </div>
+
+              <Separator className="my-4" />
+
+              <h3 className="mb-3 text-sm font-semibold">
+                Notas com saldo disponível para utilização
+              </h3>
+              {notasDisponiveis.length === 0 ? (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Nenhuma nota com saldo disponível para este item.
+                </p>
+              ) : (
+                <ol className="space-y-3">
+                  {notasDisponiveis.map((n, idx) => (
+                    <li
+                      key={idx}
+                      className="rounded-lg border border-border p-3 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-start gap-2">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100">
+                            <ArrowDownCircle className="h-4 w-4 text-emerald-600" />
+                          </span>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold text-foreground">
+                              {n.notaFiscal ? `NF: ${n.notaFiscal}` : "Sem NF"}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Emissão: {formatarData(n.data)}
+                              {n.origem ? `  |  Origem: ${n.origem}` : ""}
+                            </p>
+                            {n.numeroSerie && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">Série: {n.numeroSerie}</p>
+                            )}
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              Valor unit.: {formatCurrency(n.valorUnitario)}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                          {n.qtdDisponivel} {n.qtdDisponivel === 1 ? "un" : "un"}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                  <li className="flex items-center gap-2 rounded-lg bg-primary/5 p-3">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <PackageCheck className="h-4 w-4 text-primary" />
+                    </span>
+                    <div>
+                      <p className="text-sm font-semibold">Total disponível</p>
+                      <p className="text-xs text-muted-foreground">
+                        {notasDisponiveis.reduce((acc, n) => acc + n.qtdDisponivel, 0)} unidade(s) em{" "}
+                        {notasDisponiveis.length} nota(s)
+                      </p>
+                    </div>
+                  </li>
+                </ol>
+              )}
+            </>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
