@@ -575,9 +575,6 @@ export function EstoqueSaldo() {
                             {n.numeroSerie && (
                               <p className="mt-0.5 text-xs text-muted-foreground">Série: {n.numeroSerie}</p>
                             )}
-                            <p className="mt-0.5 text-xs text-muted-foreground">
-                              Valor unit.: {formatCurrency(n.valorUnitario)}
-                            </p>
                           </div>
                         </div>
                         <span className="shrink-0 whitespace-nowrap rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
