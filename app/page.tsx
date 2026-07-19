@@ -22,8 +22,10 @@ import { MachineFormDialog } from "@/components/machine-form-dialog"
 import { RegistroSemanal } from "@/components/registro-semanal"
 import { Configuracoes } from "@/components/configuracoes"
 import { Button } from "@/components/ui/button"
-import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench, Shield, History } from "lucide-react"
+import { Plus, Download, Upload, Settings, ClipboardList, TrendingUp, LayoutDashboard, ChevronDown, ChevronRight, OctagonX, PackagePlus, PackageMinus, Boxes, Wrench, Shield, History, LogOut, Eye } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/components/auth-provider"
+import { useRouter } from "next/navigation"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HistoricoMaquinas } from "@/components/historico-maquinas"
@@ -46,6 +48,15 @@ import { cn } from "@/lib/utils"
 type MenuSection = "painel" | "registro" | "historico" | "paradas" | "entrada" | "saida" | "estoque" | "estoque-estrategico" | "historico-utilizacao" | "gerenciar" | "config"
 
 export default function Home() {
+  const { canEdit } = useAuth()
+  const router = useRouter()
+
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" })
+    router.replace("/login")
+    router.refresh()
+  }
+
   const [machines, setMachines] = useState<Machine[]>([])
   const [history, setHistory] = useState<WeeklySnapshot[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -877,25 +888,54 @@ export default function Home() {
         </nav>
 
         {/* Footer: importar / exportar */}
-        <div className="flex flex-shrink-0 gap-2 border-t border-slate-200 p-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleImport}
-            className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          >
-            <Upload className="mr-1 h-3 w-3" />
-            Importar
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExport}
-            className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-          >
-            <Download className="mr-1 h-3 w-3" />
-            Exportar
-          </Button>
+        <div className="flex flex-shrink-0 flex-col gap-2 border-t border-slate-200 p-2">
+          <div className="flex gap-2">
+            {canEdit && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleImport}
+                className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              >
+                <Upload className="mr-1 h-3 w-3" />
+                Importar
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="flex-1 border-slate-300 bg-transparent text-xs text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <Download className="mr-1 h-3 w-3" />
+              Exportar
+            </Button>
+          </div>
+
+          {/* Papel do usuário + Sair */}
+          <div className="flex items-center justify-between gap-2 rounded-md bg-slate-50 px-2 py-1.5">
+            <span className="flex items-center gap-1.5 text-xs font-medium text-slate-500">
+              {canEdit ? (
+                <>
+                  <Wrench className="h-3 w-3 text-[#0092bc]" />
+                  Modo edição
+                </>
+              ) : (
+                <>
+                  <Eye className="h-3 w-3 text-slate-400" />
+                  Somente leitura
+                </>
+              )}
+            </span>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1 text-xs font-medium text-slate-500 transition-colors hover:text-red-600"
+            >
+              <LogOut className="h-3 w-3" />
+              Sair
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -1061,10 +1101,12 @@ export default function Home() {
                   <h2 className="text-xl font-semibold">Gerenciar Máquinas</h2>
                   <p className="text-sm text-muted-foreground">Adicione, edite ou remova máquinas do sistema</p>
                 </div>
-                <Button onClick={handleAddNew} className="gap-2 bg-primary">
-                  <Plus className="h-4 w-4" />
-                  Nova Máquina
-                </Button>
+                {canEdit && (
+                  <Button onClick={handleAddNew} className="gap-2 bg-primary">
+                    <Plus className="h-4 w-4" />
+                    Nova Máquina
+                  </Button>
+                )}
               </div>
 
               <MachineFilters
