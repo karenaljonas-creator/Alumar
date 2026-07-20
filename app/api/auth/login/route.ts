@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE, type Role } from "@/lib/auth"
+import { createSessionToken, SESSION_COOKIE, SESSION_MAX_AGE, sessionCookieOptions, type Role } from "@/lib/auth"
 
 export async function POST(request: Request) {
   let password = ""
@@ -32,10 +32,7 @@ export async function POST(request: Request) {
   const token = await createSessionToken(role, secret)
   const response = NextResponse.json({ ok: true, role })
   response.cookies.set(SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+    ...sessionCookieOptions,
     maxAge: SESSION_MAX_AGE,
   })
   return response
