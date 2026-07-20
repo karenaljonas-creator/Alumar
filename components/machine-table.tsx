@@ -4,6 +4,7 @@ import type { Machine } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Pencil, Trash2 } from "lucide-react"
+import { useAuth } from "@/components/auth-provider"
 
 interface MachineTableProps {
   machines: Machine[]
@@ -12,6 +13,8 @@ interface MachineTableProps {
 }
 
 export function MachineTable({ machines, onEdit, onDelete }: MachineTableProps) {
+  const { canEdit } = useAuth()
+
   if (machines.length === 0) {
     return (
       <Card className="border-border shadow-sm">
@@ -33,7 +36,7 @@ export function MachineTable({ machines, onEdit, onDelete }: MachineTableProps) 
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Tipo</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Localização</th>
                 <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Contrato</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Ações</th>
+                {canEdit && <th className="px-6 py-4 text-right text-sm font-semibold text-foreground">Ações</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -43,21 +46,23 @@ export function MachineTable({ machines, onEdit, onDelete }: MachineTableProps) 
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.tipo}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.localizacao}</td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">{machine.temContrato ? "Sim" : "Não"}</td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => onEdit(machine)} className="h-8 w-8 p-0">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onDelete(machine.id)}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </td>
+                  {canEdit && (
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => onEdit(machine)} className="h-8 w-8 p-0">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onDelete(machine.id)}
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

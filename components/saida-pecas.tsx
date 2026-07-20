@@ -17,6 +17,7 @@ import { formatDateOnly } from "@/lib/utils"
 import { ColumnFilter } from "@/components/column-filter"
 import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
 import { HorizontalScrollArea } from "@/components/horizontal-scroll-area"
+import { useAuth } from "@/components/auth-provider"
 
 interface SaidaPeca {
   id: string
@@ -60,6 +61,7 @@ interface SaidaPecasProps {
 }
 
 export function SaidaPecas({ machines }: SaidaPecasProps) {
+  const { canEdit } = useAuth()
   const [saidas, setSaidas] = useState<SaidaPeca[]>([])
   const [estoquePecas, setEstoquePecas] = useState<EstoquePeca[]>([])
   const [loading, setLoading] = useState(true)
@@ -589,12 +591,14 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
           <p className="text-sm text-muted-foreground">Registro de saída de peças do estoque</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Saída
-            </Button>
-          </DialogTrigger>
+          {canEdit && (
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Saída
+              </Button>
+            </DialogTrigger>
+          )}
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingSaida ? "Editar Saída de Peça" : "Registrar Saída de Peça"}</DialogTitle>
@@ -1011,7 +1015,7 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                     <TableHead>
                       <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
-                    <TableHead className="text-center">Ações</TableHead>
+                    {canEdit && <TableHead className="text-center">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1047,16 +1051,18 @@ export function SaidaPecas({ machines }: SaidaPecasProps) {
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {saida.updated_at ? new Date(saida.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(saida.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(saida)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(saida.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canEdit && (
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(saida)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(saida.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>

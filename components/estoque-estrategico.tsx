@@ -40,6 +40,7 @@ import {
 import { ColumnFilter, type SortDir } from "@/components/column-filter"
 import { EstoqueEstrategicoAnalise } from "@/components/estoque-estrategico-analise"
 import { gerarRelatorioEstrategico } from "@/lib/gerar-relatorio-estrategico"
+import { useAuth } from "@/components/auth-provider"
 
 type Status = "OK" | "Repor" | "Analisar"
 
@@ -108,6 +109,7 @@ function DonutCritico({ pct }: { pct: number }) {
 }
 
 export function EstoqueEstrategico() {
+  const { canEdit } = useAuth()
   const [itens, setItens] = useState<ItemEstrategico[]>([])
   const [loading, setLoading] = useState(true)
   const [gerandoRelatorio, setGerandoRelatorio] = useState(false)
@@ -607,9 +609,11 @@ export function EstoqueEstrategico() {
           {gerandoRelatorio ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
           Gerar Relatório
         </Button>
-        <Button onClick={() => setNovoDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" /> Novo Item Estratégico
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setNovoDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" /> Novo Item Estratégico
+          </Button>
+        )}
       </div>
 
       {/* Faixa de KPIs principais */}
@@ -720,7 +724,7 @@ export function EstoqueEstrategico() {
                         </div>
                       </TableHead>
                     ))}
-                    <TableHead className="text-right">Ações</TableHead>
+                    {canEdit && <TableHead className="text-right">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -745,6 +749,7 @@ export function EstoqueEstrategico() {
                       <TableCell className="text-center">
                         <StatusBadge status={item.status} />
                       </TableCell>
+                      {canEdit && (
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button
@@ -776,6 +781,7 @@ export function EstoqueEstrategico() {
                           )}
                         </div>
                       </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
