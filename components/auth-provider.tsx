@@ -1,7 +1,8 @@
 "use client"
 
-import { createContext, useContext } from "react"
+import { createContext, useContext, useEffect } from "react"
 import type { Role } from "@/lib/auth"
+import { setClientRole } from "@/lib/supabase/client"
 
 type AuthContextValue = {
   role: Role | null
@@ -17,6 +18,11 @@ export function AuthProvider({
   role: Role | null
   children: React.ReactNode
 }) {
+  // Propaga o papel para o cliente Supabase, que bloqueia escritas de "viewer".
+  useEffect(() => {
+    setClientRole(role)
+  }, [role])
+
   return <AuthContext.Provider value={{ role, canEdit: role === "editor" }}>{children}</AuthContext.Provider>
 }
 

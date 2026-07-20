@@ -16,6 +16,7 @@ import { formatDateOnly } from "@/lib/utils"
 import { ColumnFilter } from "@/components/column-filter"
 import { useTableFilters, type TableColumnDef } from "@/lib/use-table-filters"
 import { HorizontalScrollArea } from "@/components/horizontal-scroll-area"
+import { useAuth } from "@/components/auth-provider"
 
 interface EstoquePeca {
   id: string
@@ -42,6 +43,7 @@ const ORIGENS = [
 ]
 
 export function EntradaPecas() {
+  const { canEdit } = useAuth()
   const [pecas, setPecas] = useState<EstoquePeca[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -332,12 +334,14 @@ export function EntradaPecas() {
           <p className="text-sm text-muted-foreground">Registro de entrada de peças no estoque</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) resetForm(); else setDialogOpen(true) }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Nova Entrada
-            </Button>
-          </DialogTrigger>
+          {canEdit && (
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Nova Entrada
+              </Button>
+            </DialogTrigger>
+          )}
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>{editingPeca ? "Editar Peça" : "Registrar Entrada de Peça"}</DialogTitle>
@@ -620,7 +624,7 @@ export function EntradaPecas() {
                     <TableHead className="w-[7%]">
                       <div className="flex items-center font-medium">Atualizado em {renderFiltro("data_atualizacao")}</div>
                     </TableHead>
-                    <TableHead className="w-[4%] text-center">Ações</TableHead>
+                    {canEdit && <TableHead className="w-[4%] text-center">Ações</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -648,16 +652,18 @@ export function EntradaPecas() {
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                         {peca.updated_at ? new Date(peca.updated_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"}) : new Date(peca.created_at).toLocaleDateString("pt-BR", {day: "2-digit", month: "2-digit", year: "numeric"})}
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleEdit(peca)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(peca.id)}>
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      </TableCell>
+                      {canEdit && (
+                        <TableCell>
+                          <div className="flex items-center justify-center gap-1">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(peca)}>
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(peca.id)}>
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      )}
                     </TableRow>
                   ))}
                 </TableBody>
