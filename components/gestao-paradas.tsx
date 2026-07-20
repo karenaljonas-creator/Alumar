@@ -22,6 +22,7 @@ import { pt } from "date-fns/locale"
 import { saveMachines } from "@/lib/supabase-machine-storage"
 import { gerarRelatorioExecutivo, gerarRelatorioDetalhado } from "@/lib/gerar-relatorio-paradas"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/components/auth-provider"
 
 type SortKey = "nome" | "tipo" | "localizacao" | "contrato" | "tipoEquip" | "status" | "categoria" | "dataParada" | "diasParada" | "prazo" | "dataAtualizacao" | "acao" | "responsavel" | "observacoes"
 type SortDirection = "asc" | "desc"
@@ -38,6 +39,7 @@ interface EditingState {
 }
 
 export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
+  const { canEdit } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState("todos")
   const [acaoFilter, setAcaoFilter] = useState("todos")
@@ -104,10 +106,12 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
   )
 
   const handleEditStart = (machineId: string, field: string, value: string) => {
+    if (!canEdit) return
     setEditingState({ machineId, field, value })
   }
 
   const handleEditSave = async (machineId: string) => {
+    if (!canEdit) return
     if (!editingState || editingState.machineId !== machineId) return
 
     setIsSaving(true)
@@ -644,7 +648,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             title={maquina.motivoParada || "-"}
                           >
                             <span className="text-sm leading-snug flex-1 whitespace-normal break-words">{maquina.motivoParada || "-"}</span>
-                            <Edit2 className="h-3 w-3 mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" />
+                            {canEdit && <Edit2 className="h-3 w-3 mt-0.5 opacity-0 group-hover:opacity-100 flex-shrink-0" />}
                           </div>
                         )}
                       </TableCell>
@@ -797,16 +801,18 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         {formatDate(maquina.updated_at || maquina.dataParada)}
                       </TableCell>
                       <TableCell className="text-center py-1.5 px-2.5 align-middle">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 hover:bg-muted"
-                          onClick={() => {
-                            handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
-                          }}
-                        >
-                                <Edit2 className="h-4 w-4 text-primary" />
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-muted"
+                            onClick={() => {
+                              handleEditStart(maquina.id, "prazo", maquina.contratoConfig?.dataFim || "")
+                            }}
+                          >
+                                  <Edit2 className="h-4 w-4 text-primary" />
+                          </Button>
+                        )}
                       </TableCell>
                     </TableRow>
                     {isExpanded && (
