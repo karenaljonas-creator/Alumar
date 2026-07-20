@@ -24,12 +24,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/components/auth-provider"
 
 interface HistoricoMaquinasProps {
   machines: Machine[]
 }
 
 export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
+  const { canEdit } = useAuth()
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set())
   const [statusFilter, setStatusFilter] = useState<string>("todos")
   const [semanaFilter, setSemanaFilter] = useState<string>("todas")
@@ -229,7 +231,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                   <TableHead className="text-center">Paradas</TableHead>
                   <TableHead className="text-center">Manutenção</TableHead>
                   <TableHead className="text-center">Disponibilidade</TableHead>
-                  <TableHead className="text-center">Ações</TableHead>
+                  {canEdit && <TableHead className="text-center">Ações</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -269,19 +271,21 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                         <TableCell className="text-center font-medium">
                           {snapshot.stats.disponibilidade.toFixed(1)}%
                         </TableCell>
-                        <TableCell className="text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteSnapshot(snapshot.id, snapshot.semana)}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                              title="Excluir registro"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {canEdit && (
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteSnapshot(snapshot.id, snapshot.semana)}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                title="Excluir registro"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
 
                       {isExpanded && (
@@ -313,7 +317,7 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                       <TableHead>Ação</TableHead>
                                       <TableHead className="text-center">Responsável</TableHead>
                                       <TableHead className="min-w-[300px]">Observações</TableHead>
-                                      <TableHead className="text-center">Ações</TableHead>
+                                      {canEdit && <TableHead className="text-center">Ações</TableHead>}
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
@@ -402,17 +406,19 @@ export function HistoricoMaquinas({ machines }: HistoricoMaquinasProps) {
                                           <TableCell className="text-sm min-w-[300px] whitespace-normal">
                                             {maquina.motivoParada || "-"}
                                           </TableCell>
-                                          <TableCell className="text-center">
-                                            <Button
-                                              variant="ghost"
-                                              size="sm"
-                                              onClick={() => openEdit(snapshot, maquina)}
-                                              className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
-                                              title="Editar categoria e ação"
-                                            >
-                                              <Pencil className="h-4 w-4" />
-                                            </Button>
-                                          </TableCell>
+                                          {canEdit && (
+                                            <TableCell className="text-center">
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => openEdit(snapshot, maquina)}
+                                                className="h-8 w-8 p-0 text-primary hover:text-primary hover:bg-primary/10"
+                                                title="Editar categoria e ação"
+                                              >
+                                                <Pencil className="h-4 w-4" />
+                                              </Button>
+                                            </TableCell>
+                                          )}
                                         </TableRow>
                                       ))
                                     ) : (

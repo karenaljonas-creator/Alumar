@@ -84,3 +84,14 @@ function timingSafeEqual(a: string, b: string): boolean {
 }
 
 export const SESSION_MAX_AGE = SESSION_MAX_AGE_SECONDS
+
+// Opções do cookie de sessão.
+// sameSite "none" + secure é obrigatório para o cookie funcionar dentro de
+// iframes cross-site (ex.: o preview do v0). Continua válido no site publicado
+// e no domínio próprio, pois ambos são servidos via HTTPS.
+export const sessionCookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none" as const,
+  path: "/",
+}

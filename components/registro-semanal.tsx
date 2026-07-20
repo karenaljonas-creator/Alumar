@@ -15,6 +15,7 @@ import { saveWeeklySnapshot } from "@/lib/supabase-history-storage"
 import { useToast } from "@/hooks/use-toast"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HorizontalScrollArea } from "@/components/horizontal-scroll-area"
+import { useAuth } from "@/components/auth-provider"
 
 interface RegistroSemanalProps {
   machines: Machine[]
@@ -33,6 +34,7 @@ type SortColumn =
 type SortDirection = "asc" | "desc" | null
 
 export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
+  const { canEdit } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [contratoFilter, setContratoFilter] = useState<string>("todos")
   const [statusFilter, setStatusFilter] = useState<string>("todos")
@@ -292,10 +294,12 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
             className="pl-10"
           />
         </div>
-        <Button onClick={handleEnviarRegistro} className="gap-2 bg-primary" disabled={isSending}>
-          <Send className="h-4 w-4" />
-          {isSending ? "Enviando..." : "Enviar Registro Semanal"}
-        </Button>
+        {canEdit && (
+          <Button onClick={handleEnviarRegistro} className="gap-2 bg-primary" disabled={isSending}>
+            <Send className="h-4 w-4" />
+            {isSending ? "Enviando..." : "Enviar Registro Semanal"}
+          </Button>
+        )}
       </div>
 
       <div className="rounded-lg border border-border bg-card p-4 space-y-4">
@@ -520,7 +524,7 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                     {renderSortIcon("acaoResponsavel")}
                   </div>
                 </TableHead>
-                <TableHead className="font-semibold text-center w-[10%] px-2">Ações</TableHead>
+                {canEdit && <TableHead className="font-semibold text-center w-[10%] px-2">Ações</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -563,12 +567,14 @@ export function RegistroSemanal({ machines, onSaveAll }: RegistroSemanalProps) {
                   </TableCell>
                   <TableCell className="px-2">{machine.responsavel || "-"}</TableCell>
                   <TableCell className="px-2">{machine.acaoResponsavel || "-"}</TableCell>
-                  <TableCell className="text-center px-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEditMachine(index)} className="gap-2">
-                      <Edit className="h-4 w-4" />
-                      Editar
-                    </Button>
-                  </TableCell>
+                  {canEdit && (
+                    <TableCell className="text-center px-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditMachine(index)} className="gap-2">
+                        <Edit className="h-4 w-4" />
+                        Editar
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
