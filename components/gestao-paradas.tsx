@@ -592,7 +592,7 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             disabled={isSaving}
                           >
                             <SelectTrigger
-                              className={`h-auto w-auto gap-1 rounded-full border-0 px-2 py-0.5 text-xs font-semibold shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70 ${
+                              className={`inline-flex h-5 w-auto gap-1 rounded-md border-0 px-1.5 py-0 text-xs font-semibold leading-none shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:opacity-60 ${
                                 maquina.status === "parada"
                                   ? "bg-destructive text-destructive-foreground [&>svg]:text-destructive-foreground"
                                   : "bg-muted text-muted-foreground"
