@@ -585,14 +585,20 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-xs py-1.5 px-2.5 align-middle">{maquina.tipo}</TableCell>
                       <TableCell className="text-xs py-1.5 px-2.5 align-middle whitespace-normal break-words">{maquina.localizacao}</TableCell>
                       <TableCell className="py-1.5 px-2.5 align-middle">
-                        {canEdit ? (
+                        {canEdit && isEditing(maquina.id, "status") ? (
                           <Select
-                            value={maquina.status}
-                            onValueChange={(v) => handleStatusChange(maquina.id, v)}
-                            disabled={isSaving}
+                            value={editingState?.value || maquina.status}
+                            onValueChange={(value) => {
+                              handleStatusChange(maquina.id, value)
+                              setEditingState(null)
+                            }}
+                            onOpenChange={(open) => {
+                              if (!open) setEditingState(null)
+                            }}
+                            defaultOpen={true}
                           >
-                            <SelectTrigger className="h-7 text-xs w-full min-w-[110px]">
-                              <SelectValue placeholder="Status" />
+                            <SelectTrigger className="h-8 text-sm w-32">
+                              <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
                               {STATUS_OPCOES.map((opcao) => (
@@ -605,13 +611,14 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                         ) : (
                           <Badge
                             variant={maquina.status === "parada" ? "destructive" : "secondary"}
-                            className={`text-xs px-1.5 py-0 ${
-                                    maquina.status === "v0"
+                            className={`text-xs px-1.5 py-0 ${canEdit ? "cursor-pointer" : ""} ${
+                                    maquina.status !== "parada"
                                       ? "bg-muted text-muted-foreground hover:bg-muted"
                                       : ""
                             }`}
+                            onClick={canEdit ? () => handleEditStart(maquina.id, "status", maquina.status) : undefined}
                           >
-                            {maquina.status === "parada" ? "Parada" : "V0"}
+                            {STATUS_OPCOES.find((o) => o.value === maquina.status)?.label || maquina.status}
                           </Badge>
                         )}
                       </TableCell>
