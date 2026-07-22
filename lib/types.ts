@@ -4,6 +4,29 @@ export type MachineStatus = "operando" | "parada" | "manutencao"
 export type StopType = "programada" | "nao-programada"
 export type MaintenanceType = "preventiva" | "corretiva"
 
+export type CategoriaParada =
+  | "Aguardando Peça"
+  | "Aguardando Cliente"
+  | "Aguardando Programação / Recurso"
+  | "Instalação / Start-up"
+  | "Manutenção Corretiva"
+  | "Melhoria / Engenharia"
+  | "Logística / Transporte"
+  | "Em execução"
+  | "Programado"
+
+export const CATEGORIAS_PARADA: CategoriaParada[] = [
+  "Aguardando Peça",
+  "Aguardando Cliente",
+  "Aguardando Programação / Recurso",
+  "Instalação / Start-up",
+  "Manutenção Corretiva",
+  "Melhoria / Engenharia",
+  "Logística / Transporte",
+  "Em execução",
+  "Programado",
+]
+
 export interface Machine {
   id: string
   name: string
@@ -13,12 +36,30 @@ export interface Machine {
   tag: string
   inContract: boolean
   status: MachineStatus
+<<<<<<< HEAD
   hoursWorked: number
   hoursAvailable: number
   nextMaintenance: string
   lastMaintenance: string
   maintenanceInterval: number
   createdAt: string
+=======
+  categoriaParada?: CategoriaParada // Categoria da parada (preenchida quando status = parada)
+  motivoParada?: string
+  descricaoDetalhada?: string
+  acaoResponsavel?: AcaoResponsavel
+  dataParada?: string // data em que a máquina parou
+  statusPreventiva?: StatusPreventiva
+  dataPreventiva?: string
+  manutencaoPreventiva?: string
+  localizacao: string
+  temContrato?: boolean // Adicionando campo para indicar se máquina tem contrato
+  contratoConfig?: ContratoConfig // Adicionando configuração do contrato
+  responsavel?: string // Adicionando responsável
+  tempoParada?: number // Adicionando tempo de parada em dias
+  prazoDados?: string // Data do prazo (formato yyyy-MM-dd)
+  updated_at?: string // Data da última atualização
+>>>>>>> origin/main
 }
 
 export interface WeeklyRecord {
@@ -90,4 +131,41 @@ export interface StopAnalysis {
   count: number
   totalHours: number
   percentage: number
+}
+
+// Evento imutável do histórico de uma máquina parada.
+// Cada mudança em categoria / ação / responsável / observação / prazo gera um novo evento.
+export interface ParadaEvento {
+  id: string
+  machineId: string
+  machineTag: string
+  contrato?: string
+  categoria?: string
+  acao?: string
+  responsavel?: string
+  observacao?: string
+  prazo?: string
+  dataEvento: string // ISO - momento em que este estado passou a valer
+  createdAt?: string
+}
+
+// Etapa consolidada da linha do tempo (evento + duração calculada).
+export interface ParadaEtapa {
+  evento: ParadaEvento
+  dataInicio: string
+  dataFim: string | null // null = etapa atual (em andamento)
+  dias: number
+  atual: boolean
+}
+
+// Indicadores calculados a partir do histórico de uma máquina.
+export interface ParadaIndicadores {
+  diasTotais: number
+  categoriaAtual?: string
+  diasNaCategoriaAtual: number
+  etapas: ParadaEtapa[]
+  porCategoria: { nome: string; dias: number; percentual: number }[]
+  porResponsavel: { nome: string; dias: number; percentual: number }[]
+  totalMudancas: number
+  ultimaAlteracao?: string
 }
