@@ -193,9 +193,41 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
     }
   }
 
+  const handleStatusChange = async (machineId: string, value: string) => {
+    setIsSaving(true)
+    try {
+      const updatedMachines = machines.map((m) =>
+        m.id === machineId
+          ? { ...m, status: value as Machine["status"], updated_at: new Date().toISOString() }
+          : m,
+      )
+      await saveMachines(updatedMachines)
+      if (onUpdate) onUpdate(updatedMachines)
+      const updatedMachine = updatedMachines.find((m) => m.id === machineId)
+      if (updatedMachine) await registrarEvento(updatedMachine)
+      toast({ title: "Sucesso!", description: "Status atualizado com sucesso" })
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Houve um erro ao salvar o status",
+        variant: "destructive",
+      })
+      console.error(error)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   const isEditing = (machineId: string, field: string) => {
     return editingState?.machineId === machineId && editingState?.field === field
   }
+
+  const STATUS_OPCOES: { value: Machine["status"]; label: string }[] = [
+    { value: "parada", label: "Parada" },
+    { value: "operacional", label: "Operacional" },
+    { value: "manutencao", label: "Manutenção" },
+    { value: "v0", label: "V0" },
+  ]
 
   // Compute filtered and sorted machines
   const filteredMachines = useMemo(() => {
@@ -553,16 +585,35 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                       <TableCell className="text-xs py-1.5 px-2.5 align-middle">{maquina.tipo}</TableCell>
                       <TableCell className="text-xs py-1.5 px-2.5 align-middle whitespace-normal break-words">{maquina.localizacao}</TableCell>
                       <TableCell className="py-1.5 px-2.5 align-middle">
-                        <Badge
-                          variant={maquina.status === "parada" ? "destructive" : "secondary"}
-                          className={`text-xs px-1.5 py-0 ${
-                                  maquina.status === "v0"
-                                    ? "bg-muted text-muted-foreground hover:bg-muted"
-                                    : ""
-                          }`}
-                        >
-                          {maquina.status === "parada" ? "Parada" : "V0"}
-                        </Badge>
+                        {canEdit ? (
+                          <Select
+                            value={maquina.status}
+                            onValueChange={(v) => handleStatusChange(maquina.id, v)}
+                            disabled={isSaving}
+                          >
+                            <SelectTrigger className="h-7 text-xs w-full min-w-[110px]">
+                              <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPCOES.map((opcao) => (
+                                <SelectItem key={opcao.value} value={opcao.value}>
+                                  {opcao.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Badge
+                            variant={maquina.status === "parada" ? "destructive" : "secondary"}
+                            className={`text-xs px-1.5 py-0 ${
+                                    maquina.status === "v0"
+                                      ? "bg-muted text-muted-foreground hover:bg-muted"
+                                      : ""
+                            }`}
+                          >
+                            {maquina.status === "parada" ? "Parada" : "V0"}
+                          </Badge>
+                        )}
                       </TableCell>
                       <TableCell className="text-sm py-1.5 px-2.5 align-middle">
                         <Select
