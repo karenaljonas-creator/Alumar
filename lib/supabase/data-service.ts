@@ -60,6 +60,61 @@ export async function deleteMachine(id: string) {
   if (error) throw error
 }
 
+// ============ PARADAS (STOPPED MACHINES) ============
+export interface ParadaHistorico {
+  id: string
+  machine_id: string | null
+  tag: string
+  categoria: string | null
+  observacoes: string | null
+  prazo: string | null
+  responsavel: string | null
+  acao_responsavel: string | null
+  dias_parado: number | null
+  created_at: string
+}
+
+export async function getParadasHistorico(machineId: string) {
+  const { data, error } = await supabase
+    .from("paradas_historico")
+    .select("*")
+    .eq("machine_id", machineId)
+    .order("created_at", { ascending: false })
+
+  if (error) throw error
+  return data as ParadaHistorico[]
+}
+
+export async function createParadaHistorico(
+  record: Omit<ParadaHistorico, "id" | "created_at">
+) {
+  const { data, error } = await supabase
+    .from("paradas_historico")
+    .insert(record)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as ParadaHistorico
+}
+
+// Atualiza a categoria e registra a data da mudança
+export async function updateMachineCategoria(id: string, categoria: string) {
+  const { data, error } = await supabase
+    .from("machines")
+    .update({
+      categoria,
+      categoria_updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) throw error
+  return data as Machine
+}
+
 // ============ WEEKLY RECORDS ============
 export async function getWeeklyRecords() {
   const { data, error } = await supabase
