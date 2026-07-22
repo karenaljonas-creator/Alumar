@@ -1,6 +1,8 @@
-export type MachineStatus = "operacional" | "parada" | "manutencao" | "v0"
-export type AcaoResponsavel = "Vale" | "Atlas" | "Outro"
-export type StatusPreventiva = "OK" | "Em Planejamento" | "Em Atraso"
+// Types for ALUMAR Machine Management System
+
+export type MachineStatus = "operando" | "parada" | "manutencao"
+export type StopType = "programada" | "nao-programada"
+export type MaintenanceType = "preventiva" | "corretiva"
 
 export type CategoriaParada =
   | "Aguardando Peça"
@@ -27,91 +29,106 @@ export const CATEGORIAS_PARADA: CategoriaParada[] = [
 
 export interface Machine {
   id: string
-  nome: string // TAG
-  tipo: string // Modelo
-  numeroSerie?: string // Adicionando número de série
-  data: string
+  name: string
+  model: string
+  area: string
+  serialNumber: string
+  tag: string
+  inContract: boolean
   status: MachineStatus
+  hoursWorked: number
+  hoursAvailable: number
+  nextMaintenance: string
+  lastMaintenance: string
+  maintenanceInterval: number
+  createdAt: string
+  // Campos de parada / contrato (usados nas telas de Paradas e relatórios)
   categoriaParada?: CategoriaParada // Categoria da parada (preenchida quando status = parada)
   motivoParada?: string
   descricaoDetalhada?: string
-  acaoResponsavel?: AcaoResponsavel
+  acaoResponsavel?: string
   dataParada?: string // data em que a máquina parou
-  statusPreventiva?: StatusPreventiva
+  statusPreventiva?: string
   dataPreventiva?: string
   manutencaoPreventiva?: string
-  localizacao: string
-  temContrato?: boolean // Adicionando campo para indicar se máquina tem contrato
-  contratoConfig?: ContratoConfig // Adicionando configuração do contrato
-  responsavel?: string // Adicionando responsável
-  tempoParada?: number // Adicionando tempo de parada em dias
+  localizacao?: string
+  temContrato?: boolean // Indica se a máquina tem contrato
+  contratoConfig?: string // Configuração do contrato
+  responsavel?: string // Responsável
+  tempoParada?: number // Tempo de parada em dias
   prazoDados?: string // Data do prazo (formato yyyy-MM-dd)
   updated_at?: string // Data da última atualização
 }
 
-export interface MachineStats {
-  total: number
-  operacionais: number
-  paradas: number
-  manutencao: number
-  disponibilidade: number
-  disponibilidadeContrato: number // Disponibilidade considerando apenas paradas Atlas
-  paradasVale: number
-  paradasAtlas: number
-  comContrato?: number
-  semContrato?: number
-}
-
-export interface WeeklySnapshot {
+export interface WeeklyRecord {
   id: string
-  semana: string // formato: "2025-W03" (ano-semana)
-  dataRegistro: string // data completa do registro
-  stats: MachineStats
-  machines: Machine[] // Adding full machines array for filtering
-  maquinasParadas: {
-    id: string
-    nome: string
-    tipo: string
-    motivoParada: string
-    localizacao: string
-  }[]
+  machineId: string
+  machineName: string
+  weekStart: string
+  weekEnd: string
+  hoursWorked: number
+  hoursAvailable: number
+  availability: number
+  observations: string
+  createdAt: string
 }
 
-export interface HistoryTrend {
-  semana: string
-  total: number
-  operacionais: number
-  paradas: number
-  manutencao: number
-  disponibilidade: number
-}
-
-export interface PeriodoInoperante {
-  faixa: string
-  quantidade: number
-  maquinas: string[]
-}
-
-export interface AnalysisGroup {
-  nome: string
-  quantidade: number
-  maquinas: string[]
-}
-
-export interface ContratoConfig {
-  numero: string
-  dataInicio: string
-  dataFim: string
-  fiscal: string
-  gestora: string
-  localizacao: string
-}
-
-export interface RegistroSemanal {
+export interface Stop {
   id: string
-  semana: string
-  dataRegistro: string
-  maquinas: Machine[]
+  machineId: string
+  machineName: string
+  type: StopType
+  reason: string
+  startDate: string
+  endDate: string | null
+  duration: number | null
+  resolved: boolean
+  createdAt: string
+}
+
+export interface MaintenanceRecord {
+  id: string
+  machineId: string
+  machineName: string
+  type: MaintenanceType
+  description: string
+  date: string
+  hoursAtMaintenance: number
+  technician: string
+  createdAt: string
+}
+
+export interface Settings {
+  clientName: string
+  contractNumber: string
+  location: string
+  targetAvailability: number
+  weekStartDay: 0 | 1 | 2 | 3 | 4 | 5 | 6
+}
+
+export interface DashboardStats {
+  totalMachines: number
+  operatingMachines: number
+  stoppedMachines: number
+  inContractMachines: number
+  outOfContractMachines: number
+  averageAvailability: number
+  targetAvailability: number
+  pendingMaintenances: number
+  activeStops: number
+}
+
+export interface WeeklyChartData {
+  week: string
+  availability: number
+  target: number
+}
+
+export interface StopAnalysis {
+  reason: string
+  count: number
+  totalHours: number
+  percentage: number
 }
 
 // Evento imutável do histórico de uma máquina parada.
