@@ -591,7 +591,14 @@ export function GestaoParadas({ machines, onUpdate }: GestaoParadasProps) {
                             onValueChange={(v) => handleStatusChange(maquina.id, v)}
                             disabled={isSaving}
                           >
-                            <SelectTrigger className="h-7 text-xs w-full min-w-[110px]">
+                            <SelectTrigger
+                              className={`h-auto w-auto gap-1 rounded-full border-0 px-2 py-0.5 text-xs font-semibold shadow-none focus:ring-0 focus:ring-offset-0 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:opacity-70 ${
+                                maquina.status === "parada"
+                                  ? "bg-destructive text-destructive-foreground [&>svg]:text-destructive-foreground"
+                                  : "bg-muted text-muted-foreground"
+                              }`}
+                              title="Clique para alterar o status"
+                            >
                               <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
