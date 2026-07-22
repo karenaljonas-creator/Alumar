@@ -36,30 +36,28 @@ export interface Machine {
   tag: string
   inContract: boolean
   status: MachineStatus
-<<<<<<< HEAD
   hoursWorked: number
   hoursAvailable: number
   nextMaintenance: string
   lastMaintenance: string
   maintenanceInterval: number
   createdAt: string
-=======
+  // Campos de parada / contrato (usados nas telas de Paradas e relatórios)
   categoriaParada?: CategoriaParada // Categoria da parada (preenchida quando status = parada)
   motivoParada?: string
   descricaoDetalhada?: string
-  acaoResponsavel?: AcaoResponsavel
+  acaoResponsavel?: string
   dataParada?: string // data em que a máquina parou
-  statusPreventiva?: StatusPreventiva
+  statusPreventiva?: string
   dataPreventiva?: string
   manutencaoPreventiva?: string
-  localizacao: string
-  temContrato?: boolean // Adicionando campo para indicar se máquina tem contrato
-  contratoConfig?: ContratoConfig // Adicionando configuração do contrato
-  responsavel?: string // Adicionando responsável
-  tempoParada?: number // Adicionando tempo de parada em dias
+  localizacao?: string
+  temContrato?: boolean // Indica se a máquina tem contrato
+  contratoConfig?: string // Configuração do contrato
+  responsavel?: string // Responsável
+  tempoParada?: number // Tempo de parada em dias
   prazoDados?: string // Data do prazo (formato yyyy-MM-dd)
   updated_at?: string // Data da última atualização
->>>>>>> origin/main
 }
 
 export interface WeeklyRecord {

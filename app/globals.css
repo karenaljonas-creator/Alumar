@@ -3,48 +3,6 @@
 
 @custom-variant dark (&:is(.dark *));
 
-<<<<<<< HEAD
-:root {
-  /* Fundo branco/cinza claro - estilo Atlas Copco */
-  --background: oklch(0.97 0.005 250);
-  --foreground: oklch(0.15 0.01 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 250);
-  --primary: oklch(0.45 0.2 145);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.005 250);
-  --secondary-foreground: oklch(0.2 0.01 250);
-  --muted: oklch(0.95 0.005 250);
-  --muted-foreground: oklch(0.45 0.01 250);
-  --accent: oklch(0.55 0.18 30);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.55 0.22 25);
-  --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0.005 250);
-  --input: oklch(0.97 0.005 250);
-  --ring: oklch(0.45 0.2 145);
-  --chart-1: oklch(0.5 0.2 145);
-  --chart-2: oklch(0.55 0.18 30);
-  --chart-3: oklch(0.6 0.18 220);
-  --chart-4: oklch(0.55 0.22 25);
-  --chart-5: oklch(0.7 0.15 85);
-  --radius: 0.625rem;
-  /* Sidebar escura */
-  --sidebar: oklch(0.2 0.02 250);
-  --sidebar-foreground: oklch(0.95 0.005 250);
-  --sidebar-primary: oklch(0.55 0.18 145);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.28 0.02 250);
-  --sidebar-accent-foreground: oklch(0.95 0.005 250);
-  --sidebar-border: oklch(0.28 0.01 250);
-  --sidebar-ring: oklch(0.55 0.18 145);
-  --success: oklch(0.5 0.2 145);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.75 0.15 85);
-  --warning-foreground: oklch(0.2 0.02 85);
-=======
 /* Tema personalizado para sistema de gestão de máquinas - fundo branco limpo e moderno */
 /* Identidade visual Atlas Copco: azul institucional (Blue) + neutros em cinza (Gray) */
 :root {
@@ -81,6 +39,11 @@
   --sidebar-accent-foreground: #0092bc;
   --sidebar-border: oklch(0.91 0.01 226);
   --sidebar-ring: #0092bc;
+  /* Tokens de sucesso/aviso usados nos gráficos e status */
+  --success: oklch(0.5 0.2 145);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.2 0.02 85);
 }
 
 .dark {
@@ -116,7 +79,10 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
->>>>>>> origin/main
+  --success: oklch(0.6 0.18 145);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.75 0.15 85);
+  --warning-foreground: oklch(0.2 0.02 85);
 }
 
 @theme inline {
