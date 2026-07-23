@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Save, Building2, FileText, MapPin, Target, Loader2 } from "lucide-react"
-import { getMachines, getSettings, updateSettings } from "@/lib/supabase/data-service"
-import { createClient } from "@/lib/supabase/client"
+import { getMachines, getSettings, updateSettings, getRecordCounts } from "@/lib/supabase/data-service"
 import type { Machine, Settings } from "@/lib/supabase/database.types"
 
 export function Configuracoes() {
@@ -34,23 +33,17 @@ export function Configuracoes() {
   async function loadData() {
     try {
       setLoading(true)
-      const supabase = createClient()
-      
-      const [settingsData, machinesData] = await Promise.all([
+
+      const [settingsData, machinesData, counts] = await Promise.all([
         getSettings(),
         getMachines(),
-      ])
-      
-      // Get counts
-      const [{ count: recordsCount }, { count: stopsCountData }] = await Promise.all([
-        supabase.from("weekly_records").select("*", { count: "exact", head: true }),
-        supabase.from("stops").select("*", { count: "exact", head: true }),
+        getRecordCounts(),
       ])
 
       setSettingsState(settingsData)
       setMachines(machinesData)
-      setWeeklyRecordsCount(recordsCount || 0)
-      setStopsCount(stopsCountData || 0)
+      setWeeklyRecordsCount(counts.weeklyRecordsCount)
+      setStopsCount(counts.stopsCount)
 
       if (settingsData) {
         setFormData({

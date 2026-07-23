@@ -1,85 +1,85 @@
-"use client"
+"use server"
 
-import { createClient } from "@/lib/supabase/client"
-import type { SupabaseClient } from "@supabase/supabase-js"
+import { query } from "@/lib/db"
 import type { Machine, WeeklyRecord, Stop, Settings } from "@/lib/supabase/database.types"
-
-// Inicialização preguiçosa (lazy): o client só é criado na primeira vez que
-// uma operação de dados for chamada — não no carregamento do módulo.
-// Isso evita que a ausência das variáveis de ambiente derrube o app inteiro.
-let _supabase: SupabaseClient | null = null
-
-function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    _supabase = createClient()
-  }
-  return _supabase
-}
-
-const supabase = new Proxy({} as SupabaseClient, {
-  get(_target, prop) {
-    const client = getSupabase()
-    const value = (client as any)[prop]
-    return typeof value === "function" ? value.bind(client) : value
-  },
-})
 
 // ============ MACHINES ============
 export async function getMachines() {
-  const { data, error } = await supabase
-    .from("machines")
-    .select("*")
-    .order("area")
-    .order("tag")
-  
-  if (error) throw error
-  return data as Machine[]
+  return query<Machine>(`SELECT * FROM machines ORDER BY area, tag`)
 }
 
 export async function getMachine(id: string) {
-  const { data, error } = await supabase
-    .from("machines")
-    .select("*")
-    .eq("id", id)
-    .single()
-  
-  if (error) throw error
-  return data as Machine
+  const rows = await query<Machine>(`SELECT * FROM machines WHERE id = $1 LIMIT 1`, [id])
+  if (rows.length === 0) throw new Error("Máquina não encontrada")
+  return rows[0]
 }
 
 export async function createMachine(machine: Omit<Machine, "id" | "created_at" | "updated_at">) {
-  const { data, error } = await supabase
-    .from("machines")
-    .insert(machine)
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as Machine
+  const rows = await query<Machine>(
+    `INSERT INTO machines
+      (name, model, area, serial_number, tag, in_contract, status, hours_worked, hours_available,
+       next_maintenance, last_maintenance, maintenance_interval, responsavel, acao_responsavel)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+     RETURNING *`,
+    [
+      machine.name ?? "",
+      machine.model ?? "",
+      machine.area ?? "",
+      machine.serial_number ?? "",
+      machine.tag ?? "",
+      machine.in_contract ?? true,
+      machine.status ?? "operacional",
+      machine.hours_worked ?? 0,
+      machine.hours_available ?? 0,
+      machine.next_maintenance || null,
+      machine.last_maintenance || null,
+      machine.maintenance_interval ?? 250,
+      (machine as any).responsavel ?? "",
+      (machine as any).acao_responsavel ?? "",
+    ],
+  )
+  return rows[0]
 }
 
 export async function updateMachine(id: string, updates: Partial<Machine>) {
-  const { data, error } = await supabase
-    .from("machines")
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as Machine
+  const allowed = [
+    "name", "model", "area", "serial_number", "tag", "in_contract", "status",
+    "hours_worked", "hours_available", "next_maintenance", "last_maintenance",
+    "maintenance_interval", "responsavel", "acao_responsavel", "categoria",
+  ]
+  const sets: string[] = []
+  const params: any[] = []
+  let i = 1
+  for (const key of allowed) {
+    if (key in updates) {
+      sets.push(`${key} = $${i++}`)
+      params.push((updates as any)[key])
+    }
+  }
+  sets.push(`updated_at = now()`)
+  params.push(id)
+  const rows = await query<Machine>(
+    `UPDATE machines SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`,
+    params,
+  )
+  return rows[0]
 }
 
 export async function deleteMachine(id: string) {
-  const { error } = await supabase
-    .from("machines")
-    .delete()
-    .eq("id", id)
-  
-  if (error) throw error
+  await query(`DELETE FROM machines WHERE id = $1`, [id])
 }
 
-// ============ PARADAS (STOPPED MACHINES) ============
+// Atualiza a categoria e registra a data da mudança
+export async function updateMachineCategoria(id: string, categoria: string) {
+  const rows = await query<Machine>(
+    `UPDATE machines SET categoria = $1, categoria_updated_at = now(), updated_at = now()
+     WHERE id = $2 RETURNING *`,
+    [categoria, id],
+  )
+  return rows[0]
+}
+
+// ============ PARADAS (HISTÓRICO) ============
 export interface ParadaHistorico {
   id: string
   machine_id: string | null
@@ -94,148 +94,150 @@ export interface ParadaHistorico {
 }
 
 export async function getParadasHistorico(machineId: string) {
-  const { data, error } = await supabase
-    .from("paradas_historico")
-    .select("*")
-    .eq("machine_id", machineId)
-    .order("created_at", { ascending: false })
-
-  if (error) throw error
-  return data as ParadaHistorico[]
+  return query<ParadaHistorico>(
+    `SELECT * FROM paradas_historico WHERE machine_id = $1 ORDER BY created_at DESC`,
+    [machineId],
+  )
 }
 
-export async function createParadaHistorico(
-  record: Omit<ParadaHistorico, "id" | "created_at">
-) {
-  const { data, error } = await supabase
-    .from("paradas_historico")
-    .insert(record)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as ParadaHistorico
-}
-
-// Atualiza a categoria e registra a data da mudança
-export async function updateMachineCategoria(id: string, categoria: string) {
-  const { data, error } = await supabase
-    .from("machines")
-    .update({
-      categoria,
-      categoria_updated_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id)
-    .select()
-    .single()
-
-  if (error) throw error
-  return data as Machine
+export async function createParadaHistorico(record: Omit<ParadaHistorico, "id" | "created_at">) {
+  const rows = await query<ParadaHistorico>(
+    `INSERT INTO paradas_historico
+      (machine_id, tag, categoria, observacoes, prazo, responsavel, acao_responsavel, dias_parado)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [
+      record.machine_id,
+      record.tag ?? "",
+      record.categoria ?? null,
+      record.observacoes ?? null,
+      record.prazo ?? null,
+      record.responsavel ?? null,
+      record.acao_responsavel ?? null,
+      record.dias_parado ?? null,
+    ],
+  )
+  return rows[0]
 }
 
 // ============ WEEKLY RECORDS ============
+// Reproduz o "select *, machines(*)" do Supabase: cada linha ganha a propriedade `machines`.
 export async function getWeeklyRecords() {
-  const { data, error } = await supabase
-    .from("weekly_records")
-    .select("*, machines(*)")
-    .order("created_at", { ascending: false })
-  
-  if (error) throw error
-  return data
+  const rows = await query<any>(
+    `SELECT wr.*, to_jsonb(m.*) AS machines
+     FROM weekly_records wr
+     LEFT JOIN machines m ON m.id = wr.machine_id
+     ORDER BY wr.created_at DESC`,
+  )
+  return rows
 }
 
 export async function getWeeklyRecordsByMachine(machineId: string) {
-  const { data, error } = await supabase
-    .from("weekly_records")
-    .select("*")
-    .eq("machine_id", machineId)
-    .order("week", { ascending: false })
-  
-  if (error) throw error
-  return data as WeeklyRecord[]
+  return query<WeeklyRecord>(
+    `SELECT * FROM weekly_records WHERE machine_id = $1 ORDER BY week DESC`,
+    [machineId],
+  )
 }
 
 export async function createWeeklyRecord(record: Omit<WeeklyRecord, "id" | "created_at">) {
-  const { data, error } = await supabase
-    .from("weekly_records")
-    .insert(record)
-    .select()
-    .single()
-  
-  if (error) throw error
-  
-  // Update machine hours
-  await supabase
-    .from("machines")
-    .update({ 
-      hours_worked: record.hours_worked,
-      updated_at: new Date().toISOString()
-    })
-    .eq("id", record.machine_id)
-  
-  return data as WeeklyRecord
+  const rows = await query<WeeklyRecord>(
+    `INSERT INTO weekly_records
+      (machine_id, week, hours_worked, hours_available, availability, observations)
+     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+    [
+      record.machine_id,
+      record.week,
+      record.hours_worked ?? 0,
+      record.hours_available ?? 0,
+      record.availability ?? 0,
+      record.observations ?? null,
+    ],
+  )
+  // Atualiza as horas da máquina
+  await query(
+    `UPDATE machines SET hours_worked = $1, updated_at = now() WHERE id = $2`,
+    [record.hours_worked ?? 0, record.machine_id],
+  )
+  return rows[0]
 }
 
 // ============ STOPS ============
 export async function getStops() {
-  const { data, error } = await supabase
-    .from("stops")
-    .select("*, machines(*)")
-    .order("created_at", { ascending: false })
-  
-  if (error) throw error
-  return data
+  return query<any>(
+    `SELECT s.*, to_jsonb(m.*) AS machines
+     FROM stops s
+     LEFT JOIN machines m ON m.id = s.machine_id
+     ORDER BY s.created_at DESC`,
+  )
 }
 
 export async function getActiveStops() {
-  const { data, error } = await supabase
-    .from("stops")
-    .select("*, machines(*)")
-    .eq("resolved", false)
-    .order("start_date", { ascending: false })
-  
-  if (error) throw error
-  return data
+  return query<any>(
+    `SELECT s.*, to_jsonb(m.*) AS machines
+     FROM stops s
+     LEFT JOIN machines m ON m.id = s.machine_id
+     WHERE s.resolved = false
+     ORDER BY s.start_date DESC`,
+  )
 }
 
 export async function createStop(stop: Omit<Stop, "id" | "created_at">) {
-  const { data, error } = await supabase
-    .from("stops")
-    .insert(stop)
-    .select()
-    .single()
-  
-  if (error) throw error
-  
-  // Update machine status
-  await supabase
-    .from("machines")
-    .update({ status: "parado", updated_at: new Date().toISOString() })
-    .eq("id", stop.machine_id)
-  
-  return data as Stop
+  const rows = await query<Stop>(
+    `INSERT INTO stops (machine_id, start_date, end_date, reason, type, description, resolved)
+     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+    [
+      stop.machine_id,
+      stop.start_date ?? new Date().toISOString(),
+      stop.end_date ?? null,
+      stop.reason ?? "",
+      stop.type ?? "outros",
+      stop.description ?? null,
+      stop.resolved ?? false,
+    ],
+  )
+  // Atualiza status da máquina
+  await query(`UPDATE machines SET status = 'parado', updated_at = now() WHERE id = $1`, [
+    stop.machine_id,
+  ])
+  return rows[0]
 }
 
 export async function updateStop(id: string, updates: Partial<Stop>) {
-  const { data, error } = await supabase
-    .from("stops")
-    .update(updates)
-    .eq("id", id)
-    .select("*, machines(*)")
-    .single()
-  
-  if (error) throw error
-  
-  // If resolved, update machine status back to operacional
-  if (updates.resolved) {
-    await supabase
-      .from("machines")
-      .update({ status: "operacional", updated_at: new Date().toISOString() })
-      .eq("id", data.machine_id)
+  const allowed = ["machine_id", "start_date", "end_date", "reason", "type", "description", "resolved"]
+  const sets: string[] = []
+  const params: any[] = []
+  let i = 1
+  for (const key of allowed) {
+    if (key in updates) {
+      sets.push(`${key} = $${i++}`)
+      params.push((updates as any)[key])
+    }
   }
-  
-  return data
+  if (sets.length === 0) {
+    const rows = await query<any>(
+      `SELECT s.*, to_jsonb(m.*) AS machines FROM stops s
+       LEFT JOIN machines m ON m.id = s.machine_id WHERE s.id = $1`,
+      [id],
+    )
+    return rows[0]
+  }
+  params.push(id)
+  const updated = await query<Stop>(
+    `UPDATE stops SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`,
+    params,
+  )
+  const stop = updated[0]
+  // Se resolvida, volta a máquina para operacional
+  if (updates.resolved) {
+    await query(`UPDATE machines SET status = 'operacional', updated_at = now() WHERE id = $1`, [
+      stop.machine_id,
+    ])
+  }
+  const rows = await query<any>(
+    `SELECT s.*, to_jsonb(m.*) AS machines FROM stops s
+     LEFT JOIN machines m ON m.id = s.machine_id WHERE s.id = $1`,
+    [id],
+  )
+  return rows[0]
 }
 
 export async function resolveStop(id: string, endDate: string) {
@@ -244,42 +246,58 @@ export async function resolveStop(id: string, endDate: string) {
 
 // ============ SETTINGS ============
 export async function getSettings() {
-  const { data, error } = await supabase
-    .from("settings")
-    .select("*")
-    .limit(1)
-    .single()
-  
-  if (error && error.code !== "PGRST116") throw error
-  return data as Settings | null
+  const rows = await query<Settings>(`SELECT * FROM settings ORDER BY created_at LIMIT 1`)
+  return rows[0] ?? null
 }
 
 export async function updateSettings(updates: Partial<Settings>) {
-  const settings = await getSettings()
-  
-  if (settings) {
-    const { data, error } = await supabase
-      .from("settings")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", settings.id)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data as Settings
+  const existing = await getSettings()
+  if (existing) {
+    const allowed = ["client_name", "contract_number", "location", "target_availability"]
+    const sets: string[] = []
+    const params: any[] = []
+    let i = 1
+    for (const key of allowed) {
+      if (key in updates) {
+        sets.push(`${key} = $${i++}`)
+        params.push((updates as any)[key])
+      }
+    }
+    sets.push(`updated_at = now()`)
+    params.push(existing.id)
+    const rows = await query<Settings>(
+      `UPDATE settings SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`,
+      params,
+    )
+    return rows[0]
   } else {
-    const { data, error } = await supabase
-      .from("settings")
-      .insert(updates)
-      .select()
-      .single()
-    
-    if (error) throw error
-    return data as Settings
+    const rows = await query<Settings>(
+      `INSERT INTO settings (client_name, contract_number, location, target_availability)
+       VALUES ($1,$2,$3,$4) RETURNING *`,
+      [
+        (updates as any).client_name ?? "ALUMAR",
+        (updates as any).contract_number ?? "",
+        (updates as any).location ?? "",
+        (updates as any).target_availability ?? 92,
+      ],
+    )
+    return rows[0]
   }
 }
 
 // ============ WEEKLY SNAPSHOTS ============
+export interface MachineDetail {
+  id: string
+  tag: string
+  model: string
+  area: string
+  serial_number: string
+  in_contract: boolean
+  status: string
+  responsavel: string
+  acao_responsavel: string
+}
+
 export interface WeeklySnapshot {
   id: string
   week_code: string
@@ -293,57 +311,31 @@ export interface WeeklySnapshot {
   created_at: string
 }
 
-export interface MachineDetail {
-  id: string
-  tag: string
-  model: string
-  area: string
-  serial_number: string
-  in_contract: boolean
-  status: string
-  responsavel: string
-  acao_responsavel: string
-}
-
 export async function getWeeklySnapshots() {
-  const { data, error } = await supabase
-    .from("weekly_snapshots")
-    .select("*")
-    .order("week_date", { ascending: false })
-  
-  if (error) throw error
-  return data as WeeklySnapshot[]
+  return query<WeeklySnapshot>(`SELECT * FROM weekly_snapshots ORDER BY week_date DESC`)
 }
 
 export async function getWeeklySnapshotsByWeek(weekCode: string) {
-  const { data, error } = await supabase
-    .from("weekly_snapshots")
-    .select("*")
-    .eq("week_code", weekCode)
-    .order("created_at", { ascending: false })
-  
-  if (error) throw error
-  return data as WeeklySnapshot[]
+  return query<WeeklySnapshot>(
+    `SELECT * FROM weekly_snapshots WHERE week_code = $1 ORDER BY created_at DESC`,
+    [weekCode],
+  )
 }
 
 export async function createWeeklySnapshot(machines: Machine[]) {
   const now = new Date()
   const weekNumber = getWeekNumber(now)
   const weekCode = `${now.getFullYear()}-W${weekNumber.toString().padStart(2, "0")}`
-  
-  // Máquinas DESATIVADAS não entram no cálculo de disponibilidade
-  const activeMachines = machines.filter(m => m.status !== "desativado")
-  
-  const operacionais = machines.filter(m => m.status === "operacional").length
-  const paradas = machines.filter(m => m.status === "parado").length
-  const desativados = machines.filter(m => m.status === "desativado").length
+
+  const activeMachines = machines.filter((m) => m.status !== "desativado")
+  const operacionais = machines.filter((m) => m.status === "operacional").length
+  const paradas = machines.filter((m) => m.status === "parado").length
+  const desativados = machines.filter((m) => m.status === "desativado").length
   const total = machines.length
   const totalAtivas = activeMachines.length
-  
-  // Disponibilidade = Operacionais / Total de máquinas ATIVAS (excluindo desativadas)
   const disponibilidade = totalAtivas > 0 ? Math.round((operacionais / totalAtivas) * 1000) / 10 : 0
-  
-  const machineDetails: MachineDetail[] = machines.map(m => ({
+
+  const machineDetails: MachineDetail[] = machines.map((m) => ({
     id: m.id,
     tag: m.tag,
     model: m.model,
@@ -354,33 +346,27 @@ export async function createWeeklySnapshot(machines: Machine[]) {
     responsavel: (m as any).responsavel || "",
     acao_responsavel: (m as any).acao_responsavel || "",
   }))
-  
-  const { data, error } = await supabase
-    .from("weekly_snapshots")
-    .insert({
-      week_code: weekCode,
-      week_date: now.toISOString().split("T")[0],
+
+  const rows = await query<WeeklySnapshot>(
+    `INSERT INTO weekly_snapshots
+      (week_code, week_date, total, operacionais, paradas, manutencao, disponibilidade, machine_details)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [
+      weekCode,
+      now.toISOString().split("T")[0],
       total,
       operacionais,
       paradas,
-      manutencao: desativados,
+      desativados,
       disponibilidade,
-      machine_details: machineDetails,
-    })
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as WeeklySnapshot
+      JSON.stringify(machineDetails),
+    ],
+  )
+  return rows[0]
 }
 
 export async function deleteWeeklySnapshot(id: string) {
-  const { error } = await supabase
-    .from("weekly_snapshots")
-    .delete()
-    .eq("id", id)
-  
-  if (error) throw error
+  await query(`DELETE FROM weekly_snapshots WHERE id = $1`, [id])
 }
 
 function getWeekNumber(date: Date): number {
@@ -388,7 +374,7 @@ function getWeekNumber(date: Date): number {
   const dayNum = d.getUTCDay() || 7
   d.setUTCDate(d.getUTCDate() + 4 - dayNum)
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
+  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
 }
 
 // ============ PREVENTIVE MAINTENANCE ============
@@ -402,7 +388,7 @@ export interface PreventiveMaintenance {
   year: number
   month: number
   maintenance_type: string | null
-  status: 'pendente' | 'planejado' | 'concluido' | 'atrasado'
+  status: "pendente" | "planejado" | "concluido" | "atrasado"
   order_number: string | null
   observations: string | null
   created_at: string
@@ -410,112 +396,148 @@ export interface PreventiveMaintenance {
 }
 
 export async function getPreventiveMaintenances(year?: number) {
-  let query = supabase
-    .from("preventive_maintenance")
-    .select("*")
-    .order("tag")
-    .order("year")
-    .order("month")
-  
   if (year) {
-    query = query.eq("year", year)
+    return query<PreventiveMaintenance>(
+      `SELECT * FROM preventive_maintenance WHERE year = $1 ORDER BY tag, year, month`,
+      [year],
+    )
   }
-  
-  const { data, error } = await query
-  if (error) throw error
-  return data as PreventiveMaintenance[]
+  return query<PreventiveMaintenance>(
+    `SELECT * FROM preventive_maintenance ORDER BY tag, year, month`,
+  )
 }
 
 export async function getPreventiveMaintenancesByMachine(machineId: string) {
-  const { data, error } = await supabase
-    .from("preventive_maintenance")
-    .select("*")
-    .eq("machine_id", machineId)
-    .order("year")
-    .order("month")
-  
-  if (error) throw error
-  return data as PreventiveMaintenance[]
+  return query<PreventiveMaintenance>(
+    `SELECT * FROM preventive_maintenance WHERE machine_id = $1 ORDER BY year, month`,
+    [machineId],
+  )
 }
 
-export async function createPreventiveMaintenance(record: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">) {
-  const { data, error } = await supabase
-    .from("preventive_maintenance")
-    .insert(record)
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as PreventiveMaintenance
+export async function createPreventiveMaintenance(
+  record: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">,
+) {
+  const rows = await query<PreventiveMaintenance>(
+    `INSERT INTO preventive_maintenance
+      (machine_id, tag, serial_number, model, area, year, month, maintenance_type, status, order_number, observations)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+    [
+      record.machine_id ?? null,
+      record.tag ?? "",
+      record.serial_number ?? null,
+      record.model ?? null,
+      record.area ?? null,
+      record.year,
+      record.month,
+      record.maintenance_type ?? null,
+      record.status ?? "pendente",
+      record.order_number ?? null,
+      record.observations ?? null,
+    ],
+  )
+  return rows[0]
 }
 
 export async function updatePreventiveMaintenance(id: string, updates: Partial<PreventiveMaintenance>) {
-  const { data, error } = await supabase
-    .from("preventive_maintenance")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as PreventiveMaintenance
+  const allowed = [
+    "machine_id", "tag", "serial_number", "model", "area", "year", "month",
+    "maintenance_type", "status", "order_number", "observations",
+  ]
+  const sets: string[] = []
+  const params: any[] = []
+  let i = 1
+  for (const key of allowed) {
+    if (key in updates) {
+      sets.push(`${key} = $${i++}`)
+      params.push((updates as any)[key])
+    }
+  }
+  sets.push(`updated_at = now()`)
+  params.push(id)
+  const rows = await query<PreventiveMaintenance>(
+    `UPDATE preventive_maintenance SET ${sets.join(", ")} WHERE id = $${i} RETURNING *`,
+    params,
+  )
+  return rows[0]
 }
 
-export async function upsertPreventiveMaintenance(record: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">) {
-  const { data, error } = await supabase
-    .from("preventive_maintenance")
-    .upsert(record, { onConflict: 'machine_id,year,month' })
-    .select()
-    .single()
-  
-  if (error) throw error
-  return data as PreventiveMaintenance
+export async function upsertPreventiveMaintenance(
+  record: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">,
+) {
+  const rows = await query<PreventiveMaintenance>(
+    `INSERT INTO preventive_maintenance
+      (machine_id, tag, serial_number, model, area, year, month, maintenance_type, status, order_number, observations)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     ON CONFLICT (machine_id, year, month) DO UPDATE SET
+       tag = EXCLUDED.tag,
+       serial_number = EXCLUDED.serial_number,
+       model = EXCLUDED.model,
+       area = EXCLUDED.area,
+       maintenance_type = EXCLUDED.maintenance_type,
+       status = EXCLUDED.status,
+       order_number = EXCLUDED.order_number,
+       observations = EXCLUDED.observations,
+       updated_at = now()
+     RETURNING *`,
+    [
+      record.machine_id ?? null,
+      record.tag ?? "",
+      record.serial_number ?? null,
+      record.model ?? null,
+      record.area ?? null,
+      record.year,
+      record.month,
+      record.maintenance_type ?? null,
+      record.status ?? "pendente",
+      record.order_number ?? null,
+      record.observations ?? null,
+    ],
+  )
+  return rows[0]
 }
 
 export async function deletePreventiveMaintenance(id: string) {
-  const { error } = await supabase
-    .from("preventive_maintenance")
-    .delete()
-    .eq("id", id)
-  
-  if (error) throw error
+  await query(`DELETE FROM preventive_maintenance WHERE id = $1`, [id])
 }
 
-export async function bulkInsertPreventiveMaintenances(records: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">[]) {
-  const { data, error } = await supabase
-    .from("preventive_maintenance")
-    .insert(records)
-    .select()
-  
-  if (error) throw error
-  return data as PreventiveMaintenance[]
+export async function bulkInsertPreventiveMaintenances(
+  records: Omit<PreventiveMaintenance, "id" | "created_at" | "updated_at">[],
+) {
+  const results: PreventiveMaintenance[] = []
+  for (const record of records) {
+    results.push(await createPreventiveMaintenance(record))
+  }
+  return results
 }
 
 export async function clearPreventiveMaintenances() {
-  const { error } = await supabase
-    .from("preventive_maintenance")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000") // Delete all
-  
-  if (error) throw error
+  await query(`DELETE FROM preventive_maintenance`)
+}
+
+// ============ COUNTS (para tela de Configurações) ============
+export async function getRecordCounts() {
+  const [wr] = await query<{ count: string }>(`SELECT count(*)::text AS count FROM weekly_records`)
+  const [st] = await query<{ count: string }>(`SELECT count(*)::text AS count FROM stops`)
+  return {
+    weeklyRecordsCount: Number(wr?.count ?? 0),
+    stopsCount: Number(st?.count ?? 0),
+  }
 }
 
 // ============ DASHBOARD STATS ============
 export async function getDashboardStats() {
   const machines = await getMachines()
   const settings = await getSettings()
-  const { data: activeStops } = await supabase
-    .from("stops")
-    .select("id")
-    .eq("resolved", false)
-  
-  const operatingMachines = machines.filter(m => m.status === "operacional").length
-  const stoppedMachines = machines.filter(m => m.status === "parado").length
-  const desativadosMachines = machines.filter(m => m.status === "desativado").length
-  const inContractMachines = machines.filter(m => m.in_contract).length
-  const outOfContractMachines = machines.filter(m => !m.in_contract).length
-  const pendingMaintenances = machines.filter(m => m.hours_worked >= m.maintenance_interval * 0.9).length
-  
+  const activeStops = await query<{ id: string }>(`SELECT id FROM stops WHERE resolved = false`)
+
+  const operatingMachines = machines.filter((m) => m.status === "operacional").length
+  const stoppedMachines = machines.filter((m) => m.status === "parado").length
+  const inContractMachines = machines.filter((m) => m.in_contract).length
+  const outOfContractMachines = machines.filter((m) => !m.in_contract).length
+  const pendingMaintenances = machines.filter(
+    (m) => m.hours_worked >= m.maintenance_interval * 0.9,
+  ).length
+
   return {
     totalMachines: machines.length,
     operatingMachines,
@@ -525,6 +547,6 @@ export async function getDashboardStats() {
     averageAvailability: 0,
     targetAvailability: settings?.target_availability || 92,
     pendingMaintenances,
-    activeStops: activeStops?.length || 0,
+    activeStops: activeStops.length || 0,
   }
 }

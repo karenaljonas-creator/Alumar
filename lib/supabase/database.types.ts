@@ -18,6 +18,8 @@ export interface Database {
           maintenance_interval: number
           responsavel: string
           acao_responsavel: string
+          categoria: string | null
+          categoria_updated_at: string | null
           created_at: string
           updated_at: string
         }
