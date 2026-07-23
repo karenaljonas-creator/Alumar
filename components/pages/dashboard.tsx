@@ -108,12 +108,6 @@ export function Dashboard() {
             <div className="text-xs text-gray-400 mt-1">Fora de operacao</div>
           </div>
           
-          {/* Desativadas */}
-          <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 shadow-sm">
-            <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">DESATIVADAS</div>
-            <div className="text-4xl font-bold text-gray-400">{stats.desativadosMachines}</div>
-          </div>
-          
           {/* Disponibilidade */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 shadow-sm">
             <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">DISPONIBILIDADE</div>
