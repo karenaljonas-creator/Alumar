@@ -1,9 +1,28 @@
 "use client"
 
 import { createClient } from "@/lib/supabase/client"
+import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Machine, WeeklyRecord, Stop, Settings } from "@/lib/supabase/database.types"
 
-const supabase = createClient()
+// Inicialização preguiçosa (lazy): o client só é criado na primeira vez que
+// uma operação de dados for chamada — não no carregamento do módulo.
+// Isso evita que a ausência das variáveis de ambiente derrube o app inteiro.
+let _supabase: SupabaseClient | null = null
+
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient()
+  }
+  return _supabase
+}
+
+const supabase = new Proxy({} as SupabaseClient, {
+  get(_target, prop) {
+    const client = getSupabase()
+    const value = (client as any)[prop]
+    return typeof value === "function" ? value.bind(client) : value
+  },
+})
 
 // ============ MACHINES ============
 export async function getMachines() {
