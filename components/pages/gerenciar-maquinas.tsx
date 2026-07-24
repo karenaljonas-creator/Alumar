@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Search, Plus, Pencil, Trash2, Filter, Loader2 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 import { getMachines, createMachine, updateMachine, deleteMachine } from "@/lib/supabase/data-service"
 import type { Machine } from "@/lib/supabase/database.types"
 
@@ -79,7 +80,7 @@ export function GerenciarMaquinas() {
     }
   }
 
-  const areas = [...new Set(machines.map(m => m.area))].sort()
+  const areas = [...new Set(machines.map((machine) => machine.area).filter(Boolean))].sort()
 
   const filteredMachines = machines.filter((machine) => {
     const matchesSearch =
@@ -135,7 +136,12 @@ export function GerenciarMaquinas() {
   }
 
   const handleSave = async () => {
-    if (!formData.model || !formData.area || !formData.serial_number || !formData.tag) {
+    if (!formData.model.trim() || !formData.area.trim() || !formData.serial_number.trim() || !formData.tag.trim()) {
+      toast({
+        title: "Preencha os campos obrigatórios",
+        description: "Área, equipamento/modelo, número de série e TAG são obrigatórios.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -147,18 +153,31 @@ export function GerenciarMaquinas() {
         await createMachine({
           ...formData,
           name: formData.name || `Compressor ${formData.model}`,
-          status: "operando",
+          status: "operacional",
           hours_worked: 0,
           hours_available: 500,
           next_maintenance: null,
           last_maintenance: null,
           maintenance_interval: 500,
+          responsavel: "",
+          acao_responsavel: "",
+          categoria: null,
+          categoria_updated_at: null,
         })
       }
       await loadMachines()
       setIsDialogOpen(false)
+      toast({
+        title: editingMachine ? "Equipamento atualizado" : "Equipamento cadastrado",
+        description: `${formData.tag.trim()} foi salvo com sucesso.`,
+      })
     } catch (error) {
       console.error("Erro ao salvar máquina:", error)
+      toast({
+        title: "Não foi possível salvar",
+        description: error instanceof Error ? error.message : "Verifique os dados e tente novamente.",
+        variant: "destructive",
+      })
     } finally {
       setSaving(false)
     }
@@ -172,8 +191,14 @@ export function GerenciarMaquinas() {
       await loadMachines()
       setIsDeleteDialogOpen(false)
       setMachineToDelete(null)
+      toast({ title: "Equipamento excluído" })
     } catch (error) {
       console.error("Erro ao excluir máquina:", error)
+      toast({
+        title: "Não foi possível excluir",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+        variant: "destructive",
+      })
     }
   }
 

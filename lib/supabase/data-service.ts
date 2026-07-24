@@ -349,9 +349,11 @@ export async function createWeeklySnapshot(machines: Machine[]) {
 
   const rows = await query<WeeklySnapshot>(
     `INSERT INTO weekly_snapshots
-      (week_code, week_date, total, operacionais, paradas, manutencao, disponibilidade, machine_details)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+      (week, snapshot, week_code, week_date, total, operacionais, paradas, manutencao, disponibilidade, machine_details)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
     [
+      weekCode,
+      JSON.stringify(machineDetails),
       weekCode,
       now.toISOString().split("T")[0],
       total,
