@@ -76,6 +76,9 @@ interface MaintenanceCell {
   id?: string
   machine_id: string | null
   tag: string
+  area: string
+  model: string
+  serial_number: string
   year: number
   month: number
   maintenance_type: string | null
@@ -176,6 +179,9 @@ export function ManutencaoPreventiva() {
           id: maintenance?.id,
           machine_id: machine.id,
           tag: machine.tag,
+          area: machine.area,
+          model: machine.model,
+          serial_number: machine.serial_number,
           year: selectedYear,
           month,
           maintenance_type: maintenance?.maintenance_type || null,
@@ -250,6 +256,9 @@ export function ManutencaoPreventiva() {
         await bulkInsertPreventiveMaintenances([{
           machine_id: editingCell.machine_id,
           tag: editingCell.tag,
+          area: editingCell.area,
+          model: editingCell.model,
+          serial_number: editingCell.serial_number,
           year: editingCell.year,
           month: editingCell.month,
           maintenance_type: editMaintenanceType || null,
@@ -316,6 +325,9 @@ export function ManutencaoPreventiva() {
             records.push({
               machine_id: machine?.id || null,
               tag,
+              area: machine?.area || "",
+              model: machine?.model || "",
+              serial_number: machine?.serial_number || "",
               year,
               month,
               maintenance_type: maintenanceType,
